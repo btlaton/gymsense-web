@@ -93,15 +93,12 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
           {/* Divider */}
           <div className="border-t border-stone-100 mx-5" />
           
-          {/* Paid By Row */}
-          <div className="px-5 py-4">
-            <span className="text-stone-500">
-              {customerName 
-                ? `Paid by ${customerName}`
-                : 'Payment received'
-              }
-            </span>
-          </div>
+        {/* Paid To Row */}
+        <div className="px-5 py-4">
+          <span className="text-stone-500">
+            Paid to The Atlas Gym
+          </span>
+        </div>
         </div>
 
         {/* Done Button - matches Pro app (just closes the browser tab) */}
