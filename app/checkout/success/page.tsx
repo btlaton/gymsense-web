@@ -49,7 +49,9 @@ async function PurchaseDetails({ sessionId }: { sessionId: string }) {
   const customerName = sessionData?.session?.customer_details?.name;
   const amountTotal = sessionData?.session?.amount_total;
   const lineItems = sessionData?.session?.line_items?.data || [];
-  const gymName = sessionData?.gym?.name;
+  
+  // Hardcoded for now - single gym deployment
+  const gymName = 'The Atlas Gym';
 
   return (
     <>
