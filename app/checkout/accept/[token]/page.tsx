@@ -217,7 +217,7 @@ export default function AcceptAgreementPage() {
       <header className="bg-stone-950 text-white px-6 py-6">
         <div className="max-w-2xl mx-auto">
           <div className="font-display text-2xl text-emerald-500 mb-1">
-            Gymsense
+            gymsense
           </div>
           <h1 className="text-lg font-medium text-stone-200">
             {checkout.gymName}
@@ -369,7 +369,7 @@ export default function AcceptAgreementPage() {
       <footer className="bg-stone-950 text-stone-400 px-6 py-8 mt-12">
         <div className="max-w-2xl mx-auto text-center">
           <div className="font-display text-xl text-emerald-600 mb-2">
-            Gymsense
+            gymsense
           </div>
           <p className="text-sm">
             Powering modern gyms
