@@ -77,3 +77,25 @@ body {
 .delay-400 { animation-delay: 400ms; }
 .delay-500 { animation-delay: 500ms; }
 
+/* Prose styles for agreement content */
+.prose p {
+  margin-bottom: 0.75em;
+}
+
+.prose div {
+  margin-bottom: 0.5em;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose ul, .prose ol {
+  margin-left: 1.25em;
+  margin-bottom: 0.75em;
+}
+
+.prose li {
+  margin-bottom: 0.25em;
+}
+
