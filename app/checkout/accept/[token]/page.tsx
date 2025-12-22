@@ -16,8 +16,8 @@
 
 'use client';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Check, FileText, ShoppingCart, AlertCircle, Loader2 } from 'lucide-react';
 
 // Supabase Edge Function base URL
@@ -57,14 +57,9 @@ interface PendingCheckout {
   cancelUrl: string;
 }
 
-interface PageProps {
-  params: Promise<{ token: string }>;
-}
-
-export default function AcceptAgreementPage({ params }: PageProps) {
-  const resolvedParams = use(params);
-  const router = useRouter();
-  const token = resolvedParams.token;
+export default function AcceptAgreementPage() {
+  const params = useParams();
+  const token = params.token as string;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
