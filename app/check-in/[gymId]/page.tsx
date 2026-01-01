@@ -3,6 +3,9 @@
  * 
  * A static page where gym owners can access/view the check-in QR code.
  * URL: /check-in/{gymId}
+ * 
+ * Query params:
+ * - ?qr-only=true - Displays only the QR code (for printing services)
  */
 
 import { Metadata } from 'next';
@@ -17,12 +20,32 @@ interface CheckInPageProps {
   params: {
     gymId: string;
   };
+  searchParams: {
+    'qr-only'?: string;
+  };
 }
 
-export default function CheckInPage({ params }: CheckInPageProps) {
+export default function CheckInPage({ params, searchParams }: CheckInPageProps) {
   const { gymId } = params;
   const qrValue = `https://gymsense.io/check-in/${gymId}`;
+  const qrOnly = searchParams['qr-only'] === 'true';
 
+  // QR-only mode: Display just the QR code for printing services
+  if (qrOnly) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <QRCode
+          value={qrValue}
+          size={512}
+          level="H"
+          bgColor="#ffffff"
+          fgColor="#000000"
+        />
+      </main>
+    );
+  }
+
+  // Full page mode: Display with branding
   return (
     <main className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-8">
