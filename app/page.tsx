@@ -421,7 +421,7 @@ export default function Home() {
   );
 }
 
-// ===== PHONE MOCKUP - Increased by ~10% =====
+// ===== PHONE MOCKUP - Scaled proportionally (9:19.5 iPhone aspect ratio) =====
 
 function PhoneMockup({ 
   children, 
@@ -430,16 +430,18 @@ function PhoneMockup({
   children: React.ReactNode;
   variant?: 'dark' | 'light';
 }) {
+  // Proportional scaling: width × 2.17 = height (iPhone aspect ratio)
+  // Mobile: 175px × 380px, Tablet: 195px × 423px, Desktop: 215px × 467px
   return (
-    <div className="relative w-[154px] sm:w-[176px] md:w-[198px] h-[308px] sm:h-[352px] md:h-[396px] bg-stone-800 rounded-[1.75rem] sm:rounded-[2.25rem] p-1.5 shadow-xl">
-      <div className={`w-full h-full rounded-[1.5rem] sm:rounded-[1.75rem] overflow-hidden relative ${
+    <div className="relative w-[175px] sm:w-[195px] md:w-[215px] h-[380px] sm:h-[423px] md:h-[467px] bg-stone-800 rounded-[2rem] sm:rounded-[2.5rem] p-1.5 shadow-xl">
+      <div className={`w-full h-full rounded-[1.75rem] sm:rounded-[2.25rem] overflow-hidden relative ${
         variant === 'dark' ? 'bg-stone-900' : 'bg-stone-50'
       }`}>
-        {/* Notch */}
-        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-14 sm:w-18 h-4 sm:h-5 bg-stone-800 rounded-full z-10" />
+        {/* Notch / Dynamic Island */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 sm:w-20 h-5 sm:h-6 bg-stone-800 rounded-full z-10" />
         
         {/* Screen */}
-        <div className="w-full h-full pt-7 sm:pt-8">
+        <div className="w-full h-full pt-8 sm:pt-9">
           {children}
         </div>
       </div>
