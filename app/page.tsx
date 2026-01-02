@@ -2,7 +2,7 @@
  * GymSense Landing Page
  * 
  * Auto-playing story scenes showing how Pro and Member apps work together.
- * Simple, reliable animation that works across all devices.
+ * Custom slide transitions to simulate real app navigation.
  */
 
 'use client';
@@ -23,7 +23,9 @@ import {
   ChevronRight,
   MapPinCheck,
   ShoppingCart,
-  ScanLine
+  ScanLine,
+  TrendingUp,
+  Dumbbell
 } from 'lucide-react';
 
 // ===== STORY CONFIGURATION =====
@@ -31,14 +33,17 @@ const STORIES = [
   {
     id: 'check-in',
     title: 'Touchless Member Check-Ins',
+    // Transition directions: 'left' = slide from left, 'right' = slide from right, 'fade' = fade
+    memberTransitions: ['fade', 'left', 'left'], // Step 0, 1, 2
+    proTransitions: ['fade', 'fade', 'fade'],
     steps: [
       {
-        narrative: "Sarah swipes to open the check-in scanner.",
+        narrative: "Sarah opens the app. Marcus views his dashboard.",
         memberPhase: 'swipe-to-scan',
-        proPhase: 'waiting',
+        proPhase: 'dashboard',
       },
       {
-        narrative: "Sarah scans the gym's QR code at the entrance.",
+        narrative: "Sarah swipes to scan the gym's QR code.",
         memberPhase: 'scanning',
         proPhase: 'waiting',
       },
@@ -52,6 +57,8 @@ const STORIES = [
   {
     id: 'payment',
     title: 'Seamless Mobile-to-Mobile Payments',
+    memberTransitions: ['fade', 'right', 'fade'],
+    proTransitions: ['fade', 'fade', 'fade'],
     steps: [
       {
         narrative: "Sarah is ready to pay. Marcus taps to scan her QR.",
@@ -73,6 +80,8 @@ const STORIES = [
   {
     id: 'session',
     title: 'Instant Session Bookings',
+    memberTransitions: ['fade', 'fade'],
+    proTransitions: ['fade', 'fade'],
     steps: [
       {
         narrative: "Marcus schedules Sarah's next PT session.",
@@ -88,6 +97,25 @@ const STORIES = [
   },
 ];
 
+// Transition variants for different directions
+const slideVariants = {
+  left: {
+    initial: { x: -50, opacity: 0 },
+    animate: { x: 0, opacity: 1 },
+    exit: { x: 50, opacity: 0 },
+  },
+  right: {
+    initial: { x: 50, opacity: 0 },
+    animate: { x: 0, opacity: 1 },
+    exit: { x: -50, opacity: 0 },
+  },
+  fade: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  },
+};
+
 export default function Home() {
   const [storyIndex, setStoryIndex] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
@@ -95,6 +123,10 @@ export default function Home() {
 
   const story = STORIES[storyIndex];
   const step = story.steps[stepIndex];
+  
+  // Get transition directions for current step
+  const memberTransition = story.memberTransitions[stepIndex] || 'fade';
+  const proTransition = story.proTransitions[stepIndex] || 'fade';
 
   // Auto-advance through steps and stories
   useEffect(() => {
@@ -245,10 +277,11 @@ export default function Home() {
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`member-${storyIndex}-${stepIndex}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
+                      variants={slideVariants[memberTransition as keyof typeof slideVariants]}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className="h-full"
                     >
                       <MemberScreen phase={step.memberPhase} />
@@ -266,10 +299,11 @@ export default function Home() {
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`pro-${storyIndex}-${stepIndex}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
+                      variants={slideVariants[proTransition as keyof typeof slideVariants]}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className="h-full"
                     >
                       <ProScreen phase={step.proPhase} />
@@ -282,7 +316,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation - Only current scene's steps */}
             <div className="flex items-center justify-center gap-4 mt-6">
               <button 
                 onClick={goPrev}
@@ -292,23 +326,23 @@ export default function Home() {
                 <ChevronLeft className="w-4 h-4" />
               </button>
               
-              {/* Step indicators */}
-              <div className="flex gap-1.5">
-                {STORIES.flatMap((s, si) => 
-                  s.steps.map((_, sti) => {
-                    const isActive = si === storyIndex && sti === stepIndex;
-                    const isPast = si < storyIndex || (si === storyIndex && sti < stepIndex);
-                    return (
-                      <div 
-                        key={`${si}-${sti}`}
-                        className={`h-1.5 rounded-full transition-all ${
-                          isActive ? 'w-4 bg-emerald-500' : 
-                          isPast ? 'w-1.5 bg-emerald-700' : 'w-1.5 bg-stone-700'
-                        }`}
-                      />
-                    );
-                  })
-                )}
+              {/* Step indicators - ONLY current scene */}
+              <div className="flex gap-2">
+                {story.steps.map((_, sti) => {
+                  const isActive = sti === stepIndex;
+                  const isPast = sti < stepIndex;
+                  return (
+                    <button
+                      key={sti}
+                      onClick={() => setStepIndex(sti)}
+                      className={`h-2 rounded-full transition-all ${
+                        isActive ? 'w-6 bg-emerald-500' : 
+                        isPast ? 'w-2 bg-emerald-700 hover:bg-emerald-600' : 'w-2 bg-stone-700 hover:bg-stone-600'
+                      }`}
+                      aria-label={`Go to step ${sti + 1}`}
+                    />
+                  );
+                })}
               </div>
 
               <button 
@@ -432,7 +466,7 @@ export default function Home() {
   );
 }
 
-// ===== QR CODE COMPONENT (Realistic SVG) =====
+// ===== QR CODE COMPONENT =====
 
 function QRCodeIcon({ className }: { className?: string }) {
   return (
@@ -460,22 +494,19 @@ function QRCodeDisplay({ size = 'medium', dark = false }: { size?: 'small' | 'me
   return (
     <svg className={sizeClasses[size]} viewBox="0 0 100 100">
       {/* Position detection patterns (corners) */}
-      {/* Top-left */}
       <rect x="5" y="5" width="25" height="25" fill={color} />
       <rect x="8" y="8" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
       <rect x="12" y="12" width="11" height="11" fill={color} />
       
-      {/* Top-right */}
       <rect x="70" y="5" width="25" height="25" fill={color} />
       <rect x="73" y="8" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
       <rect x="77" y="12" width="11" height="11" fill={color} />
       
-      {/* Bottom-left */}
       <rect x="5" y="70" width="25" height="25" fill={color} />
       <rect x="8" y="73" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
       <rect x="12" y="77" width="11" height="11" fill={color} />
       
-      {/* Data modules (random pattern to simulate QR) */}
+      {/* Data modules */}
       <rect x="35" y="5" width="5" height="5" fill={color} />
       <rect x="45" y="5" width="5" height="5" fill={color} />
       <rect x="55" y="5" width="5" height="5" fill={color} />
@@ -485,7 +516,6 @@ function QRCodeDisplay({ size = 'medium', dark = false }: { size?: 'small' | 'me
       <rect x="40" y="19" width="5" height="5" fill={color} />
       <rect x="55" y="19" width="5" height="5" fill={color} />
       
-      {/* Middle section */}
       <rect x="5" y="35" width="5" height="5" fill={color} />
       <rect x="15" y="35" width="5" height="5" fill={color} />
       <rect x="25" y="35" width="5" height="5" fill={color} />
@@ -519,7 +549,6 @@ function QRCodeDisplay({ size = 'medium', dark = false }: { size?: 'small' | 'me
       <rect x="65" y="58" width="5" height="5" fill={color} />
       <rect x="80" y="58" width="5" height="5" fill={color} />
       
-      {/* Bottom section */}
       <rect x="35" y="70" width="5" height="5" fill={color} />
       <rect x="45" y="70" width="5" height="5" fill={color} />
       <rect x="60" y="70" width="5" height="5" fill={color} />
@@ -564,7 +593,7 @@ function PhoneMockup({
         <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 sm:w-20 h-5 sm:h-6 bg-stone-800 rounded-full z-10" />
         
         {/* Screen */}
-        <div className="w-full h-full pt-8 sm:pt-9">
+        <div className="w-full h-full pt-8 sm:pt-9 overflow-hidden">
           {children}
         </div>
       </div>
@@ -609,35 +638,32 @@ function MemberSwipeToScanScreen() {
       </div>
       
       <p className="text-stone-200 text-xs font-medium mb-1">Welcome, Sarah!</p>
-      <p className="text-stone-500 text-[10px] mb-3">Membership active</p>
+      <p className="text-stone-500 text-[10px] mb-4">Membership active</p>
       
-      {/* Main content with swipe hint */}
-      <div className="flex-1 flex flex-col items-center justify-center mt-8">
-        {/* Swipe indicator */}
-        <motion.div 
-          className="flex items-center gap-2 text-emerald-400"
-          animate={{ x: [-10, 10, -10] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ChevronRight className="w-5 h-5" />
-          <span className="text-xs font-medium">Swipe to check in</span>
-        </motion.div>
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="bg-stone-800 rounded-lg p-3 text-center border border-stone-700">
+          <QRCodeIcon className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+          <span className="text-stone-300 text-[10px]">Check In</span>
+        </div>
+        <div className="bg-stone-800 rounded-lg p-3 text-center border border-stone-700">
+          <CreditCard className="w-5 h-5 text-stone-500 mx-auto mb-1" />
+          <span className="text-stone-500 text-[10px]">Pay</span>
+        </div>
       </div>
       
-      {/* Simulated panel sliding in from left */}
-      <motion.div
-        className="absolute top-0 left-0 w-3/4 h-full bg-stone-950 border-r border-stone-800 flex items-center justify-center"
-        initial={{ x: '-100%' }}
-        animate={{ x: '-100%' }}
-        transition={{ delay: 2, duration: 0.5 }}
-      >
-        <div className="text-center p-4">
-          <div className="w-16 h-16 border-2 border-emerald-500 rounded-xl mx-auto mb-3 flex items-center justify-center">
-            <ScanLine className="w-8 h-8 text-emerald-500/50" />
-          </div>
-          <p className="text-stone-400 text-xs">Camera Scanner</p>
-        </div>
-      </motion.div>
+      {/* Swipe indicator */}
+      <div className="flex items-center justify-center mt-6">
+        <motion.div 
+          className="flex items-center gap-2 text-emerald-400"
+          animate={{ x: [-8, 8, -8] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-xs">Swipe to check in</span>
+          <ChevronRight className="w-4 h-4" />
+        </motion.div>
+      </div>
     </div>
   );
 }
@@ -645,7 +671,7 @@ function MemberSwipeToScanScreen() {
 function MemberScanningScreen() {
   return (
     <div className="h-full bg-stone-900 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
@@ -653,7 +679,7 @@ function MemberScanningScreen() {
         </div>
       </div>
       
-      {/* Scanning frame with QR code */}
+      {/* Scanning frame */}
       <div className="relative w-24 sm:w-28 h-24 sm:h-28">
         <motion.div 
           className="absolute inset-0 border-2 border-emerald-500 rounded-xl"
@@ -678,7 +704,7 @@ function MemberScanningScreen() {
 function MemberSuccessScreen() {
   return (
     <div className="h-full bg-stone-900 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
@@ -713,34 +739,32 @@ function MemberSwipeToPayScreen() {
       </div>
       
       <p className="text-stone-200 text-xs font-medium mb-1">Welcome, Sarah!</p>
-      <p className="text-stone-500 text-[10px] mb-3">Membership active</p>
+      <p className="text-stone-500 text-[10px] mb-4">Membership active</p>
       
-      {/* Main content with swipe hint */}
-      <div className="flex-1 flex flex-col items-center justify-center mt-8">
-        {/* Swipe indicator */}
-        <motion.div 
-          className="flex items-center gap-2 text-emerald-400"
-          animate={{ x: [10, -10, 10] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <span className="text-xs font-medium">Swipe to pay</span>
-          <ChevronLeft className="w-5 h-5" />
-        </motion.div>
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="bg-stone-800 rounded-lg p-3 text-center border border-stone-700">
+          <QRCodeIcon className="w-5 h-5 text-stone-500 mx-auto mb-1" />
+          <span className="text-stone-500 text-[10px]">Check In</span>
+        </div>
+        <div className="bg-stone-800 rounded-lg p-3 text-center border border-stone-700">
+          <CreditCard className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+          <span className="text-stone-300 text-[10px]">Pay</span>
+        </div>
       </div>
       
-      {/* Simulated panel sliding in from right */}
-      <motion.div
-        className="absolute top-0 right-0 w-3/4 h-full bg-stone-950 border-l border-stone-800 flex items-center justify-center"
-        initial={{ x: '100%' }}
-        animate={{ x: '100%' }}
-      >
-        <div className="text-center p-4">
-          <div className="w-20 h-20 bg-white rounded-xl mx-auto mb-3 flex items-center justify-center">
-            <QRCodeDisplay size="small" dark />
-          </div>
-          <p className="text-stone-400 text-xs">Payment QR</p>
-        </div>
-      </motion.div>
+      {/* Swipe indicator */}
+      <div className="flex items-center justify-center mt-6">
+        <motion.div 
+          className="flex items-center gap-2 text-emerald-400"
+          animate={{ x: [8, -8, 8] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="text-xs">Swipe to pay</span>
+          <ChevronLeft className="w-4 h-4" />
+        </motion.div>
+      </div>
     </div>
   );
 }
@@ -748,7 +772,7 @@ function MemberSwipeToPayScreen() {
 function MemberQRScreen() {
   return (
     <div className="h-full bg-stone-900 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
@@ -775,7 +799,7 @@ function MemberQRScreen() {
 function MemberPaymentSuccessScreen() {
   return (
     <div className="h-full bg-stone-900 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
@@ -801,7 +825,7 @@ function MemberPaymentSuccessScreen() {
 function MemberHomeScreen() {
   return (
     <div className="h-full bg-stone-900 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
@@ -834,7 +858,7 @@ function MemberHomeScreen() {
 function MemberNewSessionScreen() {
   return (
     <div className="h-full bg-stone-900 p-3 relative">
-      {/* Header with logo and avatar with notification */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span className="font-display text-emerald-500 text-sm">gymsense</span>
         <div className="relative">
@@ -874,6 +898,8 @@ function MemberNewSessionScreen() {
 
 function ProScreen({ phase }: { phase: string }) {
   switch (phase) {
+    case 'dashboard':
+      return <ProDashboardScreen />;
     case 'waiting':
       return <ProWaitingScreen />;
     case 'new-checkin':
@@ -893,10 +919,79 @@ function ProScreen({ phase }: { phase: string }) {
   }
 }
 
+function ProDashboardScreen() {
+  return (
+    <div className="h-full bg-stone-50 p-3 relative">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-display text-emerald-600 text-sm">gymsense</span>
+        <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
+          <User className="w-3 h-3 text-stone-500" />
+        </div>
+      </div>
+      
+      <p className="text-stone-800 text-xs font-medium mb-3">Dashboard</p>
+      
+      {/* 2x2 Grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Revenue */}
+        <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-1 mb-1">
+            <TrendingUp className="w-3 h-3 text-emerald-600" />
+            <span className="text-stone-500 text-[8px]">Revenue</span>
+          </div>
+          <p className="text-stone-800 text-sm font-semibold">$2,450</p>
+          <p className="text-emerald-600 text-[8px]">+12% today</p>
+        </div>
+        
+        {/* Check-ins - Highlighted with tap animation */}
+        <motion.div 
+          className="bg-emerald-50 rounded-lg p-2 border-2 border-emerald-400 shadow-sm relative"
+          animate={{ scale: [1, 0.97, 1] }}
+          transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.8 }}
+        >
+          <div className="flex items-center gap-1 mb-1">
+            <MapPinCheck className="w-3 h-3 text-emerald-600" />
+            <span className="text-emerald-700 text-[8px] font-medium">Check-ins</span>
+          </div>
+          <p className="text-stone-800 text-sm font-semibold">24</p>
+          <p className="text-emerald-600 text-[8px]">5 today</p>
+          {/* Tap indicator */}
+          <motion.div
+            className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full"
+            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        </motion.div>
+        
+        {/* Customers */}
+        <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-1 mb-1">
+            <Users className="w-3 h-3 text-stone-500" />
+            <span className="text-stone-500 text-[8px]">Customers</span>
+          </div>
+          <p className="text-stone-800 text-sm font-semibold">156</p>
+          <p className="text-stone-500 text-[8px]">Active members</p>
+        </div>
+        
+        {/* Training */}
+        <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-1 mb-1">
+            <Dumbbell className="w-3 h-3 text-stone-500" />
+            <span className="text-stone-500 text-[8px]">Training</span>
+          </div>
+          <p className="text-stone-800 text-sm font-semibold">8</p>
+          <p className="text-stone-500 text-[8px]">Sessions today</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProWaitingScreen() {
   return (
     <div className="h-full bg-stone-50 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -906,7 +1001,6 @@ function ProWaitingScreen() {
       
       <p className="text-stone-800 text-[10px] sm:text-xs font-medium mb-2">Today&apos;s Check-ins</p>
       
-      {/* Cards in reverse order (most recent first) with shadows */}
       <div className="space-y-1">
         <CheckInRow name="David K." time="8:45 AM" />
         <CheckInRow name="Jessica L." time="8:32 AM" />
@@ -921,7 +1015,7 @@ function ProWaitingScreen() {
 function ProNewCheckinScreen() {
   return (
     <div className="h-full bg-stone-50 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -931,7 +1025,6 @@ function ProNewCheckinScreen() {
       
       <p className="text-stone-800 text-[10px] sm:text-xs font-medium mb-2">Today&apos;s Check-ins</p>
       
-      {/* Sarah's card at top with pop animation, pushing others down */}
       <div className="space-y-1">
         <motion.div 
           className="bg-emerald-100 border border-emerald-400 rounded-lg p-1.5 flex items-center gap-1.5 shadow-md"
@@ -956,40 +1049,19 @@ function ProNewCheckinScreen() {
           </motion.div>
         </motion.div>
         
-        {/* Other cards pushed down */}
-        <motion.div
-          initial={{ y: -10 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div initial={{ y: -10 }} animate={{ y: 0 }} transition={{ delay: 0.1 }}>
           <CheckInRow name="David K." time="8:45 AM" />
         </motion.div>
-        <motion.div
-          initial={{ y: -10 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
+        <motion.div initial={{ y: -10 }} animate={{ y: 0 }} transition={{ delay: 0.15 }}>
           <CheckInRow name="Jessica L." time="8:32 AM" />
         </motion.div>
-        <motion.div
-          initial={{ y: -10 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{ y: -10 }} animate={{ y: 0 }} transition={{ delay: 0.2 }}>
           <CheckInRow name="Mike R." time="8:15 AM" />
         </motion.div>
-        <motion.div
-          initial={{ y: -10 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.25 }}
-        >
+        <motion.div initial={{ y: -10 }} animate={{ y: 0 }} transition={{ delay: 0.25 }}>
           <CheckInRow name="Amanda T." time="7:58 AM" />
         </motion.div>
-        <motion.div
-          initial={{ y: -10 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.div initial={{ y: -10 }} animate={{ y: 0 }} transition={{ delay: 0.3 }}>
           <CheckInRow name="Chris P." time="7:42 AM" />
         </motion.div>
       </div>
@@ -1014,7 +1086,7 @@ function CheckInRow({ name, time }: { name: string; time: string }) {
 function ProCheckoutScreen() {
   return (
     <div className="h-full bg-stone-50 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -1037,7 +1109,7 @@ function ProCheckoutScreen() {
         </div>
       </div>
       
-      {/* Cart item */}
+      {/* Cart */}
       <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm mb-2">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-4 h-4 text-stone-400" />
@@ -1056,7 +1128,7 @@ function ProCheckoutScreen() {
         </div>
       </div>
       
-      {/* Scan button with tap animation */}
+      {/* Scan button */}
       <motion.div 
         className="bg-emerald-600 rounded-lg py-2.5 text-center shadow-sm flex items-center justify-center gap-2"
         animate={{ scale: [1, 0.97, 1] }}
@@ -1072,7 +1144,7 @@ function ProCheckoutScreen() {
 function ProScanningScreen() {
   return (
     <div className="h-full bg-stone-100 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -1093,7 +1165,6 @@ function ProScanningScreen() {
           animate={{ top: ['10%', '85%', '10%'] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* QR code visible inside */}
         <div className="absolute inset-0 flex items-center justify-center p-3">
           <QRCodeDisplay size="small" dark />
         </div>
@@ -1112,7 +1183,7 @@ function ProScanningScreen() {
 function ProPaymentSuccessScreen() {
   return (
     <div className="h-full bg-stone-50 flex flex-col items-center justify-center p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -1138,7 +1209,7 @@ function ProPaymentSuccessScreen() {
 function ProSchedulingScreen() {
   return (
     <div className="h-full bg-stone-50 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
@@ -1184,7 +1255,7 @@ function ProSchedulingScreen() {
 function ProScheduledScreen() {
   return (
     <div className="h-full bg-stone-50 p-3 relative">
-      {/* Header with logo and avatar */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="font-display text-emerald-600 text-sm">gymsense</span>
         <div className="w-6 h-6 rounded-full bg-stone-300 flex items-center justify-center">
