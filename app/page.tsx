@@ -176,16 +176,12 @@ export default function Home() {
           <h3 className="text-stone-500 uppercase tracking-wider text-sm font-semibold mb-4">
             The Problem
           </h3>
-          <p className="text-2xl md:text-3xl text-stone-300 mb-8 leading-relaxed">
-            Gym management software hasn&apos;t evolved in a decade. 
-            Clunky interfaces. Frustrated members. Missed revenue.
+          <p className="text-xl md:text-2xl text-stone-300 mb-6 leading-relaxed">
+            Gym management software hasn&apos;t evolved in over a decade. Owners are overpaying for bloated apps with clunky interfaces, archaic business reporting masked as &quot;AI-powered insights&quot;, and annoying calls with &quot;engagement&quot; representatives just to add a new product for sale.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 text-stone-500">
-            <span className="px-4 py-2 bg-stone-800 rounded-full text-sm">Paper sign-in sheets</span>
-            <span className="px-4 py-2 bg-stone-800 rounded-full text-sm">Outdated apps</span>
-            <span className="px-4 py-2 bg-stone-800 rounded-full text-sm">Manual billing</span>
-            <span className="px-4 py-2 bg-stone-800 rounded-full text-sm">No member app</span>
-          </div>
+          <p className="text-xl md:text-2xl text-emerald-400 leading-relaxed font-medium">
+            Ditch the computer/iPad-based check-ins, hardware-required in-person payments, and hidden payment processing fees.
+          </p>
         </div>
       </section>
 
