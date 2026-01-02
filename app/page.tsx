@@ -104,7 +104,7 @@ export default function Home() {
         setStoryIndex(0);
         setStepIndex(0);
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [storyIndex, stepIndex, story.steps.length, isPlaying]);
@@ -192,7 +192,7 @@ export default function Home() {
           </div>
 
           {/* Story Tabs */}
-          <div className="flex justify-center gap-2 mb-6 flex-wrap">
+          <div className="flex justify-center gap-2 mb-4 flex-wrap">
             {STORIES.map((s, i) => (
               <button
                 key={s.id}
@@ -206,6 +206,22 @@ export default function Home() {
                 {s.title}
               </button>
             ))}
+          </div>
+
+          {/* Narrative - Above Phones */}
+          <div className="text-center mb-6">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={`narrative-${storyIndex}-${stepIndex}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-stone-300 text-sm sm:text-base md:text-lg max-w-md mx-auto"
+              >
+                {step.narrative}
+              </motion.p>
+            </AnimatePresence>
           </div>
 
           {/* Phone Display */}
@@ -275,24 +291,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Narrative */}
-            <div className="mt-6 text-center">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={`narrative-${storyIndex}-${stepIndex}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-stone-300 text-sm sm:text-base md:text-lg max-w-md mx-auto"
-                >
-                  {step.narrative}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-
             {/* Navigation */}
-            <div className="flex items-center justify-center gap-4 mt-4">
+            <div className="flex items-center justify-center gap-4 mt-6">
               <button 
                 onClick={goPrev}
                 className="p-2 rounded-full bg-stone-800 text-stone-400 hover:bg-stone-700 transition-colors"
