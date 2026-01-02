@@ -96,37 +96,31 @@ export default function Home() {
           </h2>
           
           {/* Subheadline */}
-          <p className="text-base md:text-lg text-stone-400 mb-4 max-w-2xl mx-auto animate-fade-in-up delay-200">
+          <p className="text-base md:text-lg text-stone-400 mb-6 max-w-2xl mx-auto animate-fade-in-up delay-200">
             Modern, mobile-first software for gym owners and their members. 
             Instant QR scanning for check-in and in-person payments. 
             Automated billing for memberships. Real-time financial insights.
           </p>
           
-          {/* Migration pitch */}
-          <p className="text-sm md:text-base text-stone-500 mb-8 max-w-xl mx-auto animate-fade-in-up delay-200">
-            Migrate from your current system in less than a day.{' '}
-            <span className="text-emerald-400">Find out why gyms are choosing to switch to gymsense.</span>
-          </p>
+          {/* Migration pitch - larger, two lines */}
+          <div className="text-lg md:text-2xl mb-6 max-w-2xl mx-auto animate-fade-in-up delay-200">
+            <p className="text-stone-300 mb-1">Migrate from your current system in less than a day.</p>
+            <p className="text-emerald-400">Find out why gyms are choosing to switch to gymsense.</p>
+          </div>
           
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-300">
-            <a 
-              href="#features" 
-              className="group flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-600/25"
-            >
-              See what&apos;s possible
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
+          {/* CTA Button */}
+          <div className="animate-fade-in-up delay-300">
             <a 
               href="#waitlist" 
-              className="px-8 py-4 border border-stone-700 hover:border-stone-500 text-stone-300 hover:text-stone-100 font-semibold rounded-xl transition-all duration-200"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-600/25"
             >
-              Join the waitlist
+              Join the Waitlist
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
           </div>
           
           {/* Status Badge */}
-          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900 border border-stone-800 text-stone-400 text-sm animate-fade-in-up delay-400">
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900 border border-stone-800 text-stone-400 text-sm animate-fade-in-up delay-400">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
