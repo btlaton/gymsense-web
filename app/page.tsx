@@ -8,7 +8,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { 
   Calendar, 
   Users, 
@@ -19,35 +18,31 @@ import {
   Zap,
   ArrowRight,
   CheckCircle2,
-  ScanLine
+  ScanLine,
+  QrCode,
+  Clock,
+  DollarSign,
+  TrendingUp,
+  ShoppingBag,
+  ChevronRight
 } from 'lucide-react';
-
-// Screenshot paths
-const PRO_SCREENSHOTS = [
-  '/screenshots/pro-schedule-screen.png',
-  '/screenshots/pro-sale-screen.png',
-  '/screenshots/pro-financials-insights-screen.png',
-];
-
-const MEMBER_SCREENSHOTS = [
-  '/screenshots/member-home-screen.png',
-  '/screenshots/member-qr-screen.png',
-  'camera-mock', // Special case: CSS-based camera view
-];
 
 export default function Home() {
   const [proIndex, setProIndex] = useState(0);
   const [memberIndex, setMemberIndex] = useState(0);
 
-  // Auto-cycle screenshots
+  const proScreens = 3;
+  const memberScreens = 3;
+
+  // Auto-cycle screens
   useEffect(() => {
     const proTimer = setInterval(() => {
-      setProIndex((i) => (i + 1) % PRO_SCREENSHOTS.length);
+      setProIndex((i) => (i + 1) % proScreens);
     }, 4000);
 
     const memberTimer = setInterval(() => {
-      setMemberIndex((i) => (i + 1) % MEMBER_SCREENSHOTS.length);
-    }, 4500); // Slightly offset timing
+      setMemberIndex((i) => (i + 1) % memberScreens);
+    }, 4500);
 
     return () => {
       clearInterval(proTimer);
@@ -119,12 +114,9 @@ export default function Home() {
               sublabel="For gym owners & staff"
               variant="primary"
               currentIndex={proIndex}
-              totalScreens={PRO_SCREENSHOTS.length}
+              totalScreens={proScreens}
             >
-              <ScreenshotCarousel 
-                screenshots={PRO_SCREENSHOTS} 
-                currentIndex={proIndex} 
-              />
+              <ProAppScreen index={proIndex} />
             </PhoneMockup>
             
             {/* Member App Phone */}
@@ -133,12 +125,9 @@ export default function Home() {
               sublabel="For gym members"
               variant="secondary"
               currentIndex={memberIndex}
-              totalScreens={MEMBER_SCREENSHOTS.length}
+              totalScreens={memberScreens}
             >
-              <ScreenshotCarousel 
-                screenshots={MEMBER_SCREENSHOTS} 
-                currentIndex={memberIndex} 
-              />
+              <MemberAppScreen index={memberIndex} />
             </PhoneMockup>
           </div>
         </div>
@@ -328,43 +317,269 @@ export default function Home() {
   );
 }
 
-// Screenshot Carousel Component
-function ScreenshotCarousel({ 
-  screenshots, 
-  currentIndex 
-}: { 
-  screenshots: string[];
-  currentIndex: number;
-}) {
-  const currentScreen = screenshots[currentIndex];
-  
-  // Special case: CSS camera mock
-  if (currentScreen === 'camera-mock') {
-    return <CameraMockScreen />;
-  }
+// Pro App Screen - Stylized mockups
+function ProAppScreen({ index }: { index: number }) {
+  const screens = [
+    <ScheduleScreen key="schedule" />,
+    <SaleScreen key="sale" />,
+    <InsightsScreen key="insights" />,
+  ];
   
   return (
-    <div className="relative w-full h-full">
-      <Image
-        src={currentScreen}
-        alt="App screenshot"
-        fill
-        className="object-cover object-top transition-opacity duration-500"
-        priority={currentIndex === 0}
-      />
+    <div className="h-full w-full transition-opacity duration-500">
+      {screens[index]}
     </div>
   );
 }
 
-// CSS-based Camera Mock Screen
+// Member App Screen - Stylized mockups
+function MemberAppScreen({ index }: { index: number }) {
+  const screens = [
+    <MemberHomeScreen key="home" />,
+    <MemberQRScreen key="qr" />,
+    <CameraMockScreen key="camera" />,
+  ];
+  
+  return (
+    <div className="h-full w-full transition-opacity duration-500">
+      {screens[index]}
+    </div>
+  );
+}
+
+// ===== PRO APP SCREENS =====
+
+function ScheduleScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
+      </div>
+      
+      {/* Day headers */}
+      <div className="flex gap-1 mb-2">
+        {['Mon', 'Tue', 'Wed'].map((day, i) => (
+          <div key={day} className={`flex-1 text-center py-1 rounded text-xs ${i === 0 ? 'bg-emerald-600/20 text-emerald-400' : 'text-stone-500'}`}>
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar grid */}
+      <div className="flex gap-1 h-[calc(100%-80px)]">
+        {[0, 1, 2].map((col) => (
+          <div key={col} className="flex-1 space-y-1">
+            {[1, 2, 3].map((row) => (
+              <div 
+                key={row}
+                className={`rounded-md p-1.5 ${
+                  (col === 0 && row === 1) || (col === 1 && row === 2) || (col === 2 && row === 1)
+                    ? 'bg-emerald-600/30 border-l-2 border-emerald-500'
+                    : 'bg-stone-800/50'
+                }`}
+                style={{ height: `${20 + row * 8}%` }}
+              >
+                {((col === 0 && row === 1) || (col === 1 && row === 2) || (col === 2 && row === 1)) && (
+                  <>
+                    <div className="w-full h-1.5 bg-stone-600 rounded mb-1" />
+                    <div className="w-2/3 h-1 bg-stone-700 rounded" />
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SaleScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
+      </div>
+      
+      {/* Customer card */}
+      <div className="bg-stone-800 rounded-xl p-3 mb-3 border border-stone-700">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-emerald-600/30 flex items-center justify-center">
+            <Users className="w-5 h-5 text-emerald-500" />
+          </div>
+          <div className="flex-1">
+            <div className="w-20 h-2 bg-stone-600 rounded mb-1" />
+            <div className="w-14 h-1.5 bg-stone-700 rounded" />
+          </div>
+          <ChevronRight className="w-4 h-4 text-stone-500" />
+        </div>
+      </div>
+      
+      {/* Cart items */}
+      <div className="text-stone-500 text-xs mb-2">Cart</div>
+      <div className="space-y-2 mb-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="flex items-center justify-between bg-stone-800/50 rounded-lg p-2">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-stone-500" />
+              <div className="w-16 h-2 bg-stone-600 rounded" />
+            </div>
+            <div className="w-10 h-2 bg-stone-600 rounded" />
+          </div>
+        ))}
+      </div>
+      
+      {/* Total */}
+      <div className="border-t border-stone-700 pt-3">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-stone-400 text-xs">Total</span>
+          <span className="text-emerald-400 font-semibold text-sm">$XX.XX</span>
+        </div>
+        <div className="w-full py-2 bg-emerald-600 rounded-lg text-center text-white text-xs font-medium">
+          Charge Card
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InsightsScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
+      </div>
+      
+      {/* Revenue card */}
+      <div className="bg-stone-800 rounded-xl p-3 mb-3 border border-stone-700">
+        <div className="flex items-center gap-2 mb-2">
+          <DollarSign className="w-4 h-4 text-emerald-500" />
+          <span className="text-stone-400 text-xs">This Month</span>
+        </div>
+        <div className="text-xl font-bold text-stone-50 mb-1">$X,XXX</div>
+        <div className="flex items-center gap-1 text-emerald-400 text-xs">
+          <TrendingUp className="w-3 h-3" />
+          <span>+12%</span>
+        </div>
+      </div>
+      
+      {/* Mini chart placeholder */}
+      <div className="bg-stone-800/50 rounded-xl p-3 mb-3">
+        <div className="flex items-end justify-between h-16 gap-1">
+          {[40, 65, 45, 80, 60, 90, 75].map((h, i) => (
+            <div 
+              key={i} 
+              className="flex-1 bg-emerald-600/40 rounded-t"
+              style={{ height: `${h}%` }}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-stone-800/50 rounded-lg p-2">
+          <div className="text-stone-500 text-xs mb-1">Sessions</div>
+          <div className="text-stone-200 font-semibold text-sm">XX</div>
+        </div>
+        <div className="bg-stone-800/50 rounded-lg p-2">
+          <div className="text-stone-500 text-xs mb-1">Check-ins</div>
+          <div className="text-stone-200 font-semibold text-sm">XXX</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== MEMBER APP SCREENS =====
+
+function MemberHomeScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
+      </div>
+      
+      {/* Welcome */}
+      <div className="mb-4">
+        <div className="text-stone-200 font-medium text-sm mb-0.5">Welcome back!</div>
+        <div className="text-stone-500 text-xs">Ready for your workout?</div>
+      </div>
+      
+      {/* QR Code area */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-white/10">
+          <QrCode className="w-16 h-16 text-stone-900" />
+        </div>
+        <div className="text-stone-400 text-xs">Tap to check in</div>
+      </div>
+      
+      {/* Upcoming session */}
+      <div className="bg-stone-800 rounded-xl p-2.5 border border-stone-700">
+        <div className="text-stone-500 text-xs mb-1.5">Next Session</div>
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-emerald-500" />
+          <div className="flex-1">
+            <div className="w-20 h-2 bg-stone-600 rounded mb-1" />
+            <div className="w-14 h-1.5 bg-stone-700 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberQRScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
+      </div>
+      
+      {/* Scan to pay header */}
+      <div className="text-center mb-4">
+        <div className="text-stone-200 font-medium text-sm">Scan to Pay</div>
+        <div className="text-stone-500 text-xs">Show this to complete purchase</div>
+      </div>
+      
+      {/* Large QR */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-white/10 relative">
+          <QrCode className="w-28 h-28 text-stone-900" />
+          {/* Animated corner pulse */}
+          <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-500 rounded-tl animate-pulse" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-500 rounded-tr animate-pulse" />
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-500 rounded-bl animate-pulse" />
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-500 rounded-br animate-pulse" />
+        </div>
+      </div>
+      
+      {/* Timer */}
+      <div className="text-center text-stone-500 text-xs">
+        Expires in 4:59
+      </div>
+    </div>
+  );
+}
+
 function CameraMockScreen() {
   return (
     <div className="relative w-full h-full bg-stone-950 flex flex-col items-center justify-center">
       {/* Simulated camera viewfinder background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-stone-900/50 to-stone-950/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-stone-800/30 via-stone-900/50 to-stone-950/80" />
       
       {/* Scanning frame */}
-      <div className="relative w-28 h-28 md:w-36 md:h-36">
+      <div className="relative w-28 h-28">
         {/* Corner brackets */}
         <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
         <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
@@ -372,30 +587,31 @@ function CameraMockScreen() {
         <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
         
         {/* Scanning line animation */}
-        <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/50 animate-pulse" />
+        <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 animate-pulse" />
         
         {/* Center icon */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <ScanLine className="w-8 h-8 text-emerald-500/30" />
+          <ScanLine className="w-8 h-8 text-emerald-500/40" />
         </div>
       </div>
       
       {/* Instruction text */}
-      <p className="mt-6 text-stone-400 text-xs text-center px-4">
-        Point camera at member&apos;s QR code
+      <p className="mt-4 text-stone-400 text-xs text-center px-4">
+        Point at member&apos;s QR code
       </p>
       
-      {/* Bottom bar mock */}
+      {/* Bottom status */}
       <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-        <div className="px-4 py-2 bg-stone-800/80 rounded-full">
-          <span className="text-stone-300 text-xs">Scanning...</span>
+        <div className="px-3 py-1.5 bg-stone-800/90 rounded-full border border-stone-700">
+          <span className="text-emerald-400 text-xs">● Scanning...</span>
         </div>
       </div>
     </div>
   );
 }
 
-// Phone Mockup Component
+// ===== SHARED COMPONENTS =====
+
 function PhoneMockup({ 
   children, 
   label, 
@@ -447,10 +663,10 @@ function PhoneMockup({
           {Array.from({ length: totalScreens }).map((_, i) => (
             <div 
               key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === currentIndex 
                   ? (isPrimary ? 'bg-emerald-500 w-4' : 'bg-stone-400 w-4')
-                  : 'bg-stone-700'
+                  : 'bg-stone-700 w-1.5'
               }`}
             />
           ))}
@@ -460,7 +676,6 @@ function PhoneMockup({
   );
 }
 
-// Feature Card Component
 function FeatureCard({ 
   icon, 
   title, 
@@ -481,7 +696,6 @@ function FeatureCard({
   );
 }
 
-// List Item Component
 function ListItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-3 text-stone-300">
