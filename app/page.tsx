@@ -91,14 +91,21 @@ export default function Home() {
           
           {/* Headline */}
           <h2 className="text-2xl md:text-4xl font-semibold text-stone-50 mb-4 animate-fade-in-up delay-100">
-            The gym management app your members{' '}
+            The gym management app you{' '}
             <span className="text-emerald-400">actually want</span> to use
           </h2>
           
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-stone-400 mb-8 max-w-2xl mx-auto animate-fade-in-up delay-200">
+          <p className="text-base md:text-lg text-stone-400 mb-4 max-w-2xl mx-auto animate-fade-in-up delay-200">
             Modern, mobile-first software for gym owners and their members. 
-            Beautiful design. Seamless payments. Real-time everything.
+            Instant QR scanning for check-in and in-person payments. 
+            Automated billing for memberships. Real-time financial insights.
+          </p>
+          
+          {/* Migration pitch */}
+          <p className="text-sm md:text-base text-stone-500 mb-8 max-w-xl mx-auto animate-fade-in-up delay-200">
+            Migrate from your current system in less than a day.{' '}
+            <span className="text-emerald-400">Find out why gyms are choosing to switch to gymsense.</span>
           </p>
           
           {/* CTA Buttons */}
