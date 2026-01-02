@@ -130,15 +130,25 @@ export default function Home() {
         </div>
         
         {/* Phone Mockups - Synchronized Scenes */}
-        <div className="relative z-10 mt-16 w-full max-w-5xl mx-auto animate-fade-in-up delay-500">
-          {/* Scene Label */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900/80 backdrop-blur border border-stone-800 rounded-full">
-              <span className="text-emerald-400 font-medium text-sm">{currentScene.label}</span>
-            </div>
+        <div className="relative z-10 mt-12 sm:mt-16 w-full max-w-5xl mx-auto animate-fade-in-up delay-500">
+          {/* Scene selector tabs - above phones */}
+          <div className="flex justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {SCENES.map((scene, i) => (
+              <button
+                key={scene.name}
+                onClick={() => { setSceneIndex(i); setPhaseIndex(0); }}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                  i === sceneIndex 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+                }`}
+              >
+                {scene.label}
+              </button>
+            ))}
           </div>
           
-          <div className="flex justify-center items-end gap-2 sm:gap-4 md:gap-8">
+          <div className="flex justify-center items-end gap-3 sm:gap-4 md:gap-8">
             {/* Member App Phone */}
             <PhoneMockup 
               label="Member App"
@@ -156,23 +166,6 @@ export default function Home() {
             >
               <ProAppScreen scene={currentScene.name} phase={currentPhase} />
             </PhoneMockup>
-          </div>
-          
-          {/* Scene indicators */}
-          <div className="flex justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
-            {SCENES.map((scene, i) => (
-              <button
-                key={scene.name}
-                onClick={() => { setSceneIndex(i); setPhaseIndex(0); }}
-                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all ${
-                  i === sceneIndex 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
-                }`}
-              >
-                {scene.label}
-              </button>
-            ))}
           </div>
         </div>
         
@@ -590,31 +583,31 @@ function ProCheckInScreen({ phase }: { phase: string }) {
   const showNewCheckIn = phase === 'success' || phase === 'hold';
 
   return (
-    <div className="h-full bg-stone-900 p-3 pt-8">
+    <div className="h-full bg-stone-50 p-3 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display text-emerald-500 text-base">gymsense</span>
-        <div className="w-7 h-7 rounded-full bg-stone-700" />
+        <span className="font-display text-emerald-600 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-300" />
       </div>
       
-      <div className="text-stone-200 font-medium text-sm mb-3">Today&apos;s Check-ins</div>
+      <div className="text-stone-800 font-medium text-sm mb-3">Today&apos;s Check-ins</div>
       
       {/* Check-in list */}
       <div className="space-y-2">
         {/* Existing check-ins */}
-        <CheckInRow name="Mike R." time="8:15 AM" />
-        <CheckInRow name="Jessica L." time="8:32 AM" />
-        <CheckInRow name="David K." time="8:45 AM" />
+        <CheckInRowLight name="Mike R." time="8:15 AM" />
+        <CheckInRowLight name="Jessica L." time="8:32 AM" />
+        <CheckInRowLight name="David K." time="8:45 AM" />
         
         {/* New check-in - animated */}
         <div className={`transition-all duration-500 overflow-hidden ${showNewCheckIn ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="bg-emerald-600/20 border border-emerald-600/40 rounded-lg p-2.5 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-600/30 flex items-center justify-center">
-              <User className="w-4 h-4 text-emerald-400" />
+          <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2.5 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center">
+              <User className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <div className="text-stone-50 text-sm font-medium">Sarah M.</div>
-              <div className="text-emerald-400 text-xs">Just now</div>
+              <div className="text-stone-900 text-sm font-medium">Sarah M.</div>
+              <div className="text-emerald-600 text-xs">Just now</div>
             </div>
             <div className="w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
               <Check className="w-3 h-3 text-white" />
@@ -626,12 +619,12 @@ function ProCheckInScreen({ phase }: { phase: string }) {
       {/* Stats at bottom */}
       <div className="absolute bottom-4 left-3 right-3">
         <div className="flex gap-2">
-          <div className="flex-1 bg-stone-800/50 rounded-lg p-2 text-center">
-            <div className="text-stone-200 font-semibold text-sm">{showNewCheckIn ? '4' : '3'}</div>
+          <div className="flex-1 bg-stone-200 rounded-lg p-2 text-center">
+            <div className="text-stone-800 font-semibold text-sm">{showNewCheckIn ? '4' : '3'}</div>
             <div className="text-stone-500 text-xs">Today</div>
           </div>
-          <div className="flex-1 bg-stone-800/50 rounded-lg p-2 text-center">
-            <div className="text-stone-200 font-semibold text-sm">28</div>
+          <div className="flex-1 bg-stone-200 rounded-lg p-2 text-center">
+            <div className="text-stone-800 font-semibold text-sm">28</div>
             <div className="text-stone-500 text-xs">This Week</div>
           </div>
         </div>
@@ -654,13 +647,27 @@ function CheckInRow({ name, time }: { name: string; time: string }) {
   );
 }
 
+function CheckInRowLight({ name, time }: { name: string; time: string }) {
+  return (
+    <div className="bg-white border border-stone-200 rounded-lg p-2.5 flex items-center gap-2 shadow-sm">
+      <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center">
+        <User className="w-4 h-4 text-stone-500" />
+      </div>
+      <div className="flex-1">
+        <div className="text-stone-800 text-sm">{name}</div>
+        <div className="text-stone-500 text-xs">{time}</div>
+      </div>
+    </div>
+  );
+}
+
 function ProPaymentScreen({ phase }: { phase: string }) {
   const isScanning = phase === 'scanning';
   const isSuccess = phase === 'success' || phase === 'hold';
 
   return (
     <div className="h-full w-full relative">
-      {/* Camera/Scanning view */}
+      {/* Camera/Scanning view - keep dark for camera effect */}
       <div className={`absolute inset-0 bg-stone-950 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-0' : 'opacity-100'}`}>
         {/* Simulated camera background */}
         <div className="absolute inset-0 bg-gradient-to-b from-stone-800/40 via-stone-900/60 to-stone-950/80" />
@@ -701,11 +708,11 @@ function ProPaymentScreen({ phase }: { phase: string }) {
         </div>
       </div>
       
-      {/* Success overlay */}
-      <div className={`absolute inset-0 bg-stone-900 flex flex-col transition-opacity duration-500 ${isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Success overlay - LIGHT THEME */}
+      <div className={`absolute inset-0 bg-stone-50 flex flex-col transition-opacity duration-500 ${isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {/* Header */}
         <div className="pt-8 px-3 text-center">
-          <span className="font-display text-emerald-500 text-base">gymsense</span>
+          <span className="font-display text-emerald-600 text-base">gymsense</span>
         </div>
         
         {/* Success content */}
@@ -713,18 +720,18 @@ function ProPaymentScreen({ phase }: { phase: string }) {
           <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mb-4 animate-scale-in">
             <Check className="w-8 h-8 text-white" />
           </div>
-          <div className="text-stone-50 font-semibold text-lg mb-1">Payment Complete!</div>
-          <div className="text-stone-400 text-xs mb-4">Charged to Sarah M.</div>
+          <div className="text-stone-900 font-semibold text-lg mb-1">Payment Complete!</div>
+          <div className="text-stone-500 text-xs mb-4">Charged to Sarah M.</div>
           
           {/* Order summary */}
-          <div className="w-full bg-stone-800 rounded-xl p-3 border border-stone-700">
+          <div className="w-full bg-white rounded-xl p-3 border border-stone-200 shadow-sm">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-stone-300 text-xs">5-Pack PT Sessions</span>
-              <span className="text-stone-300 text-xs">$45.00</span>
+              <span className="text-stone-700 text-xs">5-Pack PT Sessions</span>
+              <span className="text-stone-700 text-xs">$45.00</span>
             </div>
-            <div className="border-t border-stone-700 pt-2 flex justify-between items-center">
-              <span className="text-stone-400 text-xs">Total</span>
-              <span className="text-emerald-400 font-semibold">$45.00</span>
+            <div className="border-t border-stone-200 pt-2 flex justify-between items-center">
+              <span className="text-stone-500 text-xs">Total</span>
+              <span className="text-emerald-600 font-semibold">$45.00</span>
             </div>
           </div>
         </div>
@@ -742,31 +749,31 @@ function ProPaymentScreen({ phase }: { phase: string }) {
 
 function ProSessionScreen() {
   return (
-    <div className="h-full bg-stone-900 p-3 pt-8">
+    <div className="h-full bg-stone-50 p-3 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display text-emerald-500 text-base">gymsense</span>
-        <div className="w-7 h-7 rounded-full bg-stone-700" />
+        <span className="font-display text-emerald-600 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-300" />
       </div>
       
       {/* Session Detail Card */}
-      <div className="bg-stone-800 rounded-xl border border-stone-700 overflow-hidden">
+      <div className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
         {/* Header */}
-        <div className="bg-emerald-600/20 px-3 py-2 border-b border-stone-700">
-          <div className="text-emerald-400 text-xs font-medium">Tomorrow • 9:00 AM</div>
+        <div className="bg-emerald-100 px-3 py-2 border-b border-emerald-200">
+          <div className="text-emerald-700 text-xs font-medium">Tomorrow • 9:00 AM</div>
         </div>
         
         {/* Content */}
         <div className="p-3">
-          <div className="text-stone-50 font-medium mb-3">Personal Training</div>
+          <div className="text-stone-900 font-medium mb-3">Personal Training</div>
           
           {/* Client */}
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center">
-              <User className="w-5 h-5 text-stone-400" />
+            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+              <User className="w-5 h-5 text-stone-500" />
             </div>
             <div>
-              <div className="text-stone-200 text-sm font-medium">Sarah M.</div>
+              <div className="text-stone-800 text-sm font-medium">Sarah M.</div>
               <div className="text-stone-500 text-xs">Member since 2024</div>
             </div>
           </div>
@@ -775,15 +782,15 @@ function ProSessionScreen() {
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
               <span className="text-stone-500">Duration</span>
-              <span className="text-stone-300">60 min</span>
+              <span className="text-stone-700">60 min</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Trainer</span>
-              <span className="text-stone-300">Marcus</span>
+              <span className="text-stone-700">Marcus</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Sessions Left</span>
-              <span className="text-emerald-400">4 of 10</span>
+              <span className="text-emerald-600">4 of 10</span>
             </div>
           </div>
         </div>
@@ -791,7 +798,7 @@ function ProSessionScreen() {
       
       {/* Actions */}
       <div className="mt-3 flex gap-2">
-        <div className="flex-1 py-2 bg-stone-800 rounded-lg text-center text-stone-300 text-xs">
+        <div className="flex-1 py-2 bg-stone-200 rounded-lg text-center text-stone-700 text-xs">
           Reschedule
         </div>
         <div className="flex-1 py-2 bg-emerald-600 rounded-lg text-center text-white text-xs">
@@ -822,7 +829,7 @@ function PhoneMockup({
       {/* Phone frame */}
       <div className="relative">
         {/* Outer bezel */}
-        <div className="w-[140px] sm:w-[180px] md:w-[220px] h-[280px] sm:h-[360px] md:h-[440px] bg-stone-800 rounded-[1.75rem] sm:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl shadow-black/50">
+        <div className="w-[160px] sm:w-[190px] md:w-[220px] h-[320px] sm:h-[380px] md:h-[440px] bg-stone-800 rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl shadow-black/50">
           {/* Inner bezel */}
           <div className="w-full h-full bg-stone-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden relative">
             {/* Dynamic Island */}
