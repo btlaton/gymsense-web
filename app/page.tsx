@@ -393,13 +393,14 @@ function MemberCheckInScreen({ phase }: { phase: string }) {
         
         {/* Scanning frame */}
         <div className="relative w-28 h-28">
-          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
-          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
-          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
-          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
+          {/* Animated corners */}
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg animate-corner-pulse" />
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg animate-corner-pulse" style={{ animationDelay: '0.25s' }} />
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg animate-corner-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg animate-corner-pulse" style={{ animationDelay: '0.75s' }} />
           
-          {/* Scanning line */}
-          <div className={`absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 ${phase === 'processing' ? 'animate-pulse' : ''}`} />
+          {/* Scanning line - moves up and down */}
+          <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-scan-line" />
           
           {/* QR icon in center */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -526,7 +527,7 @@ function MemberSessionScreen() {
       {/* Welcome */}
       <div className="mb-4">
         <div className="text-stone-200 font-medium text-sm mb-0.5">Welcome back, Sarah!</div>
-        <div className="text-stone-500 text-xs">Ready for your workout?</div>
+        <div className="text-stone-500 text-xs">Your upcoming sessions</div>
       </div>
       
       {/* Upcoming Session Card - Highlighted */}
@@ -539,12 +540,31 @@ function MemberSessionScreen() {
         <div className="text-stone-400 text-xs">with Marcus • 9:00 AM - 10:00 AM</div>
       </div>
       
-      {/* QR Code area */}
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-white/10">
-          <QrCode className="w-14 h-14 text-stone-900" />
+      {/* Session details */}
+      <div className="bg-stone-800/50 rounded-xl p-3 mb-3">
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between">
+            <span className="text-stone-500">Duration</span>
+            <span className="text-stone-300">60 min</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-stone-500">Location</span>
+            <span className="text-stone-300">The Atlas Gym</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-stone-500">Sessions Left</span>
+            <span className="text-emerald-400">4 of 10</span>
+          </div>
         </div>
-        <div className="text-stone-500 text-xs mt-2">Tap to check in</div>
+      </div>
+      
+      {/* Recent activity */}
+      <div className="text-stone-500 text-xs mb-2">Recent Activity</div>
+      <div className="space-y-2">
+        <div className="bg-stone-800/30 rounded-lg p-2 flex items-center gap-2">
+          <Check className="w-3 h-3 text-emerald-500" />
+          <span className="text-stone-400 text-xs">Completed session • Dec 28</span>
+        </div>
       </div>
     </div>
   );
@@ -651,13 +671,14 @@ function ProPaymentScreen({ phase }: { phase: string }) {
         
         {/* Scanning frame */}
         <div className="relative w-28 h-28">
-          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
-          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
-          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
-          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
+          {/* Animated corners */}
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg animate-corner-pulse" />
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg animate-corner-pulse" style={{ animationDelay: '0.25s' }} />
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg animate-corner-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg animate-corner-pulse" style={{ animationDelay: '0.75s' }} />
           
-          {/* Scanning line */}
-          <div className={`absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 ${isScanning ? 'animate-pulse' : ''}`} />
+          {/* Scanning line - moves up and down */}
+          <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-scan-line" />
           
           <div className="absolute inset-0 flex items-center justify-center">
             <ScanLine className="w-8 h-8 text-emerald-500/40" />
@@ -796,7 +817,7 @@ function PhoneMockup({
   const isPrimary = variant === 'primary';
   
   return (
-    <div className={`flex flex-col items-center ${isPrimary ? 'scale-100 md:scale-110' : 'scale-90 md:scale-100 opacity-90'}`}>
+    <div className="flex flex-col items-center">
       {/* Phone frame */}
       <div className="relative">
         {/* Outer bezel */}
