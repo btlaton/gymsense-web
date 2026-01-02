@@ -226,8 +226,8 @@ export default function Home() {
             onMouseLeave={() => setIsPlaying(true)}
             onTouchStart={() => setIsPlaying(false)}
           >
-            {/* Phones Container - No gap, side by side */}
-            <div className="flex justify-center items-start gap-2 sm:gap-3">
+            {/* Phones Container */}
+            <div className="flex justify-center items-start gap-4">
               {/* Member Phone */}
               <div className="flex flex-col items-center">
                 <PhoneMockup>
@@ -245,7 +245,7 @@ export default function Home() {
                   </AnimatePresence>
                 </PhoneMockup>
                 <div className="mt-2 text-center">
-                  <div className="text-stone-300 font-medium text-xs sm:text-sm">Member App</div>
+                  <div className="text-emerald-400 font-medium text-xs sm:text-sm">Member App</div>
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export default function Home() {
                   </AnimatePresence>
                 </PhoneMockup>
                 <div className="mt-2 text-center">
-                  <div className="text-emerald-400 font-medium text-xs sm:text-sm">Pro App</div>
+                  <div className="text-stone-300 font-medium text-xs sm:text-sm">Pro App</div>
                 </div>
               </div>
             </div>
@@ -524,7 +524,7 @@ function MemberSuccessScreen() {
       </motion.div>
       
       <p className="mt-4 text-stone-50 font-medium text-sm sm:text-base">Checked In!</p>
-      <p className="mt-2 text-stone-200 text-xs sm:text-sm">Have a great workout, Sarah!</p>
+      <p className="mt-2 text-stone-200 text-xs sm:text-sm whitespace-nowrap">Have a great workout, Sarah!</p>
     </div>
   );
 }
@@ -692,6 +692,8 @@ function ProWaitingScreen() {
         <CheckInRow name="David K." time="8:45 AM" />
         <CheckInRow name="Jessica L." time="8:32 AM" />
         <CheckInRow name="Mike R." time="8:15 AM" />
+        <CheckInRow name="Amanda T." time="7:58 AM" />
+        <CheckInRow name="Chris P." time="7:42 AM" />
       </div>
     </div>
   );
@@ -756,6 +758,20 @@ function ProNewCheckinScreen() {
           transition={{ delay: 0.2 }}
         >
           <CheckInRow name="Mike R." time="8:15 AM" />
+        </motion.div>
+        <motion.div
+          initial={{ y: -10 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <CheckInRow name="Amanda T." time="7:58 AM" />
+        </motion.div>
+        <motion.div
+          initial={{ y: -10 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <CheckInRow name="Chris P." time="7:42 AM" />
         </motion.div>
       </div>
     </div>
