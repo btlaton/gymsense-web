@@ -22,10 +22,11 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPinCheck,
-  ShoppingCart,
   ScanLine,
   TrendingUp,
-  Dumbbell
+  Dumbbell,
+  Shirt,
+  Cookie
 } from 'lucide-react';
 
 // ===== STORY CONFIGURATION =====
@@ -38,12 +39,12 @@ const STORIES = [
     proTransitions: ['fade', 'fade', 'fade'],
     steps: [
       {
-        narrative: "Sarah opens the app. Marcus views his dashboard.",
+        narrative: "Sarah opens the app and swipes right to open the camera.",
         memberPhase: 'swipe-to-scan',
         proPhase: 'dashboard',
       },
       {
-        narrative: "Sarah swipes to scan the gym's QR code.",
+        narrative: "Sarah scans the QR code posted at the gym's front desk.",
         memberPhase: 'scanning',
         proPhase: 'waiting',
       },
@@ -61,17 +62,17 @@ const STORIES = [
     proTransitions: ['fade', 'fade', 'fade'],
     steps: [
       {
-        narrative: "Sarah is ready to pay. Marcus taps to scan her QR.",
+        narrative: "Sarah swipes left to reveal her unique QR code for payment.",
         memberPhase: 'swipe-to-pay',
         proPhase: 'checkout',
       },
       {
-        narrative: "Sarah shows her payment QR to the staff.",
+        narrative: "Staff member scans Sarah's QR code to accept payment.",
         memberPhase: 'qr-display',
         proPhase: 'scanning',
       },
       {
-        narrative: "Payment complete on both devices instantly.",
+        narrative: "Payment completes on both devices instantly.",
         memberPhase: 'payment-success',
         proPhase: 'payment-success',
       },
@@ -84,13 +85,13 @@ const STORIES = [
     proTransitions: ['fade', 'fade'],
     steps: [
       {
-        narrative: "Marcus schedules Sarah's next PT session.",
+        narrative: "Marcus schedules Sarah's next personal training session.",
         memberPhase: 'home',
         proPhase: 'scheduling',
       },
       {
         narrative: "Sarah's app instantly shows the new session.",
-        memberPhase: 'new-session',
+        memberPhase: 'session-booked',
         proPhase: 'scheduled',
       },
     ],
@@ -281,7 +282,7 @@ export default function Home() {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                       className="h-full"
                     >
                       <MemberScreen phase={step.memberPhase} />
@@ -303,7 +304,7 @@ export default function Home() {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                       className="h-full"
                     >
                       <ProScreen phase={step.proPhase} />
@@ -621,6 +622,8 @@ function MemberScreen({ phase }: { phase: string }) {
       return <MemberHomeScreen />;
     case 'new-session':
       return <MemberNewSessionScreen />;
+    case 'session-booked':
+      return <MemberSessionBookedScreen />;
     default:
       return <MemberHomeScreen />;
   }
@@ -655,12 +658,11 @@ function MemberSwipeToScanScreen() {
       {/* Swipe indicator */}
       <div className="flex items-center justify-center mt-6">
         <motion.div 
-          className="flex items-center gap-2 text-emerald-400"
+          className="flex items-center gap-1 text-emerald-400"
           animate={{ x: [-8, 8, -8] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-xs">Swipe to check in</span>
+          <span className="text-xs whitespace-nowrap">Swipe to check in</span>
           <ChevronRight className="w-4 h-4" />
         </motion.div>
       </div>
@@ -756,13 +758,12 @@ function MemberSwipeToPayScreen() {
       {/* Swipe indicator */}
       <div className="flex items-center justify-center mt-6">
         <motion.div 
-          className="flex items-center gap-2 text-emerald-400"
+          className="flex items-center gap-1 text-emerald-400"
           animate={{ x: [8, -8, 8] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="text-xs">Swipe to pay</span>
-          <ChevronLeft className="w-4 h-4" />
+          <span className="text-xs whitespace-nowrap">Swipe to pay</span>
         </motion.div>
       </div>
     </div>
@@ -889,6 +890,52 @@ function MemberNewSessionScreen() {
         </div>
         <p className="text-stone-200 text-xs font-medium">Personal Training</p>
         <p className="text-stone-400 text-[10px]">Tomorrow • 9:00 AM</p>
+      </motion.div>
+    </div>
+  );
+}
+
+function MemberSessionBookedScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 relative">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-display text-emerald-500 text-sm">gymsense</span>
+        <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center">
+          <User className="w-3 h-3 text-stone-400" />
+        </div>
+      </div>
+      
+      <p className="text-stone-200 text-xs font-medium mb-1">Welcome, Sarah!</p>
+      <p className="text-stone-500 text-[10px] mb-3">Membership active</p>
+      
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="bg-stone-800 rounded-lg p-2 text-center">
+          <QRCodeIcon className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
+          <span className="text-stone-400 text-[10px]">Check In</span>
+        </div>
+        <div className="bg-stone-800 rounded-lg p-2 text-center">
+          <CreditCard className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
+          <span className="text-stone-400 text-[10px]">Pay</span>
+        </div>
+      </div>
+      
+      <p className="text-stone-500 text-[10px] mb-1">Upcoming</p>
+      <motion.div 
+        className="bg-stone-800 rounded-lg p-2 border border-emerald-600/40"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-emerald-600/20 flex items-center justify-center">
+            <Dumbbell className="w-3.5 h-3.5 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-stone-200 text-[10px] font-medium">Personal Training</p>
+            <p className="text-stone-500 text-[9px]">Tomorrow • 9:00 AM</p>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
@@ -1096,26 +1143,24 @@ function ProCheckoutScreen() {
       
       <p className="text-stone-800 text-[10px] sm:text-xs font-medium mb-2">Checkout</p>
       
-      {/* Customer */}
-      <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm mb-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center">
-            <User className="w-3.5 h-3.5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-stone-800 text-[10px] font-medium">Sarah G.</p>
-            <p className="text-stone-500 text-[8px]">Member</p>
+      {/* Cart Items */}
+      <div className="space-y-2 mb-2">
+        <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Shirt className="w-4 h-4 text-stone-400" />
+            <div className="flex-1">
+              <p className="text-stone-800 text-[10px] font-medium">T-Shirt</p>
+              <p className="text-stone-500 text-[8px]">1x $24.50</p>
+            </div>
           </div>
         </div>
-      </div>
-      
-      {/* Cart */}
-      <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm mb-2">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="w-4 h-4 text-stone-400" />
-          <div className="flex-1">
-            <p className="text-stone-800 text-[10px] font-medium">Protein Shake</p>
-            <p className="text-stone-500 text-[8px]">1x $45.00</p>
+        <div className="bg-white rounded-lg p-2 border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Cookie className="w-4 h-4 text-stone-400" />
+            <div className="flex-1">
+              <p className="text-stone-800 text-[10px] font-medium">Protein Cookie</p>
+              <p className="text-stone-500 text-[8px]">1x $4.00</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1124,7 +1169,7 @@ function ProCheckoutScreen() {
       <div className="bg-stone-100 rounded-lg p-2 mb-3">
         <div className="flex justify-between items-center">
           <span className="text-stone-600 text-[10px]">Total</span>
-          <span className="text-stone-900 text-xs font-semibold">$45.00</span>
+          <span className="text-stone-900 text-xs font-semibold">$28.50</span>
         </div>
       </div>
       
