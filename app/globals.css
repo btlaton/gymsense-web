@@ -3,28 +3,38 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 12, 10, 9;
-  --background-start-rgb: 250, 250, 249;
-  --background-end-rgb: 245, 245, 244;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 250, 250, 249;
-    --background-start-rgb: 12, 10, 9;
-    --background-end-rgb: 28, 25, 23;
-  }
+  --foreground-rgb: 250, 250, 249;
+  --background-start-rgb: 12, 10, 9;
+  --background-end-rgb: 28, 25, 23;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for cleaner look (optional) */
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #1c1917;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: #44403c;
+  border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: #57534e;
 }
 
 /* Custom animations */
