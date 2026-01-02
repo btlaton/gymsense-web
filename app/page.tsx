@@ -168,13 +168,6 @@ export default function Home() {
             </PhoneMockup>
           </div>
         </div>
-        
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-stone-700 flex items-start justify-center p-2">
-            <div className="w-1 h-2 bg-stone-500 rounded-full" />
-          </div>
-        </div>
       </section>
 
       {/* Problem/Solution Section */}
@@ -667,42 +660,39 @@ function ProPaymentScreen({ phase }: { phase: string }) {
 
   return (
     <div className="h-full w-full relative">
-      {/* Camera/Scanning view - keep dark for camera effect */}
-      <div className={`absolute inset-0 bg-stone-950 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-0' : 'opacity-100'}`}>
-        {/* Simulated camera background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-800/40 via-stone-900/60 to-stone-950/80" />
-        
+      {/* Camera/Scanning view - LIGHT THEME */}
+      <div className={`absolute inset-0 bg-stone-100 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-0' : 'opacity-100'}`}>
         {/* Header */}
         <div className="absolute top-8 left-0 right-0 px-3">
-          <span className="font-display text-emerald-500 text-base">gymsense</span>
+          <span className="font-display text-emerald-600 text-base">gymsense</span>
         </div>
         
         {/* Scanning frame */}
         <div className="relative w-28 h-28">
           {/* Animated corners */}
-          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg animate-corner-pulse" />
-          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg animate-corner-pulse" style={{ animationDelay: '0.25s' }} />
-          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg animate-corner-pulse" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg animate-corner-pulse" style={{ animationDelay: '0.75s' }} />
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-600 rounded-tl-lg animate-corner-pulse" />
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-600 rounded-tr-lg animate-corner-pulse" style={{ animationDelay: '0.25s' }} />
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-600 rounded-bl-lg animate-corner-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-600 rounded-br-lg animate-corner-pulse" style={{ animationDelay: '0.75s' }} />
           
           {/* Scanning line - moves up and down */}
-          <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-scan-line" />
+          <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-600 to-transparent animate-scan-line" />
           
           <div className="absolute inset-0 flex items-center justify-center">
-            <ScanLine className="w-8 h-8 text-emerald-500/40" />
+            <ScanLine className="w-8 h-8 text-emerald-600/40" />
           </div>
         </div>
         
-        <p className="mt-4 text-stone-400 text-xs">
+        <p className="mt-4 text-stone-600 text-xs">
           {isScanning ? 'Processing payment...' : 'Scan member QR code'}
         </p>
         
         {/* Cart summary */}
         <div className="absolute bottom-4 left-3 right-3">
-          <div className="bg-stone-800/90 rounded-xl p-2.5 border border-stone-700">
+          <div className="bg-white rounded-xl p-2.5 border border-stone-200 shadow-sm">
             <div className="flex justify-between items-center">
-              <span className="text-stone-400 text-xs">Cart Total</span>
-              <span className="text-emerald-400 font-semibold text-sm">$45.00</span>
+              <span className="text-stone-500 text-xs">Cart Total</span>
+              <span className="text-emerald-600 font-semibold text-sm">$45.00</span>
             </div>
           </div>
         </div>
@@ -829,24 +819,15 @@ function PhoneMockup({
       {/* Phone frame */}
       <div className="relative">
         {/* Outer bezel */}
-        <div className="w-[160px] sm:w-[190px] md:w-[220px] h-[320px] sm:h-[380px] md:h-[440px] bg-stone-800 rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl shadow-black/50">
+        <div className="w-[165px] sm:w-[200px] md:w-[240px] h-[340px] sm:h-[410px] md:h-[480px] bg-stone-800 rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl shadow-black/50">
           {/* Inner bezel */}
           <div className="w-full h-full bg-stone-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden relative">
             {/* Dynamic Island */}
             <div className="absolute top-1.5 sm:top-2 left-1/2 -translate-x-1/2 w-14 sm:w-20 h-4 sm:h-6 bg-stone-950 rounded-full z-10" />
             
-            {/* Screen content - always render at 220x440, scale to fit */}
-            <div className="absolute inset-0 overflow-hidden">
-              <div 
-                className="origin-top-left"
-                style={{ 
-                  width: 220, 
-                  height: 440,
-                  transform: 'scale(var(--phone-scale))'
-                }}
-              >
-                {children}
-              </div>
+            {/* Screen content - fills container */}
+            <div className="w-full h-full">
+              {children}
             </div>
           </div>
         </div>
