@@ -187,8 +187,8 @@ export default function Home() {
           
           {/* Headline */}
           <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-stone-50 mb-3">
-            The gym management app you{' '}
-            <span className="text-emerald-400">actually want</span> to use
+            The gym management app<br />
+            <span className="text-emerald-400">owners actually want to use</span>
           </h2>
           
           {/* Subheadline */}
@@ -202,18 +202,9 @@ export default function Home() {
             href="#waitlist" 
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all text-sm sm:text-base"
           >
-            Join the Waitlist
+            Schedule a 10-minute demo
             <ArrowRight className="w-4 h-4" />
           </a>
-          
-          {/* Status Badge */}
-          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-900 border border-stone-800 text-stone-400 text-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Launching Q1 2026
-          </div>
         </div>
       </section>
 
@@ -230,13 +221,13 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Story Tabs - Two line support */}
-          <div className="flex justify-center gap-2 mb-4 flex-wrap">
+          {/* Story Tabs - 1x3 Grid */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 max-w-md sm:max-w-lg mx-auto">
             {STORIES.map((s, i) => (
               <button
                 key={s.id}
                 onClick={() => goToStory(i)}
-                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all text-center leading-tight min-w-[100px] sm:min-w-[120px] ${
+                className={`px-2 sm:px-3 py-3 sm:py-4 rounded-xl text-[10px] sm:text-xs font-medium transition-all text-center leading-tight ${
                   i === storyIndex 
                     ? 'bg-emerald-600 text-white' 
                     : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
