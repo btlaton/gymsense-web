@@ -2,7 +2,7 @@
  * GymSense Landing Page
  * 
  * Mobile-optimized landing page showcasing the Pro and Member apps.
- * Design tokens match the native apps (stone palette, emerald accent, Hanken/Pacifico fonts).
+ * Features synchronized scene-based animations showing the apps working together.
  */
 
 'use client';
@@ -21,34 +21,57 @@ import {
   ScanLine,
   QrCode,
   Clock,
-  DollarSign,
-  TrendingUp,
-  ShoppingBag,
-  ChevronRight
+  Check,
+  User
 } from 'lucide-react';
 
+// Scene definitions with phase durations in ms
+const SCENES = [
+  { 
+    name: 'check-in', 
+    label: 'Scan to Check In',
+    phases: ['scanning', 'processing', 'success', 'hold'],
+    durations: [2500, 1500, 2000, 2000] 
+  },
+  { 
+    name: 'payment', 
+    label: 'Scan to Pay',
+    phases: ['qr-display', 'scanning', 'success', 'hold'],
+    durations: [2500, 2000, 2000, 1500] 
+  },
+  { 
+    name: 'session', 
+    label: 'Training Sessions',
+    phases: ['display'],
+    durations: [5000] 
+  },
+];
+
 export default function Home() {
-  const [proIndex, setProIndex] = useState(0);
-  const [memberIndex, setMemberIndex] = useState(0);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [phaseIndex, setPhaseIndex] = useState(0);
 
-  const proScreens = 3;
-  const memberScreens = 3;
-
-  // Auto-cycle screens
+  // Scene and phase progression
   useEffect(() => {
-    const proTimer = setInterval(() => {
-      setProIndex((i) => (i + 1) % proScreens);
-    }, 4000);
+    const currentScene = SCENES[sceneIndex];
+    const phaseDuration = currentScene.durations[phaseIndex];
 
-    const memberTimer = setInterval(() => {
-      setMemberIndex((i) => (i + 1) % memberScreens);
-    }, 4500);
+    const timer = setTimeout(() => {
+      // Move to next phase or next scene
+      if (phaseIndex < currentScene.phases.length - 1) {
+        setPhaseIndex(phaseIndex + 1);
+      } else {
+        // Move to next scene
+        setSceneIndex((sceneIndex + 1) % SCENES.length);
+        setPhaseIndex(0);
+      }
+    }, phaseDuration);
 
-    return () => {
-      clearInterval(proTimer);
-      clearInterval(memberTimer);
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [sceneIndex, phaseIndex]);
+
+  const currentScene = SCENES[sceneIndex];
+  const currentPhase = currentScene.phases[phaseIndex];
 
   return (
     <main className="min-h-screen bg-stone-950 text-stone-50 overflow-x-hidden">
@@ -105,30 +128,50 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Phone Mockups - Hero Preview */}
+        {/* Phone Mockups - Synchronized Scenes */}
         <div className="relative z-10 mt-16 w-full max-w-5xl mx-auto animate-fade-in-up delay-500">
+          {/* Scene Label */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900/80 backdrop-blur border border-stone-800 rounded-full">
+              <span className="text-emerald-400 font-medium text-sm">{currentScene.label}</span>
+            </div>
+          </div>
+          
           <div className="flex justify-center items-end gap-4 md:gap-8">
-            {/* Pro App Phone */}
-            <PhoneMockup 
-              label="Pro App"
-              sublabel="For gym owners & staff"
-              variant="primary"
-              currentIndex={proIndex}
-              totalScreens={proScreens}
-            >
-              <ProAppScreen index={proIndex} />
-            </PhoneMockup>
-            
             {/* Member App Phone */}
             <PhoneMockup 
               label="Member App"
               sublabel="For gym members"
               variant="secondary"
-              currentIndex={memberIndex}
-              totalScreens={memberScreens}
             >
-              <MemberAppScreen index={memberIndex} />
+              <MemberAppScreen scene={currentScene.name} phase={currentPhase} />
             </PhoneMockup>
+            
+            {/* Pro App Phone */}
+            <PhoneMockup 
+              label="Pro App"
+              sublabel="For gym owners & staff"
+              variant="primary"
+            >
+              <ProAppScreen scene={currentScene.name} phase={currentPhase} />
+            </PhoneMockup>
+          </div>
+          
+          {/* Scene indicators */}
+          <div className="flex justify-center gap-2 mt-6">
+            {SCENES.map((scene, i) => (
+              <button
+                key={scene.name}
+                onClick={() => { setSceneIndex(i); setPhaseIndex(0); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  i === sceneIndex 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+                }`}
+              >
+                {scene.label}
+              </button>
+            ))}
           </div>
         </div>
         
@@ -317,189 +360,161 @@ export default function Home() {
   );
 }
 
-// Pro App Screen - Stylized mockups
-function ProAppScreen({ index }: { index: number }) {
-  const screens = [
-    <ScheduleScreen key="schedule" />,
-    <SaleScreen key="sale" />,
-    <InsightsScreen key="insights" />,
-  ];
-  
-  return (
-    <div className="h-full w-full transition-opacity duration-500">
-      {screens[index]}
-    </div>
-  );
-}
-
-// Member App Screen - Stylized mockups
-function MemberAppScreen({ index }: { index: number }) {
-  const screens = [
-    <MemberHomeScreen key="home" />,
-    <MemberQRScreen key="qr" />,
-    <CameraMockScreen key="camera" />,
-  ];
-  
-  return (
-    <div className="h-full w-full transition-opacity duration-500">
-      {screens[index]}
-    </div>
-  );
-}
-
-// ===== PRO APP SCREENS =====
-
-function ScheduleScreen() {
-  return (
-    <div className="h-full bg-stone-900 p-3 pt-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-display text-emerald-500 text-base">gymsense</span>
-        <div className="w-7 h-7 rounded-full bg-stone-700" />
-      </div>
-      
-      {/* Day headers */}
-      <div className="flex gap-1 mb-2">
-        {['Mon', 'Tue', 'Wed'].map((day, i) => (
-          <div key={day} className={`flex-1 text-center py-1 rounded text-xs ${i === 0 ? 'bg-emerald-600/20 text-emerald-400' : 'text-stone-500'}`}>
-            {day}
-          </div>
-        ))}
-      </div>
-      
-      {/* Calendar grid */}
-      <div className="flex gap-1 h-[calc(100%-80px)]">
-        {[0, 1, 2].map((col) => (
-          <div key={col} className="flex-1 space-y-1">
-            {[1, 2, 3].map((row) => (
-              <div 
-                key={row}
-                className={`rounded-md p-1.5 ${
-                  (col === 0 && row === 1) || (col === 1 && row === 2) || (col === 2 && row === 1)
-                    ? 'bg-emerald-600/30 border-l-2 border-emerald-500'
-                    : 'bg-stone-800/50'
-                }`}
-                style={{ height: `${20 + row * 8}%` }}
-              >
-                {((col === 0 && row === 1) || (col === 1 && row === 2) || (col === 2 && row === 1)) && (
-                  <>
-                    <div className="w-full h-1.5 bg-stone-600 rounded mb-1" />
-                    <div className="w-2/3 h-1 bg-stone-700 rounded" />
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SaleScreen() {
-  return (
-    <div className="h-full bg-stone-900 p-3 pt-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-display text-emerald-500 text-base">gymsense</span>
-        <div className="w-7 h-7 rounded-full bg-stone-700" />
-      </div>
-      
-      {/* Customer card */}
-      <div className="bg-stone-800 rounded-xl p-3 mb-3 border border-stone-700">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-emerald-600/30 flex items-center justify-center">
-            <Users className="w-5 h-5 text-emerald-500" />
-          </div>
-          <div className="flex-1">
-            <div className="w-20 h-2 bg-stone-600 rounded mb-1" />
-            <div className="w-14 h-1.5 bg-stone-700 rounded" />
-          </div>
-          <ChevronRight className="w-4 h-4 text-stone-500" />
-        </div>
-      </div>
-      
-      {/* Cart items */}
-      <div className="text-stone-500 text-xs mb-2">Cart</div>
-      <div className="space-y-2 mb-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="flex items-center justify-between bg-stone-800/50 rounded-lg p-2">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-stone-500" />
-              <div className="w-16 h-2 bg-stone-600 rounded" />
-            </div>
-            <div className="w-10 h-2 bg-stone-600 rounded" />
-          </div>
-        ))}
-      </div>
-      
-      {/* Total */}
-      <div className="border-t border-stone-700 pt-3">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-stone-400 text-xs">Total</span>
-          <span className="text-emerald-400 font-semibold text-sm">$XX.XX</span>
-        </div>
-        <div className="w-full py-2 bg-emerald-600 rounded-lg text-center text-white text-xs font-medium">
-          Charge Card
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InsightsScreen() {
-  return (
-    <div className="h-full bg-stone-900 p-3 pt-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-display text-emerald-500 text-base">gymsense</span>
-        <div className="w-7 h-7 rounded-full bg-stone-700" />
-      </div>
-      
-      {/* Revenue card */}
-      <div className="bg-stone-800 rounded-xl p-3 mb-3 border border-stone-700">
-        <div className="flex items-center gap-2 mb-2">
-          <DollarSign className="w-4 h-4 text-emerald-500" />
-          <span className="text-stone-400 text-xs">This Month</span>
-        </div>
-        <div className="text-xl font-bold text-stone-50 mb-1">$X,XXX</div>
-        <div className="flex items-center gap-1 text-emerald-400 text-xs">
-          <TrendingUp className="w-3 h-3" />
-          <span>+12%</span>
-        </div>
-      </div>
-      
-      {/* Mini chart placeholder */}
-      <div className="bg-stone-800/50 rounded-xl p-3 mb-3">
-        <div className="flex items-end justify-between h-16 gap-1">
-          {[40, 65, 45, 80, 60, 90, 75].map((h, i) => (
-            <div 
-              key={i} 
-              className="flex-1 bg-emerald-600/40 rounded-t"
-              style={{ height: `${h}%` }}
-            />
-          ))}
-        </div>
-      </div>
-      
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-stone-800/50 rounded-lg p-2">
-          <div className="text-stone-500 text-xs mb-1">Sessions</div>
-          <div className="text-stone-200 font-semibold text-sm">XX</div>
-        </div>
-        <div className="bg-stone-800/50 rounded-lg p-2">
-          <div className="text-stone-500 text-xs mb-1">Check-ins</div>
-          <div className="text-stone-200 font-semibold text-sm">XXX</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ===== MEMBER APP SCREENS =====
 
-function MemberHomeScreen() {
+function MemberAppScreen({ scene, phase }: { scene: string; phase: string }) {
+  if (scene === 'check-in') {
+    return <MemberCheckInScreen phase={phase} />;
+  }
+  if (scene === 'payment') {
+    return <MemberPaymentScreen phase={phase} />;
+  }
+  if (scene === 'session') {
+    return <MemberSessionScreen />;
+  }
+  return null;
+}
+
+function MemberCheckInScreen({ phase }: { phase: string }) {
+  const isScanning = phase === 'scanning' || phase === 'processing';
+  const isSuccess = phase === 'success' || phase === 'hold';
+
+  return (
+    <div className="h-full w-full relative">
+      {/* Camera/Scanning view */}
+      <div className={`absolute inset-0 bg-stone-950 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-0' : 'opacity-100'}`}>
+        {/* Simulated camera background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-800/40 via-stone-900/60 to-stone-950/80" />
+        
+        {/* Header */}
+        <div className="absolute top-8 left-0 right-0 px-3">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+        </div>
+        
+        {/* Scanning frame */}
+        <div className="relative w-28 h-28">
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
+          
+          {/* Scanning line */}
+          <div className={`absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 ${phase === 'processing' ? 'animate-pulse' : ''}`} />
+          
+          {/* QR icon in center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <QrCode className="w-12 h-12 text-white/20" />
+          </div>
+        </div>
+        
+        <p className="mt-4 text-stone-400 text-xs">
+          {phase === 'processing' ? 'Processing...' : 'Scan gym QR code'}
+        </p>
+        
+        {/* Status pill */}
+        <div className="absolute bottom-4 left-4 right-4 flex justify-center">
+          <div className="px-3 py-1.5 bg-stone-800/90 rounded-full border border-stone-700">
+            <span className="text-emerald-400 text-xs">● {phase === 'processing' ? 'Checking in...' : 'Ready to scan'}</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Success overlay */}
+      <div className={`absolute inset-0 bg-stone-900 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Header */}
+        <div className="absolute top-8 left-0 right-0 px-3 text-center">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+        </div>
+        
+        {/* Success content */}
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mb-4 animate-scale-in">
+            <Check className="w-8 h-8 text-white" />
+          </div>
+          <div className="text-stone-50 font-semibold text-lg mb-1">Checked In!</div>
+          <div className="text-stone-400 text-xs">Welcome to The Atlas Gym</div>
+        </div>
+        
+        {/* Time */}
+        <div className="absolute bottom-6 text-stone-500 text-xs">
+          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberPaymentScreen({ phase }: { phase: string }) {
+  const showQR = phase === 'qr-display' || phase === 'scanning';
+  const isSuccess = phase === 'success' || phase === 'hold';
+
+  return (
+    <div className="h-full w-full relative">
+      {/* QR Display view */}
+      <div className={`absolute inset-0 bg-stone-900 flex flex-col transition-opacity duration-500 ${showQR && !isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Header */}
+        <div className="pt-8 px-3 flex items-center justify-between">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+          <div className="w-7 h-7 rounded-full bg-stone-700" />
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="text-stone-200 font-medium text-sm mb-1">Scan to Pay</div>
+          <div className="text-stone-500 text-xs mb-4">Show this to complete purchase</div>
+          
+          {/* QR Code */}
+          <div className="relative">
+            <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-white/10">
+              <QrCode className="w-24 h-24 text-stone-900" />
+            </div>
+            {/* Animated corners */}
+            <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-500 rounded-tl animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-500 rounded-tr animate-pulse" />
+            <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-500 rounded-bl animate-pulse" />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-500 rounded-br animate-pulse" />
+          </div>
+          
+          <div className="mt-4 text-stone-500 text-xs">Expires in 4:59</div>
+        </div>
+      </div>
+      
+      {/* Success overlay */}
+      <div className={`absolute inset-0 bg-stone-900 flex flex-col transition-opacity duration-500 ${isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Header */}
+        <div className="pt-8 px-3 text-center">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+        </div>
+        
+        {/* Success content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mb-4 animate-scale-in">
+            <Check className="w-8 h-8 text-white" />
+          </div>
+          <div className="text-stone-50 font-semibold text-lg mb-1">Payment Complete!</div>
+          <div className="text-stone-400 text-xs mb-4">Paid to The Atlas Gym</div>
+          
+          {/* Order summary card */}
+          <div className="w-full bg-stone-800 rounded-xl p-3 border border-stone-700">
+            <div className="flex justify-between items-center">
+              <span className="text-stone-400 text-xs">Total</span>
+              <span className="text-emerald-400 font-semibold">$45.00</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Done button placeholder */}
+        <div className="px-4 pb-6">
+          <div className="w-full py-2.5 bg-emerald-950 border border-emerald-900 rounded-xl text-center text-white text-sm font-medium">
+            Done
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberSessionScreen() {
   return (
     <div className="h-full bg-stone-900 p-3 pt-8 flex flex-col">
       {/* Header */}
@@ -510,26 +525,93 @@ function MemberHomeScreen() {
       
       {/* Welcome */}
       <div className="mb-4">
-        <div className="text-stone-200 font-medium text-sm mb-0.5">Welcome back!</div>
+        <div className="text-stone-200 font-medium text-sm mb-0.5">Welcome back, Sarah!</div>
         <div className="text-stone-500 text-xs">Ready for your workout?</div>
+      </div>
+      
+      {/* Upcoming Session Card - Highlighted */}
+      <div className="bg-emerald-600/10 border border-emerald-600/30 rounded-xl p-3 mb-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-4 h-4 text-emerald-500" />
+          <span className="text-emerald-400 text-xs font-medium">Tomorrow</span>
+        </div>
+        <div className="text-stone-50 font-medium text-sm mb-0.5">Personal Training</div>
+        <div className="text-stone-400 text-xs">with Marcus • 9:00 AM - 10:00 AM</div>
       </div>
       
       {/* QR Code area */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-white/10">
-          <QrCode className="w-16 h-16 text-stone-900" />
+        <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-white/10">
+          <QrCode className="w-14 h-14 text-stone-900" />
         </div>
-        <div className="text-stone-400 text-xs">Tap to check in</div>
+        <div className="text-stone-500 text-xs mt-2">Tap to check in</div>
+      </div>
+    </div>
+  );
+}
+
+// ===== PRO APP SCREENS =====
+
+function ProAppScreen({ scene, phase }: { scene: string; phase: string }) {
+  if (scene === 'check-in') {
+    return <ProCheckInScreen phase={phase} />;
+  }
+  if (scene === 'payment') {
+    return <ProPaymentScreen phase={phase} />;
+  }
+  if (scene === 'session') {
+    return <ProSessionScreen />;
+  }
+  return null;
+}
+
+function ProCheckInScreen({ phase }: { phase: string }) {
+  const showNewCheckIn = phase === 'success' || phase === 'hold';
+
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-display text-emerald-500 text-base">gymsense</span>
+        <div className="w-7 h-7 rounded-full bg-stone-700" />
       </div>
       
-      {/* Upcoming session */}
-      <div className="bg-stone-800 rounded-xl p-2.5 border border-stone-700">
-        <div className="text-stone-500 text-xs mb-1.5">Next Session</div>
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-emerald-500" />
-          <div className="flex-1">
-            <div className="w-20 h-2 bg-stone-600 rounded mb-1" />
-            <div className="w-14 h-1.5 bg-stone-700 rounded" />
+      <div className="text-stone-200 font-medium text-sm mb-3">Today&apos;s Check-ins</div>
+      
+      {/* Check-in list */}
+      <div className="space-y-2">
+        {/* Existing check-ins */}
+        <CheckInRow name="Mike R." time="8:15 AM" />
+        <CheckInRow name="Jessica L." time="8:32 AM" />
+        <CheckInRow name="David K." time="8:45 AM" />
+        
+        {/* New check-in - animated */}
+        <div className={`transition-all duration-500 overflow-hidden ${showNewCheckIn ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="bg-emerald-600/20 border border-emerald-600/40 rounded-lg p-2.5 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-600/30 flex items-center justify-center">
+              <User className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="flex-1">
+              <div className="text-stone-50 text-sm font-medium">Sarah M.</div>
+              <div className="text-emerald-400 text-xs">Just now</div>
+            </div>
+            <div className="w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Stats at bottom */}
+      <div className="absolute bottom-4 left-3 right-3">
+        <div className="flex gap-2">
+          <div className="flex-1 bg-stone-800/50 rounded-lg p-2 text-center">
+            <div className="text-stone-200 font-semibold text-sm">{showNewCheckIn ? '4' : '3'}</div>
+            <div className="text-stone-500 text-xs">Today</div>
+          </div>
+          <div className="flex-1 bg-stone-800/50 rounded-lg p-2 text-center">
+            <div className="text-stone-200 font-semibold text-sm">28</div>
+            <div className="text-stone-500 text-xs">This Week</div>
           </div>
         </div>
       </div>
@@ -537,73 +619,161 @@ function MemberHomeScreen() {
   );
 }
 
-function MemberQRScreen() {
+function CheckInRow({ name, time }: { name: string; time: string }) {
   return (
-    <div className="h-full bg-stone-900 p-3 pt-8 flex flex-col">
+    <div className="bg-stone-800/50 rounded-lg p-2.5 flex items-center gap-2">
+      <div className="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center">
+        <User className="w-4 h-4 text-stone-400" />
+      </div>
+      <div className="flex-1">
+        <div className="text-stone-200 text-sm">{name}</div>
+        <div className="text-stone-500 text-xs">{time}</div>
+      </div>
+    </div>
+  );
+}
+
+function ProPaymentScreen({ phase }: { phase: string }) {
+  const isScanning = phase === 'scanning';
+  const isSuccess = phase === 'success' || phase === 'hold';
+
+  return (
+    <div className="h-full w-full relative">
+      {/* Camera/Scanning view */}
+      <div className={`absolute inset-0 bg-stone-950 flex flex-col items-center justify-center transition-opacity duration-500 ${isSuccess ? 'opacity-0' : 'opacity-100'}`}>
+        {/* Simulated camera background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-stone-800/40 via-stone-900/60 to-stone-950/80" />
+        
+        {/* Header */}
+        <div className="absolute top-8 left-0 right-0 px-3">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+        </div>
+        
+        {/* Scanning frame */}
+        <div className="relative w-28 h-28">
+          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
+          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
+          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
+          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
+          
+          {/* Scanning line */}
+          <div className={`absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 ${isScanning ? 'animate-pulse' : ''}`} />
+          
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ScanLine className="w-8 h-8 text-emerald-500/40" />
+          </div>
+        </div>
+        
+        <p className="mt-4 text-stone-400 text-xs">
+          {isScanning ? 'Processing payment...' : 'Scan member QR code'}
+        </p>
+        
+        {/* Cart summary */}
+        <div className="absolute bottom-4 left-3 right-3">
+          <div className="bg-stone-800/90 rounded-xl p-2.5 border border-stone-700">
+            <div className="flex justify-between items-center">
+              <span className="text-stone-400 text-xs">Cart Total</span>
+              <span className="text-emerald-400 font-semibold text-sm">$45.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Success overlay */}
+      <div className={`absolute inset-0 bg-stone-900 flex flex-col transition-opacity duration-500 ${isSuccess ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Header */}
+        <div className="pt-8 px-3 text-center">
+          <span className="font-display text-emerald-500 text-base">gymsense</span>
+        </div>
+        
+        {/* Success content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mb-4 animate-scale-in">
+            <Check className="w-8 h-8 text-white" />
+          </div>
+          <div className="text-stone-50 font-semibold text-lg mb-1">Payment Complete!</div>
+          <div className="text-stone-400 text-xs mb-4">Charged to Sarah M.</div>
+          
+          {/* Order summary */}
+          <div className="w-full bg-stone-800 rounded-xl p-3 border border-stone-700">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-stone-300 text-xs">5-Pack PT Sessions</span>
+              <span className="text-stone-300 text-xs">$45.00</span>
+            </div>
+            <div className="border-t border-stone-700 pt-2 flex justify-between items-center">
+              <span className="text-stone-400 text-xs">Total</span>
+              <span className="text-emerald-400 font-semibold">$45.00</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Done button */}
+        <div className="px-4 pb-6">
+          <div className="w-full py-2.5 bg-emerald-600 rounded-xl text-center text-white text-sm font-medium">
+            Done
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProSessionScreen() {
+  return (
+    <div className="h-full bg-stone-900 p-3 pt-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="font-display text-emerald-500 text-base">gymsense</span>
         <div className="w-7 h-7 rounded-full bg-stone-700" />
       </div>
       
-      {/* Scan to pay header */}
-      <div className="text-center mb-4">
-        <div className="text-stone-200 font-medium text-sm">Scan to Pay</div>
-        <div className="text-stone-500 text-xs">Show this to complete purchase</div>
-      </div>
-      
-      {/* Large QR */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-white/10 relative">
-          <QrCode className="w-28 h-28 text-stone-900" />
-          {/* Animated corner pulse */}
-          <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-500 rounded-tl animate-pulse" />
-          <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-500 rounded-tr animate-pulse" />
-          <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-500 rounded-bl animate-pulse" />
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-500 rounded-br animate-pulse" />
+      {/* Session Detail Card */}
+      <div className="bg-stone-800 rounded-xl border border-stone-700 overflow-hidden">
+        {/* Header */}
+        <div className="bg-emerald-600/20 px-3 py-2 border-b border-stone-700">
+          <div className="text-emerald-400 text-xs font-medium">Tomorrow • 9:00 AM</div>
+        </div>
+        
+        {/* Content */}
+        <div className="p-3">
+          <div className="text-stone-50 font-medium mb-3">Personal Training</div>
+          
+          {/* Client */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center">
+              <User className="w-5 h-5 text-stone-400" />
+            </div>
+            <div>
+              <div className="text-stone-200 text-sm font-medium">Sarah M.</div>
+              <div className="text-stone-500 text-xs">Member since 2024</div>
+            </div>
+          </div>
+          
+          {/* Details */}
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-stone-500">Duration</span>
+              <span className="text-stone-300">60 min</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-stone-500">Trainer</span>
+              <span className="text-stone-300">Marcus</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-stone-500">Sessions Left</span>
+              <span className="text-emerald-400">4 of 10</span>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Timer */}
-      <div className="text-center text-stone-500 text-xs">
-        Expires in 4:59
-      </div>
-    </div>
-  );
-}
-
-function CameraMockScreen() {
-  return (
-    <div className="relative w-full h-full bg-stone-950 flex flex-col items-center justify-center">
-      {/* Simulated camera viewfinder background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-stone-800/30 via-stone-900/50 to-stone-950/80" />
-      
-      {/* Scanning frame */}
-      <div className="relative w-28 h-28">
-        {/* Corner brackets */}
-        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-emerald-500 rounded-tl-lg" />
-        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-emerald-500 rounded-tr-lg" />
-        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-emerald-500 rounded-bl-lg" />
-        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-emerald-500 rounded-br-lg" />
-        
-        {/* Scanning line animation */}
-        <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-500/60 animate-pulse" />
-        
-        {/* Center icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <ScanLine className="w-8 h-8 text-emerald-500/40" />
+      {/* Actions */}
+      <div className="mt-3 flex gap-2">
+        <div className="flex-1 py-2 bg-stone-800 rounded-lg text-center text-stone-300 text-xs">
+          Reschedule
         </div>
-      </div>
-      
-      {/* Instruction text */}
-      <p className="mt-4 text-stone-400 text-xs text-center px-4">
-        Point at member&apos;s QR code
-      </p>
-      
-      {/* Bottom status */}
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-        <div className="px-3 py-1.5 bg-stone-800/90 rounded-full border border-stone-700">
-          <span className="text-emerald-400 text-xs">● Scanning...</span>
+        <div className="flex-1 py-2 bg-emerald-600 rounded-lg text-center text-white text-xs">
+          Start Session
         </div>
       </div>
     </div>
@@ -616,16 +786,12 @@ function PhoneMockup({
   children, 
   label, 
   sublabel,
-  variant = 'primary',
-  currentIndex,
-  totalScreens
+  variant = 'primary'
 }: { 
   children: React.ReactNode;
   label: string;
   sublabel: string;
   variant?: 'primary' | 'secondary';
-  currentIndex: number;
-  totalScreens: number;
 }) {
   const isPrimary = variant === 'primary';
   
@@ -651,26 +817,12 @@ function PhoneMockup({
         <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
       </div>
       
-      {/* Label and indicators */}
+      {/* Label */}
       <div className="mt-4 text-center">
         <div className={`font-semibold ${isPrimary ? 'text-emerald-400' : 'text-stone-300'}`}>
           {label}
         </div>
         <div className="text-stone-500 text-sm">{sublabel}</div>
-        
-        {/* Page indicators */}
-        <div className="flex justify-center gap-1.5 mt-3">
-          {Array.from({ length: totalScreens }).map((_, i) => (
-            <div 
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex 
-                  ? (isPrimary ? 'bg-emerald-500 w-4' : 'bg-stone-400 w-4')
-                  : 'bg-stone-700 w-1.5'
-              }`}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
