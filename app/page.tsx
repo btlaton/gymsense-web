@@ -137,7 +137,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex justify-center items-end gap-4 md:gap-8">
+          <div className="flex justify-center items-end gap-2 sm:gap-4 md:gap-8">
             {/* Member App Phone */}
             <PhoneMockup 
               label="Member App"
@@ -158,12 +158,12 @@ export default function Home() {
           </div>
           
           {/* Scene indicators */}
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
             {SCENES.map((scene, i) => (
               <button
                 key={scene.name}
                 onClick={() => { setSceneIndex(i); setPhaseIndex(0); }}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all ${
                   i === sceneIndex 
                     ? 'bg-emerald-600 text-white' 
                     : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
@@ -821,15 +821,24 @@ function PhoneMockup({
       {/* Phone frame */}
       <div className="relative">
         {/* Outer bezel */}
-        <div className="w-[180px] md:w-[220px] h-[360px] md:h-[440px] bg-stone-800 rounded-[2.5rem] p-2 shadow-2xl shadow-black/50">
+        <div className="w-[140px] sm:w-[180px] md:w-[220px] h-[280px] sm:h-[360px] md:h-[440px] bg-stone-800 rounded-[1.75rem] sm:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl shadow-black/50">
           {/* Inner bezel */}
-          <div className="w-full h-full bg-stone-900 rounded-[2rem] overflow-hidden relative">
+          <div className="w-full h-full bg-stone-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden relative">
             {/* Dynamic Island */}
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-6 bg-stone-950 rounded-full z-10" />
+            <div className="absolute top-1.5 sm:top-2 left-1/2 -translate-x-1/2 w-14 sm:w-20 h-4 sm:h-6 bg-stone-950 rounded-full z-10" />
             
-            {/* Screen content */}
-            <div className="w-full h-full">
-              {children}
+            {/* Screen content - always render at 220x440, scale to fit */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div 
+                className="origin-top-left"
+                style={{ 
+                  width: 220, 
+                  height: 440,
+                  transform: 'scale(var(--phone-scale))'
+                }}
+              >
+                {children}
+              </div>
             </div>
           </div>
         </div>

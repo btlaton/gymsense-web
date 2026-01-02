@@ -6,6 +6,19 @@
   --foreground-rgb: 12, 10, 9;
   --background-start-rgb: 250, 250, 249;
   --background-end-rgb: 245, 245, 244;
+  --phone-scale: 0.60; /* Mobile: 140px / 220px = 0.636, minus padding */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --phone-scale: 0.80; /* sm: 180px / 220px = 0.818 */
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --phone-scale: 1; /* md: full size */
+  }
 }
 
 @media (prefers-color-scheme: dark) {
