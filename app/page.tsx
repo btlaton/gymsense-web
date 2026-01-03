@@ -26,8 +26,194 @@ import {
   TrendingUp,
   Dumbbell,
   Shirt,
-  Cookie
+  Cookie,
+  X,
+  Receipt,
+  Smartphone,
+  LineChart,
+  Package,
+  Shield
 } from 'lucide-react';
+
+// ===== COMPARISON FEATURES =====
+const COMPARISON_FEATURES = [
+  {
+    id: 'billing',
+    title: 'Recurring Billing & Payouts',
+    icon: Receipt,
+    gymsense: '100% accurate and AI-verified',
+    competitor: 'brittle and error-prone',
+  },
+  {
+    id: 'checkins',
+    title: 'Member Check-ins',
+    icon: Smartphone,
+    gymsense: 'Touchless, instant QR scan from member app',
+    competitor: 'computer or tablet requiring member to type name or code',
+  },
+  {
+    id: 'insights',
+    title: 'Revenue Growth Opportunities',
+    icon: LineChart,
+    gymsense: 'Actionable customer insights dashboard',
+    competitor: 'dozens of static reports masked as "AI-powered marketing tools"',
+  },
+  {
+    id: 'payments',
+    title: 'In-Person Payments',
+    icon: CreditCard,
+    gymsense: 'Instant mobile-to-mobile QR scanning',
+    competitor: 'hardware-required, slow and inefficient checkout flow',
+  },
+  {
+    id: 'products',
+    title: 'Product Catalog Flexibility',
+    icon: Package,
+    gymsense: 'In-app product creation and instant price updates',
+    competitor: 'Requires a call with customer support to add/edit a product',
+  },
+  {
+    id: 'permissions',
+    title: 'Role-based App Permissions',
+    icon: Shield,
+    gymsense: 'Hide sensitive financial data from specified staff roles',
+    competitor: 'same app experience for all staff',
+  },
+];
+
+// ===== COMPARISON CAROUSEL COMPONENT =====
+function ComparisonCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [phase, setPhase] = useState<'competitor' | 'transition' | 'gymsense'>('competitor');
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const feature = COMPARISON_FEATURES[currentIndex];
+  const Icon = feature.icon;
+  
+  useEffect(() => {
+    if (isPaused) return;
+    
+    const timer = setInterval(() => {
+      setPhase(prev => {
+        if (prev === 'competitor') return 'transition';
+        if (prev === 'transition') return 'gymsense';
+        // Move to next card
+        setCurrentIndex(i => (i + 1) % COMPARISON_FEATURES.length);
+        return 'competitor';
+      });
+    }, phase === 'gymsense' ? 3000 : phase === 'competitor' ? 1500 : 400);
+    
+    return () => clearInterval(timer);
+  }, [phase, isPaused]);
+  
+  const goToFeature = (index: number) => {
+    setCurrentIndex(index);
+    setPhase('competitor');
+  };
+  
+  return (
+    <div 
+      className="mb-6 max-w-md mx-auto"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Card */}
+      <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 min-h-[180px] sm:min-h-[200px]">
+        {/* Feature Title */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-emerald-500" />
+          </div>
+          <h4 className="text-stone-200 text-sm sm:text-base font-medium">{feature.title}</h4>
+        </div>
+        
+        {/* Comparison Content */}
+        <div className="relative h-24 sm:h-28">
+          <AnimatePresence mode="wait">
+            {phase === 'competitor' || phase === 'transition' ? (
+              <motion.div
+                key={`${feature.id}-competitor`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: phase === 'transition' ? 0.3 : 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5 rounded-full bg-stone-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="w-3 h-3 text-stone-500" />
+                  </div>
+                  <div>
+                    <p className="text-stone-500 text-[10px] uppercase tracking-wide mb-1">Leading Competitor</p>
+                    <p className={`text-stone-400 text-sm sm:text-base ${phase === 'transition' ? 'line-through' : ''}`}>
+                      {feature.competitor}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`${feature.id}-gymsense`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="absolute inset-0"
+              >
+                <div className="flex items-start gap-2">
+                  <motion.div 
+                    className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, delay: 0.1 }}
+                  >
+                    <Check className="w-3 h-3 text-white" />
+                  </motion.div>
+                  <div>
+                    <p className="text-emerald-500 text-[10px] uppercase tracking-wide mb-1">gymsense</p>
+                    <p className="text-stone-100 text-sm sm:text-base font-medium">
+                      {feature.gymsense}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      
+      {/* Navigation Dots */}
+      <div className="flex justify-center gap-2 mt-3">
+        {COMPARISON_FEATURES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goToFeature(i)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              i === currentIndex 
+                ? 'bg-emerald-500 w-4' 
+                : 'bg-stone-700 hover:bg-stone-600'
+            }`}
+          />
+        ))}
+      </div>
+      
+      {/* Navigation Arrows */}
+      <div className="flex justify-center gap-4 mt-2">
+        <button 
+          onClick={() => goToFeature((currentIndex - 1 + COMPARISON_FEATURES.length) % COMPARISON_FEATURES.length)}
+          className="text-stone-500 hover:text-stone-300 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <button 
+          onClick={() => goToFeature((currentIndex + 1) % COMPARISON_FEATURES.length)}
+          className="text-stone-500 hover:text-stone-300 transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ===== STORY CONFIGURATION =====
 const STORIES = [
@@ -192,10 +378,15 @@ export default function Home() {
           </h2>
           
           {/* Subheadline */}
-          <p className="text-sm sm:text-base text-stone-400 mb-4 max-w-xl mx-auto">
-            Modern software for gym owners and their members. 
-            QR check-ins, instant payments, real-time sync.
+          <p className="text-sm sm:text-base text-stone-400 mb-2 max-w-xl mx-auto">
+            Stop overpaying for clunky, outdated and error-prone software built for the 2000s.
           </p>
+          <p className="text-sm sm:text-base text-stone-400 mb-6 max-w-xl mx-auto">
+            Break free from software lock-in: Switch to gymsense in less than a day and start managing all of your locations directly from your phone.
+          </p>
+          
+          {/* Feature Comparison Carousel */}
+          <ComparisonCarousel />
           
           {/* CTA Button */}
           <a 
