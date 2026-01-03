@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   Calendar, 
   Users, 
@@ -82,7 +82,7 @@ const COMPARISON_FEATURES = [
 ];
 
 // ===== COMPARISON CAROUSEL COMPONENT =====
-function ComparisonCarousel() {
+function ComparisonCarousel({ isActive = true }: { isActive?: boolean }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   
@@ -90,14 +90,14 @@ function ComparisonCarousel() {
   const Icon = feature.icon;
   
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !isActive) return;
     
     const timer = setInterval(() => {
       setCurrentIndex(i => (i + 1) % COMPARISON_FEATURES.length);
     }, 5000);
     
     return () => clearInterval(timer);
-  }, [isPaused]);
+  }, [isPaused, isActive]);
   
   const goToFeature = (index: number) => {
     setCurrentIndex(index);
@@ -285,6 +285,14 @@ export default function Home() {
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
+  // Section visibility refs
+  const heroRef = useRef(null);
+  const demoRef = useRef(null);
+  
+  // Track which section is in view (threshold 0.5 = 50% visible)
+  const heroInView = useInView(heroRef, { amount: 0.3 });
+  const demoInView = useInView(demoRef, { amount: 0.3 });
+
   const story = STORIES[storyIndex];
   const step = story.steps[stepIndex];
   
@@ -292,9 +300,9 @@ export default function Home() {
   const memberTransition = story.memberTransitions[stepIndex] || 'fade';
   const proTransition = story.proTransitions[stepIndex] || 'fade';
 
-  // Auto-advance through steps and stories
+  // Auto-advance through steps and stories - only when demo section is visible
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || !demoInView) return;
 
     const timer = setTimeout(() => {
       if (stepIndex < story.steps.length - 1) {
@@ -309,7 +317,7 @@ export default function Home() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [storyIndex, stepIndex, story.steps.length, isPlaying]);
+  }, [storyIndex, stepIndex, story.steps.length, isPlaying, demoInView]);
 
   const goToStory = (index: number) => {
     setStoryIndex(index);
@@ -337,12 +345,20 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-stone-950 text-stone-50">
       {/* Hero Section */}
-      <section className="relative px-4 sm:px-6 pt-12 sm:pt-16 pb-8">
+      <section 
+        ref={heroRef}
+        className="relative px-4 sm:px-6 min-h-[100svh] flex flex-col justify-center pb-16"
+      >
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-3xl" />
         
-        <div className="relative z-10 text-center max-w-3xl mx-auto">
+        <motion.div 
+          className="relative z-10 text-center max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           {/* Logo */}
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-emerald-500 mb-3">
             gymsense
@@ -363,7 +379,7 @@ export default function Home() {
           </p>
           
           {/* Feature Comparison Carousel */}
-          <ComparisonCarousel />
+          <ComparisonCarousel isActive={heroInView} />
           
           {/* CTA Button */}
           <a 
@@ -373,12 +389,29 @@ export default function Home() {
             Schedule a 10-minute demo
             <ArrowRight className="w-4 h-4" />
           </a>
-        </div>
+        </motion.div>
+        
+        {/* Scroll indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <ChevronRight className="w-6 h-6 text-stone-600 rotate-90" />
+        </motion.div>
       </section>
 
       {/* App Demo Section */}
-      <section className="relative px-4 sm:px-6 py-8 sm:py-12">
-        <div className="max-w-4xl mx-auto">
+      <section 
+        ref={demoRef}
+        className="relative px-4 sm:px-6 min-h-[100svh] flex flex-col justify-center py-12"
+      >
+        <motion.div 
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={demoInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           {/* Section Header */}
           <div className="text-center mb-6">
             <h3 className="text-lg sm:text-xl font-semibold text-stone-50 mb-1">
@@ -514,7 +547,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Problem/Solution Section */}
