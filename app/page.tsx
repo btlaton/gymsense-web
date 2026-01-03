@@ -117,7 +117,7 @@ function ComparisonCarousel() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/20"
+          className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-lg shadow-stone-700/50"
         >
           {/* Feature Title */}
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -130,7 +130,7 @@ function ComparisonCarousel() {
           {/* Side by Side Comparison */}
           <div className="grid grid-cols-2 gap-3">
             {/* gymsense - Left */}
-            <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-xl p-3 shadow-md shadow-black/10">
+            <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-xl p-3 shadow-md shadow-stone-700/30">
               <div className="flex items-center gap-1.5 mb-2">
                 <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 text-white" />
@@ -143,7 +143,7 @@ function ComparisonCarousel() {
             </div>
             
             {/* Competitor - Right */}
-            <div className="bg-stone-800/30 border border-stone-700/30 rounded-xl p-3 shadow-md shadow-black/10">
+            <div className="bg-stone-800/30 border border-stone-700/30 rounded-xl p-3 shadow-md shadow-stone-700/30">
               <div className="flex items-center gap-1.5 mb-2">
                 <div className="w-4 h-4 rounded-full bg-stone-600 flex items-center justify-center">
                   <X className="w-2.5 h-2.5 text-stone-400" />
