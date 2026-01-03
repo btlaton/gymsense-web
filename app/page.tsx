@@ -84,7 +84,6 @@ const COMPARISON_FEATURES = [
 // ===== COMPARISON CAROUSEL COMPONENT =====
 function ComparisonCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<'competitor' | 'transition' | 'gymsense'>('competitor');
   const [isPaused, setIsPaused] = useState(false);
   
   const feature = COMPARISON_FEATURES[currentIndex];
@@ -94,92 +93,70 @@ function ComparisonCarousel() {
     if (isPaused) return;
     
     const timer = setInterval(() => {
-      setPhase(prev => {
-        if (prev === 'competitor') return 'transition';
-        if (prev === 'transition') return 'gymsense';
-        // Move to next card
-        setCurrentIndex(i => (i + 1) % COMPARISON_FEATURES.length);
-        return 'competitor';
-      });
-    }, phase === 'gymsense' ? 3000 : phase === 'competitor' ? 1500 : 400);
+      setCurrentIndex(i => (i + 1) % COMPARISON_FEATURES.length);
+    }, 5000);
     
     return () => clearInterval(timer);
-  }, [phase, isPaused]);
+  }, [isPaused]);
   
   const goToFeature = (index: number) => {
     setCurrentIndex(index);
-    setPhase('competitor');
   };
   
   return (
     <div 
-      className="mb-6 max-w-md mx-auto"
+      className="mb-6 max-w-lg mx-auto"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Card */}
-      <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5 min-h-[180px] sm:min-h-[200px]">
-        {/* Feature Title */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center">
-            <Icon className="w-4 h-4 text-emerald-500" />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={feature.id}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+          className="bg-stone-900/80 border border-stone-800 rounded-2xl p-4 sm:p-5"
+        >
+          {/* Feature Title */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-7 h-7 rounded-lg bg-stone-800 flex items-center justify-center">
+              <Icon className="w-3.5 h-3.5 text-emerald-500" />
+            </div>
+            <h4 className="text-stone-200 text-sm sm:text-base font-medium">{feature.title}</h4>
           </div>
-          <h4 className="text-stone-200 text-sm sm:text-base font-medium">{feature.title}</h4>
-        </div>
-        
-        {/* Comparison Content */}
-        <div className="relative h-24 sm:h-28">
-          <AnimatePresence mode="wait">
-            {phase === 'competitor' || phase === 'transition' ? (
-              <motion.div
-                key={`${feature.id}-competitor`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: phase === 'transition' ? 0.3 : 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0"
-              >
-                <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-stone-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="w-3 h-3 text-stone-500" />
-                  </div>
-                  <div>
-                    <p className="text-stone-500 text-[10px] uppercase tracking-wide mb-1">Leading Competitor</p>
-                    <p className={`text-stone-400 text-sm sm:text-base ${phase === 'transition' ? 'line-through' : ''}`}>
-                      {feature.competitor}
-                    </p>
-                  </div>
+          
+          {/* Side by Side Comparison */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* gymsense - Left */}
+            <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={`${feature.id}-gymsense`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="absolute inset-0"
-              >
-                <div className="flex items-start gap-2">
-                  <motion.div 
-                    className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, delay: 0.1 }}
-                  >
-                    <Check className="w-3 h-3 text-white" />
-                  </motion.div>
-                  <div>
-                    <p className="text-emerald-500 text-[10px] uppercase tracking-wide mb-1">gymsense</p>
-                    <p className="text-stone-100 text-sm sm:text-base font-medium">
-                      {feature.gymsense}
-                    </p>
-                  </div>
+                <span className="text-emerald-500 text-[10px] sm:text-xs font-semibold">gymsense</span>
+              </div>
+              <p className="text-stone-200 text-xs sm:text-sm leading-relaxed">
+                {feature.gymsense}
+              </p>
+            </div>
+            
+            {/* Competitor - Right */}
+            <div className="bg-stone-800/30 border border-stone-700/30 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className="w-4 h-4 rounded-full bg-stone-600 flex items-center justify-center">
+                  <X className="w-2.5 h-2.5 text-stone-400" />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+                <span className="text-stone-500 text-[10px] sm:text-xs font-semibold">Competitor</span>
+              </div>
+              <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">
+                {feature.competitor}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
       
       {/* Navigation Dots */}
       <div className="flex justify-center gap-2 mt-3">
