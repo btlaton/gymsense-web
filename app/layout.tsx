@@ -16,10 +16,11 @@ const pacifico = Pacifico({
 });
 
 export const metadata: Metadata = {
-  title: 'GymSense',
+  title: 'gymsense',
   description: 'Modern gym management for the modern gym',
   icons: {
     icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 

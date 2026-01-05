@@ -12,7 +12,7 @@ import { Metadata } from 'next';
 import QRCode from 'react-qr-code';
 
 export const metadata: Metadata = {
-  title: 'Check-In QR Code | Gymsense',
+  title: 'Check-In QR Code | gymsense',
   description: 'Member check-in QR code',
 };
 
