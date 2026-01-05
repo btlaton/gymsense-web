@@ -11,7 +11,6 @@ import {
   MapPinCheck,
   Calendar,
   ShieldCheck,
-  Mail,
   Package,
   Users,
   MessageSquare,
@@ -1098,21 +1097,14 @@ export default function UserGuidePage() {
     <main className="min-h-screen bg-stone-50 text-stone-950 overflow-x-hidden">
       {/* Header */}
       <header className="border-b border-stone-200 px-4 py-3 sm:py-4 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center">
           <div className="flex items-center gap-2 sm:gap-3">
             <a href="/" className="font-display text-xl sm:text-2xl text-emerald-600 hover:text-emerald-500 transition-colors">
               gymsense
             </a>
-            <span className="text-stone-300 hidden sm:inline">|</span>
-            <span className="text-stone-500 text-xs sm:text-sm font-medium hidden sm:inline">User Guide</span>
+            <span className="text-stone-300">|</span>
+            <span className="text-stone-500 text-xs sm:text-sm font-medium">User Guide</span>
           </div>
-          <a 
-            href="mailto:support@gymsense.io"
-            className="text-stone-500 hover:text-emerald-600 transition-colors text-sm flex items-center gap-1"
-          >
-            <Mail className="w-4 h-4" />
-            <span className="hidden sm:inline">Need help?</span>
-          </a>
         </div>
       </header>
       
