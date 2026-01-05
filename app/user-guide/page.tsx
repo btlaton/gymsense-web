@@ -33,7 +33,14 @@ interface Step {
   memberScanning?: boolean;
   proScanning?: boolean;
   scanningBackground?: string;
-  webCheckout?: boolean;
+  scanningBackgroundScale?: number; // Scale factor for background (default 1)
+  scanningVariant?: 'dark' | 'light'; // Override default scanning theme
+  // Per-step visibility overrides
+  showMemberPhone?: boolean;
+  showProPhone?: boolean;
+  // Dimmed state (visible but greyed out)
+  memberDimmed?: boolean;
+  proDimmed?: boolean;
 }
 
 interface Flow {
@@ -42,7 +49,8 @@ interface Flow {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   category: 'onboarding' | 'transactions' | 'operations' | 'admin';
-  displayMode: 'single-member' | 'single-pro' | 'dual'; // Which phones to show
+  displayMode: 'single-member' | 'single-pro' | 'dual' | 'dynamic'; // 'dynamic' = per-step control
+  memberPhoneLabel?: string; // Custom label (default: "Member App")
   steps: Step[];
 }
 
@@ -68,15 +76,21 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'pro-login-2',
-        narrative: 'Enter your phone number to receive a six-digit verification code.',
+        narrative: 'Enter your phone number and tap Send Verification Text to receive an SMS with your six-digit verification code.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/pro-app-login/step-2.png',
       },
       {
         id: 'pro-login-3',
-        narrative: 'Enter the verification code to complete onboarding.',
+        narrative: 'Enter the verification code to continue.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/pro-app-login/step-3.png',
+      },
+      {
+        id: 'pro-login-4',
+        narrative: "Onboarding is complete! You'll be directed to the Pro app home screen.",
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/pro-app-login/step-4.png',
       },
     ],
   },
@@ -96,7 +110,7 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'customer-onboarding-2',
-        narrative: 'Enter your phone number to receive a six-digit verification code.',
+        narrative: 'Enter your phone number and tap Send Verification Text to receive an SMS with your six-digit verification code.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/customer-onboarding/step-2.png',
       },
@@ -120,7 +134,7 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'customer-onboarding-6',
-        narrative: "Onboarding is complete and you'll be directed to the Member App home screen.",
+        narrative: "Onboarding is complete! You'll be directed to the Member app home screen.",
         activeApp: 'member',
         memberScreenshot: '/user-guide/customer-onboarding/step-6.png',
       },
@@ -131,28 +145,35 @@ const FLOWS: Flow[] = [
   {
     id: 'new-member-signup',
     title: 'New Member Signup',
-    description: 'Sign up a brand new member via QR checkout',
+    description: 'Sign up a new member via QR checkout',
     icon: Users,
     category: 'transactions',
-    displayMode: 'dual',
+    displayMode: 'dynamic',
+    memberPhoneLabel: "Customer's Phone",
     steps: [
       {
         id: 'new-member-signup-1',
-        narrative: 'Navigate to the Shop screen and add the desired membership product to the cart.',
+        narrative: 'Navigate to the Shop and add the desired membership product to the cart, then tap the Cart button.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/new-member-signup/step-1-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'new-member-signup-2',
-        narrative: 'Tap the Cart button to review the cart and tap Proceed to Checkout.',
+        narrative: 'Set a custom price if desired, otherwise tap Proceed to Checkout.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/new-member-signup/step-2-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'new-member-signup-3',
         narrative: "Tap the Generate Payment QR button to display a QR code for the customer to scan with their phone's camera.",
         activeApp: 'pro',
         proScreenshot: '/user-guide/new-member-signup/step-3-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'new-member-signup-4',
@@ -160,20 +181,29 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/new-member-signup/step-4-pro.png',
         memberScanning: true,
+        scanningVariant: 'light',
+        showMemberPhone: true,
+        showProPhone: true,
       },
       {
         id: 'new-member-signup-5',
         narrative: 'Sarah reviews and agrees to the membership agreement terms, then taps Continue to Payment.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/new-member-signup/step-5-member.png',
-        webCheckout: true,
+        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png', // QR persists
+        showMemberPhone: true,
+        showProPhone: true,
+        proDimmed: true,
       },
       {
         id: 'new-member-signup-6',
         narrative: 'Sarah enters her email, phone and payment method and taps Subscribe.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/new-member-signup/step-6-member.png',
-        webCheckout: true,
+        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png', // QR persists
+        showMemberPhone: true,
+        showProPhone: true,
+        proDimmed: true,
       },
       {
         id: 'new-member-signup-7',
@@ -181,7 +211,8 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         memberScreenshot: '/user-guide/new-member-signup/step-7-member.png',
         proScreenshot: '/user-guide/new-member-signup/step-7-pro.png',
-        webCheckout: true,
+        showMemberPhone: true,
+        showProPhone: true,
       },
     ],
   },
@@ -198,6 +229,8 @@ const FLOWS: Flow[] = [
         narrative: 'Add the desired products to the cart and tap Proceed to Checkout.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/customer-checkout/step-1-pro.png',
+        memberScreenshot: '/user-guide/customer-checkout/step-1-member.png',
+        memberDimmed: true,
       },
       {
         id: 'customer-checkout-2',
@@ -208,9 +241,10 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'customer-checkout-3',
-        narrative: "Scan the member's QR code.",
+        narrative: "Use the Pro app to scan the member's QR code.",
         activeApp: 'both',
         proScanning: true,
+        scanningVariant: 'light',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
       },
       {
@@ -218,6 +252,8 @@ const FLOWS: Flow[] = [
         narrative: 'Confirm the customer name and total and tap Charge Card.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/customer-checkout/step-4-pro.png',
+        memberScreenshot: '/user-guide/customer-checkout/step-2-member.png', // QR persists
+        memberDimmed: true,
       },
       {
         id: 'customer-checkout-5',
@@ -243,13 +279,15 @@ const FLOWS: Flow[] = [
     description: 'Touchless QR check-in at the gym',
     icon: MapPinCheck,
     category: 'operations',
-    displayMode: 'dual',
+    displayMode: 'dynamic',
     steps: [
       {
         id: 'member-check-in-1',
         narrative: 'From the Member app home screen, swipe right on the screen (or tap Check-In from the navigation menu) to open the camera.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/member-check-in/step-1-member.png',
+        showMemberPhone: true,
+        showProPhone: false,
       },
       {
         id: 'member-check-in-2',
@@ -257,6 +295,9 @@ const FLOWS: Flow[] = [
         activeApp: 'member',
         memberScanning: true,
         scanningBackground: '/user-guide/member-check-in/step-2-qr-code.png',
+        scanningBackgroundScale: 0.5,
+        showMemberPhone: true,
+        showProPhone: false,
       },
       {
         id: 'member-check-in-3',
@@ -264,6 +305,8 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         memberScreenshot: '/user-guide/member-check-in/step-3-member.png',
         proScreenshot: '/user-guide/member-check-in/step-3-pro.png',
+        showMemberPhone: true,
+        showProPhone: true,
       },
     ],
   },
@@ -273,31 +316,39 @@ const FLOWS: Flow[] = [
     description: 'Book a personal training session for a client',
     icon: Calendar,
     category: 'operations',
-    displayMode: 'dual',
+    displayMode: 'dynamic',
     steps: [
       {
         id: 'schedule-session-1',
         narrative: 'From the Schedule screen, tap the View Clients button.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/schedule-training-session/step-1-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'schedule-session-2',
         narrative: "Tap on the desired client's card to open their profile.",
         activeApp: 'pro',
         proScreenshot: '/user-guide/schedule-training-session/step-2-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'schedule-session-3',
         narrative: 'Tap the Schedule Session button.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'schedule-session-4',
         narrative: 'Select the desired date, time and session duration, then tap Schedule Session.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/schedule-training-session/step-4-pro.png',
+        showMemberPhone: false,
+        showProPhone: true,
       },
       {
         id: 'schedule-session-5',
@@ -305,6 +356,8 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/schedule-training-session/step-5-pro.png',
         memberScreenshot: '/user-guide/schedule-training-session/step-5-member.png',
+        showMemberPhone: true,
+        showProPhone: true,
       },
     ],
   },
@@ -482,7 +535,7 @@ function useImagePreloader(imagePaths: string[]) {
         img.onerror = () => {
           loadedImages++;
           setLoadedCount(loadedImages);
-          resolve(); // Still resolve on error to not block
+          resolve();
         };
         img.src = src;
       });
@@ -523,44 +576,50 @@ function LoadingSkeleton({ progress }: { progress: number }) {
 }
 
 // ============================================================================
-// PHONE MOCKUP COMPONENT - iPhone Pro Max dimensions
+// PHONE MOCKUP COMPONENT - Clean frame without Dynamic Island
 // ============================================================================
 
 function PhoneMockup({ 
   variant = 'dark',
   isActive = true,
+  isDimmed = false,
   children,
 }: { 
   variant?: 'dark' | 'light';
   isActive?: boolean;
+  isDimmed?: boolean;
   children: React.ReactNode;
 }) {
-  // iPhone Pro Max aspect ratio: approximately 430 x 932 logical pixels (1:2.17)
-  // Using responsive sizes that maintain this aspect ratio
   return (
-    <div className={`relative transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-50 scale-95'}`}>
+    <motion.div 
+      className={`relative transition-all duration-300`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ 
+        opacity: isDimmed ? 0.5 : (isActive ? 1 : 0.6), 
+        scale: isDimmed ? 0.97 : (isActive ? 1 : 0.97)
+      }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+    >
       {/* Active indicator glow */}
-      {isActive && (
+      {isActive && !isDimmed && (
         <div className={`absolute -inset-3 rounded-[3.5rem] blur-xl ${
           variant === 'dark' ? 'bg-emerald-500/15' : 'bg-emerald-600/10'
         }`} />
       )}
       
-      {/* Phone frame - sized for iPhone Pro Max screenshots */}
+      {/* Phone frame - clean design without Dynamic Island */}
       <div className="relative w-[220px] sm:w-[260px] md:w-[280px] h-[476px] sm:h-[563px] md:h-[607px] bg-stone-800 rounded-[2.5rem] sm:rounded-[3rem] p-[6px] shadow-2xl">
         <div className={`w-full h-full rounded-[2.25rem] sm:rounded-[2.75rem] overflow-hidden relative ${
           variant === 'dark' ? 'bg-stone-900' : 'bg-stone-100'
         }`}>
-          {/* Dynamic Island */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-7 sm:h-8 bg-stone-900 rounded-full z-10" />
-          
-          {/* Screen Content - no extra padding, full bleed */}
+          {/* Screen Content - full bleed */}
           <div className="w-full h-full overflow-hidden">
             {children}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -571,9 +630,11 @@ function PhoneMockup({
 function ScanningScreen({ 
   variant = 'dark',
   backgroundImage,
+  backgroundScale = 1,
 }: { 
   variant?: 'dark' | 'light';
   backgroundImage?: string;
+  backgroundScale?: number;
 }) {
   const isDark = variant === 'dark';
   
@@ -583,12 +644,15 @@ function ScanningScreen({
     }`}>
       {/* Optional background image (e.g., QR code stand) */}
       {backgroundImage && (
-        <div className="absolute inset-0 opacity-20">
+        <div 
+          className="absolute inset-0 flex items-center justify-center opacity-20"
+          style={{ transform: `scale(${backgroundScale})` }}
+        >
           <Image 
             src={backgroundImage} 
             alt="Scanning context"
             fill
-            className="object-cover object-center"
+            className="object-contain object-center"
           />
         </div>
       )}
@@ -621,16 +685,16 @@ function ScanningScreen({
         />
         
         {/* Corner accents */}
-        <div className={`absolute top-0 left-0 w-6 h-6 border-t-3 border-l-3 rounded-tl-xl ${
+        <div className={`absolute top-0 left-0 w-6 h-6 border-t-[3px] border-l-[3px] rounded-tl-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute top-0 right-0 w-6 h-6 border-t-3 border-r-3 rounded-tr-xl ${
+        <div className={`absolute top-0 right-0 w-6 h-6 border-t-[3px] border-r-[3px] rounded-tr-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-3 border-l-3 rounded-bl-xl ${
+        <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-[3px] border-l-[3px] rounded-bl-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-3 border-r-3 rounded-br-xl ${
+        <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-[3px] border-r-[3px] rounded-br-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
         
@@ -643,7 +707,7 @@ function ScanningScreen({
         
         {/* QR Code placeholder */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
-          <QRCodeDisplay size="medium" dark={!isDark} />
+          <QRCodeDisplay size="medium" dark={isDark} />
         </div>
       </div>
       
@@ -705,33 +769,23 @@ function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'med
 }
 
 // ============================================================================
-// PLACEHOLDER SCREENS
+// PLACEHOLDER SCREEN - gymsense logo
 // ============================================================================
 
 function PlaceholderScreen({ 
   variant = 'dark', 
-  label 
 }: { 
   variant?: 'dark' | 'light';
-  label: string;
 }) {
   const isDark = variant === 'dark';
   
   return (
-    <div className={`h-full p-6 flex flex-col items-center justify-center ${
+    <div className={`h-full flex flex-col items-center justify-center ${
       isDark ? 'bg-stone-900' : 'bg-stone-100'
     }`}>
-      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-4 ${
-        isDark ? 'bg-stone-800' : 'bg-stone-200'
-      }`}>
-        <span className={`text-3xl ${isDark ? 'text-stone-600' : 'text-stone-400'}`}>📱</span>
-      </div>
-      <p className={`text-sm text-center ${isDark ? 'text-stone-600' : 'text-stone-400'}`}>
-        {label}
-      </p>
-      <p className={`text-xs text-center mt-1 ${isDark ? 'text-stone-700' : 'text-stone-300'}`}>
-        Screenshot pending
-      </p>
+      <span className={`font-display text-3xl ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+        gymsense
+      </span>
     </div>
   );
 }
@@ -742,18 +796,26 @@ function ScreenshotDisplay({
   label,
   isScanning,
   scanningBackground,
-  webCheckout,
+  scanningBackgroundScale,
+  scanningVariant,
 }: {
   screenshot?: string;
   variant: 'dark' | 'light';
   label: string;
   isScanning?: boolean;
   scanningBackground?: string;
-  webCheckout?: boolean;
+  scanningBackgroundScale?: number;
+  scanningVariant?: 'dark' | 'light';
 }) {
   // Show scanning animation
   if (isScanning) {
-    return <ScanningScreen variant={variant} backgroundImage={scanningBackground} />;
+    return (
+      <ScanningScreen 
+        variant={scanningVariant || variant} 
+        backgroundImage={scanningBackground}
+        backgroundScale={scanningBackgroundScale}
+      />
+    );
   }
   
   // Show screenshot
@@ -767,21 +829,36 @@ function ScreenshotDisplay({
           className="object-cover object-top"
           priority
         />
-        {/* Web checkout indicator */}
-        {webCheckout && variant === 'dark' && (
-          <div className="absolute bottom-3 left-3 right-3 z-10">
-            <div className="bg-stone-800/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
-              <p className="text-[10px] text-stone-400">
-                📱 Customer&apos;s phone (web checkout)
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
   
-  return <PlaceholderScreen variant={variant} label={label} />;
+  return <PlaceholderScreen variant={variant} />;
+}
+
+// ============================================================================
+// HELPER: Determine phone visibility for a step
+// ============================================================================
+
+function getPhoneVisibility(flow: Flow, step: Step): { showMember: boolean; showPro: boolean } {
+  // For dynamic display mode, use per-step overrides
+  if (flow.displayMode === 'dynamic') {
+    return {
+      showMember: step.showMemberPhone ?? false,
+      showPro: step.showProPhone ?? false,
+    };
+  }
+  
+  // For fixed display modes
+  switch (flow.displayMode) {
+    case 'single-member':
+      return { showMember: true, showPro: false };
+    case 'single-pro':
+      return { showMember: false, showPro: true };
+    case 'dual':
+    default:
+      return { showMember: true, showPro: true };
+  }
 }
 
 // ============================================================================
@@ -798,6 +875,10 @@ export default function UserGuidePage() {
   
   const selectedFlow = FLOWS.find(f => f.id === selectedFlowId) || FLOWS[0];
   const currentStep = selectedFlow.steps[currentStepIndex];
+  const { showMember, showPro } = getPhoneVisibility(selectedFlow, currentStep);
+  
+  // Get the label for the member phone
+  const memberPhoneLabel = selectedFlow.memberPhoneLabel || 'Member App';
   
   const goToNextStep = () => {
     if (currentStepIndex < selectedFlow.steps.length - 1) {
@@ -934,62 +1015,81 @@ export default function UserGuidePage() {
           
           {/* Phones Display */}
           <div className="flex flex-col items-center">
-            {/* Phones - conditionally render based on displayMode */}
-            <div className="flex justify-center items-start gap-6 sm:gap-10 mb-6">
-              
-              {/* Member Phone (Dark) - only for dual or single-member */}
-              {(selectedFlow.displayMode === 'dual' || selectedFlow.displayMode === 'single-member') && (
-                <div className="flex flex-col items-center">
-                  <PhoneMockup 
-                    variant="dark" 
-                    isActive={selectedFlow.displayMode === 'single-member' || currentStep.activeApp === 'member' || currentStep.activeApp === 'both'}
+            {/* Phones - with AnimatePresence for smooth transitions */}
+            <div className="flex justify-center items-start gap-6 sm:gap-10 mb-6 min-h-[520px] sm:min-h-[600px] md:min-h-[650px]">
+              <AnimatePresence mode="popLayout">
+                {/* Member Phone (Dark) */}
+                {showMember && (
+                  <motion.div 
+                    key="member-phone"
+                    className="flex flex-col items-center"
+                    initial={{ opacity: 0, x: -50, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -50, scale: 0.9 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
                   >
-                    <ScreenshotDisplay
-                      screenshot={currentStep.memberScreenshot}
-                      variant="dark"
-                      label="Member App"
-                      isScanning={currentStep.memberScanning}
-                      scanningBackground={currentStep.scanningBackground}
-                      webCheckout={currentStep.webCheckout}
-                    />
-                  </PhoneMockup>
-                  <div className="mt-4 text-center">
-                    <span className={`text-sm font-medium ${
-                      selectedFlow.displayMode === 'single-member' || currentStep.activeApp === 'member' || currentStep.activeApp === 'both'
-                        ? 'text-emerald-600'
-                        : 'text-stone-400'
-                    }`}>
-                      Member App
-                    </span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Pro Phone (Light) - only for dual or single-pro */}
-              {(selectedFlow.displayMode === 'dual' || selectedFlow.displayMode === 'single-pro') && (
-                <div className="flex flex-col items-center">
-                  <PhoneMockup 
-                    variant="light" 
-                    isActive={selectedFlow.displayMode === 'single-pro' || currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'}
+                    <PhoneMockup 
+                      variant="dark" 
+                      isActive={currentStep.activeApp === 'member' || currentStep.activeApp === 'both'}
+                      isDimmed={currentStep.memberDimmed}
+                    >
+                      <ScreenshotDisplay
+                        screenshot={currentStep.memberScreenshot}
+                        variant="dark"
+                        label={memberPhoneLabel}
+                        isScanning={currentStep.memberScanning}
+                        scanningBackground={currentStep.scanningBackground}
+                        scanningBackgroundScale={currentStep.scanningBackgroundScale}
+                        scanningVariant={currentStep.scanningVariant}
+                      />
+                    </PhoneMockup>
+                    <div className="mt-4 text-center">
+                      <span className={`text-sm font-medium ${
+                        !currentStep.memberDimmed && (currentStep.activeApp === 'member' || currentStep.activeApp === 'both')
+                          ? 'text-emerald-600'
+                          : 'text-stone-400'
+                      }`}>
+                        {memberPhoneLabel}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {/* Pro Phone (Light) */}
+                {showPro && (
+                  <motion.div 
+                    key="pro-phone"
+                    className="flex flex-col items-center"
+                    initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
                   >
-                    <ScreenshotDisplay
-                      screenshot={currentStep.proScreenshot}
-                      variant="light"
-                      label="Pro App"
-                      isScanning={currentStep.proScanning}
-                    />
-                  </PhoneMockup>
-                  <div className="mt-4 text-center">
-                    <span className={`text-sm font-medium ${
-                      selectedFlow.displayMode === 'single-pro' || currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'
-                        ? 'text-stone-700'
-                        : 'text-stone-400'
-                    }`}>
-                      Pro App
-                    </span>
-                  </div>
-                </div>
-              )}
+                    <PhoneMockup 
+                      variant="light" 
+                      isActive={currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'}
+                      isDimmed={currentStep.proDimmed}
+                    >
+                      <ScreenshotDisplay
+                        screenshot={currentStep.proScreenshot}
+                        variant="light"
+                        label="Pro App"
+                        isScanning={currentStep.proScanning}
+                        scanningVariant={currentStep.scanningVariant}
+                      />
+                    </PhoneMockup>
+                    <div className="mt-4 text-center">
+                      <span className={`text-sm font-medium ${
+                        !currentStep.proDimmed && (currentStep.activeApp === 'pro' || currentStep.activeApp === 'both')
+                          ? 'text-stone-700'
+                          : 'text-stone-400'
+                      }`}>
+                        Pro App
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             
             {/* Narrative */}
@@ -1002,12 +1102,12 @@ export default function UserGuidePage() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Active App Indicator - only show for dual mode */}
-                  {selectedFlow.displayMode === 'dual' && (
+                  {/* Active App Indicator - only show for dual/dynamic mode with both phones visible */}
+                  {showMember && showPro && (
                     <div className="flex items-center justify-center gap-2 mb-2">
                       {(currentStep.activeApp === 'member' || currentStep.activeApp === 'both') && (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">
-                          Member
+                          {memberPhoneLabel}
                         </span>
                       )}
                       {(currentStep.activeApp === 'pro' || currentStep.activeApp === 'both') && (
@@ -1067,6 +1167,7 @@ export default function UserGuidePage() {
             {selectedFlow.steps.map((step, idx) => {
               const isActive = idx === currentStepIndex;
               const isPast = idx < currentStepIndex;
+              const stepVisibility = getPhoneVisibility(selectedFlow, step);
               
               return (
                 <li key={step.id}>
@@ -1092,11 +1193,11 @@ export default function UserGuidePage() {
                         }`}>
                           {step.narrative}
                         </p>
-                        {/* App indicators - only for dual mode */}
-                        {selectedFlow.displayMode === 'dual' && (
+                        {/* App indicators - only for steps with both phones visible */}
+                        {stepVisibility.showMember && stepVisibility.showPro && (
                           <div className="flex items-center gap-1 mt-1">
                             {(step.activeApp === 'member' || step.activeApp === 'both') && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-500" title="Member App" />
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" title={memberPhoneLabel} />
                             )}
                             {(step.activeApp === 'pro' || step.activeApp === 'both') && (
                               <span className="w-2 h-2 rounded-full bg-stone-400" title="Pro App" />
