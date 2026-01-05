@@ -5,16 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  User,
   LogIn,
-  Users,
   UserPlus,
   CreditCard,
   MapPinCheck,
   Calendar,
   ShieldCheck,
   Mail,
-  ArrowRight
+  Package,
+  Users,
+  MessageSquare,
+  FileText,
+  ScanLine
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -26,9 +28,13 @@ interface Step {
   id: string;
   narrative: string;
   activeApp: 'member' | 'pro' | 'both';
-  memberScreenshot?: string;  // Path to screenshot image
-  proScreenshot?: string;     // Path to screenshot image
-  hotspot?: { app: 'member' | 'pro'; x: string; y: string }; // Optional tap indicator
+  memberScreenshot?: string;
+  proScreenshot?: string;
+  // Special rendering modes
+  memberScanning?: boolean;  // Show scanning animation instead of screenshot
+  proScanning?: boolean;     // Show scanning animation instead of screenshot
+  scanningBackground?: string; // Optional background image for scanning effect
+  webCheckout?: boolean;     // Note that this happens on customer's phone (web), not member app
 }
 
 interface Flow {
@@ -40,10 +46,14 @@ interface Flow {
   steps: Step[];
 }
 
-// TODO: Replace placeholder steps with actual screenshots and content
+// ============================================================================
+// FLOWS DATA - Updated with real screenshots and narratives
+// ============================================================================
+
 const FLOWS: Flow[] = [
+  // ==================== ONBOARDING ====================
   {
-    id: 'pro-login',
+    id: 'pro-app-login',
     title: 'Pro App Login',
     description: 'Log into the Pro app as a staff member',
     icon: LogIn,
@@ -51,86 +61,71 @@ const FLOWS: Flow[] = [
     steps: [
       {
         id: 'pro-login-1',
-        narrative: 'Open the Pro app and tap "Sign In" to begin.',
+        narrative: 'Open the Pro app and enter the four-digit code from your welcome email.',
         activeApp: 'pro',
-        // proScreenshot: '/user-guide/pro-login/step-1.png',
+        proScreenshot: '/user-guide/pro-app-login/step-1.png',
       },
       {
         id: 'pro-login-2',
-        narrative: 'Enter your credentials and authenticate.',
+        narrative: 'Enter your phone number to receive a six-digit verification code.',
         activeApp: 'pro',
-        // proScreenshot: '/user-guide/pro-login/step-2.png',
+        proScreenshot: '/user-guide/pro-app-login/step-2.png',
+      },
+      {
+        id: 'pro-login-3',
+        narrative: 'Enter the verification code to complete onboarding.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/pro-app-login/step-3.png',
       },
     ],
   },
   {
-    id: 'member-onboarding-before-billing',
-    title: 'Member Onboarding (Before Billing Date)',
-    description: 'Onboard an existing member before their billing anchor date',
+    id: 'customer-onboarding',
+    title: 'Customer Onboarding',
+    description: 'Onboard a customer to the Member app',
     icon: UserPlus,
     category: 'onboarding',
     steps: [
       {
-        id: 'onboard-before-1',
-        narrative: 'Send onboarding email from Pro app or via CLI command.',
-        activeApp: 'pro',
-      },
-      {
-        id: 'onboard-before-2',
-        narrative: 'Member receives email with onboarding link.',
+        id: 'customer-onboarding-1',
+        narrative: 'Open the Member app and enter the four-digit code from your welcome email.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-1.png',
       },
       {
-        id: 'onboard-before-3',
-        narrative: 'Member opens the app and enters their setup code.',
+        id: 'customer-onboarding-2',
+        narrative: 'Enter your phone number to receive a six-digit verification code.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-2.png',
       },
       {
-        id: 'onboard-before-4',
-        narrative: 'Member authenticates via phone number verification.',
+        id: 'customer-onboarding-3',
+        narrative: 'Enter the verification code to continue.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-3.png',
       },
       {
-        id: 'onboard-before-5',
-        narrative: 'Member adds payment method. No charge occurs until billing date.',
+        id: 'customer-onboarding-4',
+        narrative: 'Enter your preferred payment method using either Apple Pay or typing in your card number, expiration date and CVC, then tap Continue.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-4.png',
       },
       {
-        id: 'onboard-before-6',
-        narrative: 'Onboarding complete! Member can now use the app.',
-        activeApp: 'both',
+        id: 'customer-onboarding-5',
+        narrative: 'Your account and payment method will be verified by Stripe.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-5.png',
+      },
+      {
+        id: 'customer-onboarding-6',
+        narrative: "Onboarding is complete and you'll be directed to the Member App home screen.",
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/customer-onboarding/step-6.png',
       },
     ],
   },
-  {
-    id: 'member-onboarding-after-billing',
-    title: 'Member Onboarding (After Billing Date)',
-    description: 'Onboard an existing member who has an outstanding invoice',
-    icon: UserPlus,
-    category: 'onboarding',
-    steps: [
-      {
-        id: 'onboard-after-1',
-        narrative: 'In Pro app, notice the "No Card" warning on the customer.',
-        activeApp: 'pro',
-      },
-      {
-        id: 'onboard-after-2',
-        narrative: 'Member opens the app and completes setup code entry.',
-        activeApp: 'member',
-      },
-      {
-        id: 'onboard-after-3',
-        narrative: 'Member adds payment method. Outstanding invoice is automatically charged.',
-        activeApp: 'member',
-      },
-      {
-        id: 'onboard-after-4',
-        narrative: 'Both apps update in real-time. Pro app shows Active status and the transaction.',
-        activeApp: 'both',
-      },
-    ],
-  },
+
+  // ==================== TRANSACTIONS ====================
   {
     id: 'new-member-signup',
     title: 'New Member Signup',
@@ -139,169 +134,287 @@ const FLOWS: Flow[] = [
     category: 'transactions',
     steps: [
       {
-        id: 'new-member-1',
-        narrative: 'In Pro app, add a membership product to the cart.',
+        id: 'new-member-signup-1',
+        narrative: 'Navigate to the Shop screen and add the desired membership product to the cart.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/new-member-signup/step-1-pro.png',
       },
       {
-        id: 'new-member-2',
-        narrative: 'Tap "Generate Payment QR" to create a checkout link.',
+        id: 'new-member-signup-2',
+        narrative: 'Tap the Cart button to review the cart and tap Proceed to Checkout.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/new-member-signup/step-2-pro.png',
       },
       {
-        id: 'new-member-3',
-        narrative: 'New member scans QR code with their phone camera.',
+        id: 'new-member-signup-3',
+        narrative: "Tap the Generate Payment QR button to display a QR code for the customer to scan with their phone's camera.",
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/new-member-signup/step-3-pro.png',
+      },
+      {
+        id: 'new-member-signup-4',
+        narrative: 'The Pro app displays the QR code; the customer (Sarah) scans the QR code with their phone.',
         activeApp: 'both',
+        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png',
+        memberScanning: true,
       },
       {
-        id: 'new-member-4',
-        narrative: 'Member reviews and accepts the agreement terms.',
+        id: 'new-member-signup-5',
+        narrative: 'Sarah reviews and agrees to the membership agreement terms, then taps Continue to Payment.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/new-member-signup/step-5-member.png',
+        webCheckout: true,
       },
       {
-        id: 'new-member-5',
-        narrative: 'Member enters email and phone number for their account.',
+        id: 'new-member-signup-6',
+        narrative: 'Sarah enters her email, phone and payment method and taps Subscribe.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/new-member-signup/step-6-member.png',
+        webCheckout: true,
       },
       {
-        id: 'new-member-6',
-        narrative: 'Payment completes. Transaction appears in Pro app Financials.',
+        id: 'new-member-signup-7',
+        narrative: 'Payment is confirmed immediately; Sarah will receive the welcome email to onboard to the Member app.',
         activeApp: 'both',
+        memberScreenshot: '/user-guide/new-member-signup/step-7-member.png',
+        proScreenshot: '/user-guide/new-member-signup/step-7-pro.png',
+        webCheckout: true,
       },
     ],
   },
   {
-    id: 'member-checkin',
+    id: 'customer-checkout',
+    title: 'Customer Checkout',
+    description: 'Accept payment by scanning member QR code',
+    icon: CreditCard,
+    category: 'transactions',
+    steps: [
+      {
+        id: 'customer-checkout-1',
+        narrative: 'Add the desired products to the cart and tap Proceed to Checkout.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/customer-checkout/step-1-pro.png',
+      },
+      {
+        id: 'customer-checkout-2',
+        narrative: "Tap the Scan Member QR button to open the camera; Customer swipes left on the Member app home screen to reveal their unique payment QR code.",
+        activeApp: 'both',
+        proScreenshot: '/user-guide/customer-checkout/step-2-pro.png',
+        memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
+      },
+      {
+        id: 'customer-checkout-3',
+        narrative: "Scan the member's QR code.",
+        activeApp: 'both',
+        proScanning: true,
+        memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
+      },
+      {
+        id: 'customer-checkout-4',
+        narrative: 'Confirm the customer name and total and tap Charge Card.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/customer-checkout/step-4-pro.png',
+      },
+      {
+        id: 'customer-checkout-5',
+        narrative: 'Payment is confirmed on both devices instantly.',
+        activeApp: 'both',
+        proScreenshot: '/user-guide/customer-checkout/step-5-pro.png',
+        memberScreenshot: '/user-guide/customer-checkout/step-5-member.png',
+      },
+      {
+        id: 'customer-checkout-6',
+        narrative: 'Transaction immediately appears in Member app (Recent Activity) and Pro app (Transactions).',
+        activeApp: 'both',
+        proScreenshot: '/user-guide/customer-checkout/step-6-pro.png',
+        memberScreenshot: '/user-guide/customer-checkout/step-6-member.png',
+      },
+    ],
+  },
+
+  // ==================== OPERATIONS ====================
+  {
+    id: 'member-check-in',
     title: 'Member Check-In',
     description: 'Touchless QR check-in at the gym',
     icon: MapPinCheck,
     category: 'operations',
     steps: [
       {
-        id: 'checkin-1',
-        narrative: 'Member opens the app and swipes right to access the scanner.',
+        id: 'member-check-in-1',
+        narrative: 'From the Member app home screen, swipe right on the screen (or tap Check-In from the navigation menu) to open the camera.',
         activeApp: 'member',
+        memberScreenshot: '/user-guide/member-check-in/step-1-member.png',
       },
       {
-        id: 'checkin-2',
-        narrative: 'Member scans the QR code posted at the front desk.',
+        id: 'member-check-in-2',
+        narrative: "Scan the QR code posted at the gym's entrance to check-in.",
         activeApp: 'member',
+        memberScanning: true,
+        scanningBackground: '/user-guide/member-check-in/step-2-qr-code.png',
       },
       {
-        id: 'checkin-3',
-        narrative: 'Check-in confirmed! Pro app updates in real-time.',
+        id: 'member-check-in-3',
+        narrative: 'Check-in confirmed! The Pro app updates in real-time.',
         activeApp: 'both',
+        memberScreenshot: '/user-guide/member-check-in/step-3-member.png',
+        proScreenshot: '/user-guide/member-check-in/step-3-pro.png',
       },
     ],
   },
   {
-    id: 'customer-checkout',
-    title: 'Customer Checkout (QR Payment)',
-    description: 'Accept payment by scanning member QR code',
-    icon: CreditCard,
-    category: 'transactions',
-    steps: [
-      {
-        id: 'checkout-1',
-        narrative: 'In Pro app, add items to the cart.',
-        activeApp: 'pro',
-      },
-      {
-        id: 'checkout-2',
-        narrative: 'Tap "Scan Member QR" to begin payment.',
-        activeApp: 'pro',
-      },
-      {
-        id: 'checkout-3',
-        narrative: 'Member swipes left in their app to reveal their payment QR.',
-        activeApp: 'member',
-      },
-      {
-        id: 'checkout-4',
-        narrative: 'Staff scans the member\'s QR code.',
-        activeApp: 'both',
-      },
-      {
-        id: 'checkout-5',
-        narrative: 'Payment confirmed on both devices instantly.',
-        activeApp: 'both',
-      },
-    ],
-  },
-  {
-    id: 'schedule-session',
-    title: 'Schedule a PT Session',
+    id: 'schedule-training-session',
+    title: 'Schedule a Training Session',
     description: 'Book a personal training session for a client',
     icon: Calendar,
     category: 'operations',
     steps: [
       {
-        id: 'schedule-1',
-        narrative: 'Open the Schedule tab in Pro app.',
+        id: 'schedule-session-1',
+        narrative: 'From the Schedule screen, tap the View Clients button.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/schedule-training-session/step-1-pro.png',
       },
       {
-        id: 'schedule-2',
-        narrative: 'Select the client and choose a time slot.',
+        id: 'schedule-session-2',
+        narrative: "Tap on the desired client's card to open their profile.",
         activeApp: 'pro',
+        proScreenshot: '/user-guide/schedule-training-session/step-2-pro.png',
       },
       {
-        id: 'schedule-3',
-        narrative: 'Confirm the session booking.',
+        id: 'schedule-session-3',
+        narrative: 'Tap the Schedule Session button.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
       },
       {
-        id: 'schedule-4',
-        narrative: 'Member receives notification and sees session in their app.',
+        id: 'schedule-session-4',
+        narrative: 'Select the desired date, time and session duration, then tap Schedule Session.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/schedule-training-session/step-4-pro.png',
+      },
+      {
+        id: 'schedule-session-5',
+        narrative: 'Both apps instantly display the scheduled session.',
         activeApp: 'both',
+        proScreenshot: '/user-guide/schedule-training-session/step-5-pro.png',
+        memberScreenshot: '/user-guide/schedule-training-session/step-5-member.png',
       },
     ],
   },
+
+  // ==================== ADMIN ====================
   {
-    id: 'create-product',
+    id: 'create-new-product',
     title: 'Create a New Product',
     description: 'Add a new product to your catalog',
-    icon: CreditCard,
+    icon: Package,
     category: 'admin',
     steps: [
       {
-        id: 'product-1',
-        narrative: 'Navigate to Admin > Products in Pro app.',
+        id: 'create-product-1',
+        narrative: 'Navigate to the Admin -> Products screen and tap the Add Product button.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/create-new-product/step-1.png',
       },
       {
-        id: 'product-2',
-        narrative: 'Tap "Add Product" and fill in the details.',
+        id: 'create-product-2',
+        narrative: 'Enter the product name, description (optional), and price then tap Create Product.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/create-new-product/step-2.png',
       },
       {
-        id: 'product-3',
-        narrative: 'Product is now available in the Shop for checkout.',
+        id: 'create-product-3',
+        narrative: 'The product is now available for sale in the Shop.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/create-new-product/step-3.png',
       },
     ],
   },
   {
-    id: 'trainer-rbac',
-    title: 'Trainer Role (Limited Access)',
-    description: 'See how the app appears for trainer role',
-    icon: ShieldCheck,
+    id: 'add-team-member',
+    title: 'Add a Team Member',
+    description: 'Invite a new staff member to your gym',
+    icon: UserPlus,
     category: 'admin',
     steps: [
       {
-        id: 'rbac-1',
-        narrative: 'Log out of the owner account.',
+        id: 'add-team-1',
+        narrative: 'Navigate to the Admin -> Team screen and tap the Add User button.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/add-team-member/step-1.png',
       },
       {
-        id: 'rbac-2',
-        narrative: 'Log in as a trainer.',
+        id: 'add-team-2',
+        narrative: 'Enter the team member\'s name, email and select the desired role. Tap Add User & Send Invite.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/add-team-member/step-2.png',
       },
       {
-        id: 'rbac-3',
-        narrative: 'Notice: Financials tab is hidden, Admin access is restricted.',
+        id: 'add-team-3',
+        narrative: 'Team member is added to the Team roster and immediately receives the onboarding email.',
         activeApp: 'pro',
+        proScreenshot: '/user-guide/add-team-member/step-3.png',
+      },
+    ],
+  },
+  {
+    id: 'submit-support-request',
+    title: 'Submit a Support Request',
+    description: 'Get help or request a new feature',
+    icon: MessageSquare,
+    category: 'admin',
+    steps: [
+      {
+        id: 'support-1',
+        narrative: 'Navigate to the Admin -> Profile screen and tap the Get Help button.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/submit-support-request/step-1.png',
+      },
+      {
+        id: 'support-2',
+        narrative: 'Select the appropriate category for the issue.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/submit-support-request/step-2.png',
+      },
+      {
+        id: 'support-3',
+        narrative: 'Enter request details and tap Send.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/submit-support-request/step-3.png',
+      },
+      {
+        id: 'support-4',
+        narrative: 'Support request is immediately sent to the gymsense support team inbox for review.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/submit-support-request/step-4.png',
+      },
+    ],
+  },
+  {
+    id: 'view-membership-agreements',
+    title: 'View/Edit Membership Agreements',
+    description: 'Manage your membership agreement terms',
+    icon: FileText,
+    category: 'admin',
+    steps: [
+      {
+        id: 'agreements-1',
+        narrative: 'Navigate to the Admin -> Agreements screen.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/view-membership-agreements/step-1.png',
+      },
+      {
+        id: 'agreements-2',
+        narrative: 'Select the desired agreement terms and tap the Edit button.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/view-membership-agreements/step-2.png',
+      },
+      {
+        id: 'agreements-3',
+        narrative: 'Review and edit the terms as desired, then tap Save.',
+        activeApp: 'pro',
+        proScreenshot: '/user-guide/view-membership-agreements/step-3.png',
       },
     ],
   },
@@ -355,6 +468,146 @@ function PhoneMockup({
 }
 
 // ============================================================================
+// SCANNING ANIMATION COMPONENT
+// ============================================================================
+
+function ScanningScreen({ 
+  variant = 'dark',
+  backgroundImage,
+}: { 
+  variant?: 'dark' | 'light';
+  backgroundImage?: string;
+}) {
+  const isDark = variant === 'dark';
+  
+  return (
+    <div className={`h-full flex flex-col items-center justify-center p-3 relative ${
+      isDark ? 'bg-stone-900' : 'bg-stone-100'
+    }`}>
+      {/* Optional background image (e.g., QR code stand) */}
+      {backgroundImage && (
+        <div className="absolute inset-0 opacity-20">
+          <Image 
+            src={backgroundImage} 
+            alt="Scanning context"
+            fill
+            className="object-cover object-center"
+          />
+        </div>
+      )}
+      
+      {/* Header */}
+      <div className="absolute top-1 sm:top-2 left-3 right-3 flex items-center justify-between z-10">
+        <span className={`font-display text-sm ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+          gymsense
+        </span>
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+          isDark ? 'bg-stone-700' : 'bg-stone-300'
+        }`}>
+          <ScanLine className={`w-3 h-3 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
+        </div>
+      </div>
+      
+      <p className={`text-xs font-medium mb-3 z-10 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+        Scanning...
+      </p>
+      
+      {/* Scanning frame */}
+      <div className="relative w-24 sm:w-28 h-24 sm:h-28 z-10">
+        {/* Animated border */}
+        <motion.div 
+          className={`absolute inset-0 border-2 rounded-xl ${
+            isDark ? 'border-emerald-500' : 'border-emerald-600'
+          }`}
+          animate={{ opacity: [1, 0.5, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        />
+        
+        {/* Corner accents */}
+        <div className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 rounded-tl-lg ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 rounded-tr-lg ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 rounded-bl-lg ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 rounded-br-lg ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        
+        {/* Scanning line */}
+        <motion.div 
+          className={`absolute inset-x-2 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
+          animate={{ top: ['10%', '85%', '10%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        
+        {/* QR Code placeholder */}
+        <div className="absolute inset-0 flex items-center justify-center p-3">
+          <QRCodeDisplay size="small" dark={!isDark} />
+        </div>
+      </div>
+      
+      <p className={`mt-3 text-[10px] z-10 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
+        Point camera at QR code
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// QR CODE DISPLAY COMPONENT
+// ============================================================================
+
+function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'medium'; dark?: boolean }) {
+  const sizeClasses = {
+    small: 'w-14 h-14',
+    medium: 'w-20 h-20',
+  };
+  
+  const color = dark ? '#1c1917' : '#fafaf9';
+  
+  return (
+    <svg className={sizeClasses[size]} viewBox="0 0 100 100">
+      {/* Position detection patterns (corners) */}
+      <rect x="5" y="5" width="25" height="25" fill={color} />
+      <rect x="8" y="8" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
+      <rect x="12" y="12" width="11" height="11" fill={color} />
+      
+      <rect x="70" y="5" width="25" height="25" fill={color} />
+      <rect x="73" y="8" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
+      <rect x="77" y="12" width="11" height="11" fill={color} />
+      
+      <rect x="5" y="70" width="25" height="25" fill={color} />
+      <rect x="8" y="73" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
+      <rect x="12" y="77" width="11" height="11" fill={color} />
+      
+      {/* Data modules */}
+      <rect x="35" y="5" width="5" height="5" fill={color} />
+      <rect x="45" y="5" width="5" height="5" fill={color} />
+      <rect x="55" y="5" width="5" height="5" fill={color} />
+      <rect x="35" y="12" width="5" height="5" fill={color} />
+      <rect x="50" y="12" width="5" height="5" fill={color} />
+      <rect x="40" y="35" width="5" height="5" fill={color} />
+      <rect x="50" y="35" width="5" height="5" fill={color} />
+      <rect x="35" y="50" width="5" height="5" fill={color} />
+      <rect x="50" y="50" width="5" height="5" fill={color} />
+      <rect x="65" y="50" width="5" height="5" fill={color} />
+      <rect x="80" y="50" width="5" height="5" fill={color} />
+      <rect x="70" y="70" width="5" height="5" fill={color} />
+      <rect x="80" y="70" width="5" height="5" fill={color} />
+      <rect x="90" y="70" width="5" height="5" fill={color} />
+      <rect x="70" y="80" width="5" height="5" fill={color} />
+      <rect x="90" y="80" width="5" height="5" fill={color} />
+      <rect x="70" y="90" width="5" height="5" fill={color} />
+      <rect x="80" y="90" width="5" height="5" fill={color} />
+    </svg>
+  );
+}
+
+// ============================================================================
 // PLACEHOLDER SCREENS
 // ============================================================================
 
@@ -390,11 +643,23 @@ function ScreenshotDisplay({
   screenshot,
   variant,
   label,
+  isScanning,
+  scanningBackground,
+  webCheckout,
 }: {
   screenshot?: string;
   variant: 'dark' | 'light';
   label: string;
+  isScanning?: boolean;
+  scanningBackground?: string;
+  webCheckout?: boolean;
 }) {
+  // Show scanning animation
+  if (isScanning) {
+    return <ScanningScreen variant={variant} backgroundImage={scanningBackground} />;
+  }
+  
+  // Show screenshot
   if (screenshot) {
     return (
       <div className="h-full w-full relative">
@@ -404,6 +669,16 @@ function ScreenshotDisplay({
           fill
           className="object-cover object-top"
         />
+        {/* Web checkout indicator */}
+        {webCheckout && variant === 'dark' && (
+          <div className="absolute bottom-2 left-2 right-2 z-10">
+            <div className="bg-stone-800/90 backdrop-blur-sm rounded-lg px-2 py-1 text-center">
+              <p className="text-[8px] text-stone-400">
+                📱 Customer&apos;s phone (web checkout)
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -445,7 +720,9 @@ export default function UserGuidePage() {
       <header className="border-b border-stone-800 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-display text-2xl text-emerald-500">gymsense</span>
+            <a href="/" className="font-display text-2xl text-emerald-500 hover:text-emerald-400 transition-colors">
+              gymsense
+            </a>
             <span className="text-stone-600">|</span>
             <span className="text-stone-400 text-sm">User Guide</span>
           </div>
@@ -561,6 +838,9 @@ export default function UserGuidePage() {
                     screenshot={currentStep.memberScreenshot}
                     variant="dark"
                     label="Member App"
+                    isScanning={currentStep.memberScanning}
+                    scanningBackground={currentStep.scanningBackground}
+                    webCheckout={currentStep.webCheckout}
                   />
                 </PhoneMockup>
                 <div className="mt-3 text-center">
@@ -584,6 +864,7 @@ export default function UserGuidePage() {
                     screenshot={currentStep.proScreenshot}
                     variant="light"
                     label="Pro App"
+                    isScanning={currentStep.proScanning}
                   />
                 </PhoneMockup>
                 <div className="mt-3 text-center">
@@ -716,4 +997,3 @@ export default function UserGuidePage() {
     </main>
   );
 }
-
