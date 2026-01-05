@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -33,12 +33,10 @@ interface Step {
   memberScanning?: boolean;
   proScanning?: boolean;
   scanningBackground?: string;
-  scanningBackgroundScale?: number; // Scale factor for background (default 1)
-  scanningVariant?: 'dark' | 'light'; // Override default scanning theme
-  // Per-step visibility overrides
+  scanningBackgroundScale?: number;
+  scanningVariant?: 'dark' | 'light';
   showMemberPhone?: boolean;
   showProPhone?: boolean;
-  // Dimmed state (visible but greyed out)
   memberDimmed?: boolean;
   proDimmed?: boolean;
 }
@@ -49,8 +47,8 @@ interface Flow {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   category: 'onboarding' | 'transactions' | 'operations' | 'admin';
-  displayMode: 'single-member' | 'single-pro' | 'dual' | 'dynamic'; // 'dynamic' = per-step control
-  memberPhoneLabel?: string; // Custom label (default: "Member App")
+  displayMode: 'single-member' | 'single-pro' | 'dual' | 'dynamic';
+  memberPhoneLabel?: string;
   steps: Step[];
 }
 
@@ -190,7 +188,7 @@ const FLOWS: Flow[] = [
         narrative: 'Sarah reviews and agrees to the membership agreement terms, then taps Continue to Payment.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/new-member-signup/step-5-member.png',
-        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png', // QR persists
+        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png',
         showMemberPhone: true,
         showProPhone: true,
         proDimmed: true,
@@ -200,7 +198,7 @@ const FLOWS: Flow[] = [
         narrative: 'Sarah enters her email, phone and payment method and taps Subscribe.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/new-member-signup/step-6-member.png',
-        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png', // QR persists
+        proScreenshot: '/user-guide/new-member-signup/step-4-pro.png',
         showMemberPhone: true,
         showProPhone: true,
         proDimmed: true,
@@ -252,7 +250,7 @@ const FLOWS: Flow[] = [
         narrative: 'Confirm the customer name and total and tap Charge Card.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/customer-checkout/step-4-pro.png',
-        memberScreenshot: '/user-guide/customer-checkout/step-2-member.png', // QR persists
+        memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
         memberDimmed: true,
       },
       {
@@ -504,7 +502,7 @@ function getAllImagePaths(): string[] {
       if (step.scanningBackground) paths.push(step.scanningBackground);
     });
   });
-  return Array.from(new Set(paths)); // Remove duplicates
+  return Array.from(new Set(paths));
 }
 
 // ============================================================================
@@ -560,7 +558,6 @@ function LoadingSkeleton({ progress }: { progress: number }) {
         <span className="font-display text-3xl text-emerald-600 mb-4 block">gymsense</span>
         <p className="text-stone-500 text-sm mb-6">Loading User Guide...</p>
         
-        {/* Progress bar */}
         <div className="w-64 h-2 bg-stone-200 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-emerald-600 rounded-full"
@@ -576,23 +573,38 @@ function LoadingSkeleton({ progress }: { progress: number }) {
 }
 
 // ============================================================================
-// PHONE MOCKUP COMPONENT - Clean frame without Dynamic Island
+// PHONE MOCKUP COMPONENT - Responsive sizing based on dual/single display
 // ============================================================================
 
 function PhoneMockup({ 
   variant = 'dark',
   isActive = true,
   isDimmed = false,
+  size = 'default',
   children,
 }: { 
   variant?: 'dark' | 'light';
   isActive?: boolean;
   isDimmed?: boolean;
+  size?: 'default' | 'compact';
   children: React.ReactNode;
 }) {
+  // Size classes based on single vs dual display
+  const sizeClasses = size === 'compact' 
+    ? 'w-[150px] sm:w-[170px] md:w-[200px] lg:w-[220px] h-[325px] sm:h-[368px] md:h-[433px] lg:h-[476px]'
+    : 'w-[200px] sm:w-[220px] md:w-[260px] lg:w-[280px] h-[433px] sm:h-[476px] md:h-[563px] lg:h-[607px]';
+  
+  const borderRadiusClasses = size === 'compact'
+    ? 'rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem]'
+    : 'rounded-[2.5rem] sm:rounded-[2.75rem] md:rounded-[3rem]';
+  
+  const innerRadiusClasses = size === 'compact'
+    ? 'rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.25rem]'
+    : 'rounded-[2.25rem] sm:rounded-[2.5rem] md:rounded-[2.75rem]';
+
   return (
     <motion.div 
-      className={`relative transition-all duration-300`}
+      className="relative transition-all duration-300"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ 
         opacity: isDimmed ? 0.5 : (isActive ? 1 : 0.6), 
@@ -603,17 +615,16 @@ function PhoneMockup({
     >
       {/* Active indicator glow */}
       {isActive && !isDimmed && (
-        <div className={`absolute -inset-3 rounded-[3.5rem] blur-xl ${
+        <div className={`absolute -inset-2 sm:-inset-3 rounded-[3rem] sm:rounded-[3.5rem] blur-xl ${
           variant === 'dark' ? 'bg-emerald-500/15' : 'bg-emerald-600/10'
         }`} />
       )}
       
-      {/* Phone frame - clean design without Dynamic Island */}
-      <div className="relative w-[220px] sm:w-[260px] md:w-[280px] h-[476px] sm:h-[563px] md:h-[607px] bg-stone-800 rounded-[2.5rem] sm:rounded-[3rem] p-[6px] shadow-2xl">
-        <div className={`w-full h-full rounded-[2.25rem] sm:rounded-[2.75rem] overflow-hidden relative ${
+      {/* Phone frame */}
+      <div className={`relative ${sizeClasses} bg-stone-800 ${borderRadiusClasses} p-[4px] sm:p-[5px] md:p-[6px] shadow-2xl`}>
+        <div className={`w-full h-full ${innerRadiusClasses} overflow-hidden relative ${
           variant === 'dark' ? 'bg-stone-900' : 'bg-stone-100'
         }`}>
-          {/* Screen Content - full bleed */}
           <div className="w-full h-full overflow-hidden">
             {children}
           </div>
@@ -642,7 +653,6 @@ function ScanningScreen({
     <div className={`h-full flex flex-col items-center justify-center p-4 relative ${
       isDark ? 'bg-stone-900' : 'bg-stone-100'
     }`}>
-      {/* Optional background image (e.g., QR code stand) */}
       {backgroundImage && (
         <div 
           className="absolute inset-0 flex items-center justify-center opacity-20"
@@ -657,61 +667,55 @@ function ScanningScreen({
         </div>
       )}
       
-      {/* Header */}
-      <div className="absolute top-12 left-4 right-4 flex items-center justify-between z-10">
-        <span className={`font-display text-base ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+      <div className="absolute top-8 sm:top-12 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between z-10">
+        <span className={`font-display text-sm sm:text-base ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
           gymsense
         </span>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+        <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
           isDark ? 'bg-stone-700' : 'bg-stone-300'
         }`}>
-          <ScanLine className={`w-4 h-4 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
+          <ScanLine className={`w-3 h-3 sm:w-4 sm:h-4 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
         </div>
       </div>
       
-      <p className={`text-sm font-medium mb-4 z-10 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+      <p className={`text-xs sm:text-sm font-medium mb-3 sm:mb-4 z-10 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
         Scanning...
       </p>
       
-      {/* Scanning frame */}
-      <div className="relative w-32 sm:w-40 h-32 sm:h-40 z-10">
-        {/* Animated border */}
+      <div className="relative w-24 sm:w-32 md:w-40 h-24 sm:h-32 md:h-40 z-10">
         <motion.div 
-          className={`absolute inset-0 border-2 rounded-2xl ${
+          className={`absolute inset-0 border-2 rounded-xl sm:rounded-2xl ${
             isDark ? 'border-emerald-500' : 'border-emerald-600'
           }`}
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
         
-        {/* Corner accents */}
-        <div className={`absolute top-0 left-0 w-6 h-6 border-t-[3px] border-l-[3px] rounded-tl-xl ${
+        <div className={`absolute top-0 left-0 w-4 sm:w-6 h-4 sm:h-6 border-t-[3px] border-l-[3px] rounded-tl-lg sm:rounded-tl-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute top-0 right-0 w-6 h-6 border-t-[3px] border-r-[3px] rounded-tr-xl ${
+        <div className={`absolute top-0 right-0 w-4 sm:w-6 h-4 sm:h-6 border-t-[3px] border-r-[3px] rounded-tr-lg sm:rounded-tr-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-[3px] border-l-[3px] rounded-bl-xl ${
+        <div className={`absolute bottom-0 left-0 w-4 sm:w-6 h-4 sm:h-6 border-b-[3px] border-l-[3px] rounded-bl-lg sm:rounded-bl-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
-        <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-[3px] border-r-[3px] rounded-br-xl ${
+        <div className={`absolute bottom-0 right-0 w-4 sm:w-6 h-4 sm:h-6 border-b-[3px] border-r-[3px] rounded-br-lg sm:rounded-br-xl ${
           isDark ? 'border-emerald-400' : 'border-emerald-500'
         }`} />
         
-        {/* Scanning line */}
         <motion.div 
-          className={`absolute inset-x-3 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
+          className={`absolute inset-x-2 sm:inset-x-3 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
           animate={{ top: ['10%', '85%', '10%'] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
         
-        {/* QR Code placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          <QRCodeDisplay size="medium" dark={isDark} />
+        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4">
+          <QRCodeDisplay size="responsive" dark={isDark} />
         </div>
       </div>
       
-      <p className={`mt-4 text-xs z-10 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
+      <p className={`mt-3 sm:mt-4 text-[10px] sm:text-xs z-10 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
         Point camera at QR code
       </p>
     </div>
@@ -722,17 +726,17 @@ function ScanningScreen({
 // QR CODE DISPLAY COMPONENT
 // ============================================================================
 
-function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'medium'; dark?: boolean }) {
+function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'medium' | 'responsive'; dark?: boolean }) {
   const sizeClasses = {
-    small: 'w-16 h-16',
-    medium: 'w-24 h-24',
+    small: 'w-14 h-14',
+    medium: 'w-20 h-20 sm:w-24 sm:h-24',
+    responsive: 'w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24',
   };
   
   const color = dark ? '#1c1917' : '#fafaf9';
   
   return (
     <svg className={sizeClasses[size]} viewBox="0 0 100 100">
-      {/* Position detection patterns (corners) */}
       <rect x="5" y="5" width="25" height="25" fill={color} />
       <rect x="8" y="8" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
       <rect x="12" y="12" width="11" height="11" fill={color} />
@@ -745,7 +749,6 @@ function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'med
       <rect x="8" y="73" width="19" height="19" fill={dark ? '#fafaf9' : '#1c1917'} />
       <rect x="12" y="77" width="11" height="11" fill={color} />
       
-      {/* Data modules */}
       <rect x="35" y="5" width="5" height="5" fill={color} />
       <rect x="45" y="5" width="5" height="5" fill={color} />
       <rect x="55" y="5" width="5" height="5" fill={color} />
@@ -769,7 +772,7 @@ function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'med
 }
 
 // ============================================================================
-// PLACEHOLDER SCREEN - gymsense logo
+// PLACEHOLDER SCREEN
 // ============================================================================
 
 function PlaceholderScreen({ 
@@ -783,7 +786,7 @@ function PlaceholderScreen({
     <div className={`h-full flex flex-col items-center justify-center ${
       isDark ? 'bg-stone-900' : 'bg-stone-100'
     }`}>
-      <span className={`font-display text-3xl ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+      <span className={`font-display text-2xl sm:text-3xl ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
         gymsense
       </span>
     </div>
@@ -807,7 +810,6 @@ function ScreenshotDisplay({
   scanningBackgroundScale?: number;
   scanningVariant?: 'dark' | 'light';
 }) {
-  // Show scanning animation
   if (isScanning) {
     return (
       <ScanningScreen 
@@ -818,7 +820,6 @@ function ScreenshotDisplay({
     );
   }
   
-  // Show screenshot
   if (screenshot) {
     return (
       <div className="h-full w-full relative">
@@ -841,7 +842,6 @@ function ScreenshotDisplay({
 // ============================================================================
 
 function getPhoneVisibility(flow: Flow, step: Step): { showMember: boolean; showPro: boolean } {
-  // For dynamic display mode, use per-step overrides
   if (flow.displayMode === 'dynamic') {
     return {
       showMember: step.showMemberPhone ?? false,
@@ -849,7 +849,6 @@ function getPhoneVisibility(flow: Flow, step: Step): { showMember: boolean; show
     };
   }
   
-  // For fixed display modes
   switch (flow.displayMode) {
     case 'single-member':
       return { showMember: true, showPro: false };
@@ -862,23 +861,171 @@ function getPhoneVisibility(flow: Flow, step: Step): { showMember: boolean; show
 }
 
 // ============================================================================
+// STEP SLIDE COMPONENT (for carousel)
+// ============================================================================
+
+interface StepSlideProps {
+  step: Step;
+  flow: Flow;
+  showMember: boolean;
+  showPro: boolean;
+  isDualDisplay: boolean;
+  memberPhoneLabel: string;
+}
+
+function StepSlide({ step, flow, showMember, showPro, isDualDisplay, memberPhoneLabel }: StepSlideProps) {
+  const phoneSize = isDualDisplay ? 'compact' : 'default';
+  
+  return (
+    <div className="flex flex-col items-center px-2 sm:px-4">
+      {/* Phones */}
+      <div className={`flex justify-center items-start mb-4 sm:mb-6 ${
+        isDualDisplay ? 'gap-2 sm:gap-4 md:gap-6 lg:gap-8' : 'gap-4 sm:gap-8'
+      }`}>
+        <AnimatePresence mode="popLayout">
+          {showMember && (
+            <motion.div 
+              key="member-phone"
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, x: -30, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -30, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              <PhoneMockup 
+                variant="dark" 
+                isActive={step.activeApp === 'member' || step.activeApp === 'both'}
+                isDimmed={step.memberDimmed}
+                size={phoneSize}
+              >
+                <ScreenshotDisplay
+                  screenshot={step.memberScreenshot}
+                  variant="dark"
+                  label={memberPhoneLabel}
+                  isScanning={step.memberScanning}
+                  scanningBackground={step.scanningBackground}
+                  scanningBackgroundScale={step.scanningBackgroundScale}
+                  scanningVariant={step.scanningVariant}
+                />
+              </PhoneMockup>
+              <div className="mt-2 sm:mt-3 text-center">
+                <span className={`text-xs sm:text-sm font-medium ${
+                  !step.memberDimmed && (step.activeApp === 'member' || step.activeApp === 'both')
+                    ? 'text-emerald-600'
+                    : 'text-stone-400'
+                }`}>
+                  {memberPhoneLabel}
+                </span>
+              </div>
+            </motion.div>
+          )}
+          
+          {showPro && (
+            <motion.div 
+              key="pro-phone"
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, x: 30, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 30, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              <PhoneMockup 
+                variant="light" 
+                isActive={step.activeApp === 'pro' || step.activeApp === 'both'}
+                isDimmed={step.proDimmed}
+                size={phoneSize}
+              >
+                <ScreenshotDisplay
+                  screenshot={step.proScreenshot}
+                  variant="light"
+                  label="Pro App"
+                  isScanning={step.proScanning}
+                  scanningVariant={step.scanningVariant}
+                />
+              </PhoneMockup>
+              <div className="mt-2 sm:mt-3 text-center">
+                <span className={`text-xs sm:text-sm font-medium ${
+                  !step.proDimmed && (step.activeApp === 'pro' || step.activeApp === 'both')
+                    ? 'text-stone-700'
+                    : 'text-stone-400'
+                }`}>
+                  Pro App
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      
+      {/* Narrative */}
+      <div className="max-w-sm sm:max-w-md text-center px-2">
+        {showMember && showPro && (
+          <div className="flex items-center justify-center gap-2 mb-2">
+            {(step.activeApp === 'member' || step.activeApp === 'both') && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">
+                {memberPhoneLabel}
+              </span>
+            )}
+            {(step.activeApp === 'pro' || step.activeApp === 'both') && (
+              <span className="px-2 py-0.5 rounded-full bg-stone-200 text-stone-700 text-[10px] font-medium">
+                Pro
+              </span>
+            )}
+          </div>
+        )}
+        
+        <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
+          {step.narrative}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
 
 export default function UserGuidePage() {
   const [selectedFlowId, setSelectedFlowId] = useState(FLOWS[0].id);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isScrollingRef = useRef(false);
   
-  // Preload all images
   const allImagePaths = getAllImagePaths();
   const { imagesLoaded, loadedCount, totalCount } = useImagePreloader(allImagePaths);
   
   const selectedFlow = FLOWS.find(f => f.id === selectedFlowId) || FLOWS[0];
-  const currentStep = selectedFlow.steps[currentStepIndex];
-  const { showMember, showPro } = getPhoneVisibility(selectedFlow, currentStep);
-  
-  // Get the label for the member phone
   const memberPhoneLabel = selectedFlow.memberPhoneLabel || 'Member App';
+  
+  // Scroll to step when index changes (from buttons or external navigation)
+  useEffect(() => {
+    if (carouselRef.current && !isScrollingRef.current) {
+      const slideWidth = carouselRef.current.scrollWidth / selectedFlow.steps.length;
+      carouselRef.current.scrollTo({
+        left: slideWidth * currentStepIndex,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentStepIndex, selectedFlow.steps.length]);
+  
+  // Sync scroll position with step index
+  const handleScroll = useCallback(() => {
+    if (!carouselRef.current) return;
+    
+    const scrollLeft = carouselRef.current.scrollLeft;
+    const slideWidth = carouselRef.current.scrollWidth / selectedFlow.steps.length;
+    const newIndex = Math.round(scrollLeft / slideWidth);
+    
+    if (newIndex !== currentStepIndex && newIndex >= 0 && newIndex < selectedFlow.steps.length) {
+      isScrollingRef.current = true;
+      setCurrentStepIndex(newIndex);
+      // Reset flag after animation
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 100);
+    }
+  }, [currentStepIndex, selectedFlow.steps.length]);
   
   const goToNextStep = () => {
     if (currentStepIndex < selectedFlow.steps.length - 1) {
@@ -895,9 +1042,12 @@ export default function UserGuidePage() {
   const selectFlow = (flowId: string) => {
     setSelectedFlowId(flowId);
     setCurrentStepIndex(0);
+    // Reset scroll position
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ left: 0, behavior: 'instant' });
+    }
   };
   
-  // Show loading skeleton while images preload
   if (!imagesLoaded) {
     const progress = totalCount > 0 ? (loadedCount / totalCount) * 100 : 0;
     return <LoadingSkeleton progress={progress} />;
@@ -926,7 +1076,7 @@ export default function UserGuidePage() {
       </header>
       
       <div className="flex">
-        {/* Sidebar Navigation */}
+        {/* Sidebar Navigation - Desktop */}
         <aside className="w-64 border-r border-stone-200 min-h-[calc(100vh-65px)] p-4 hidden lg:block bg-white">
           <nav className="space-y-6">
             {CATEGORIES.map(category => {
@@ -965,9 +1115,9 @@ export default function UserGuidePage() {
         </aside>
         
         {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 bg-stone-50">
+        <div className="flex-1 bg-stone-50 overflow-hidden">
           {/* Mobile Flow Selector */}
-          <div className="lg:hidden mb-6">
+          <div className="lg:hidden p-4 pb-2">
             <select
               value={selectedFlowId}
               onChange={(e) => selectFlow(e.target.value)}
@@ -984,17 +1134,17 @@ export default function UserGuidePage() {
           </div>
           
           {/* Flow Header */}
-          <div className="mb-8 text-center">
-            <h1 className="text-xl sm:text-2xl font-semibold text-stone-900 mb-2">
+          <div className="pt-4 pb-2 sm:pt-6 sm:pb-4 text-center px-4">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-stone-900 mb-1">
               {selectedFlow.title}
             </h1>
-            <p className="text-stone-500 text-sm">
+            <p className="text-stone-500 text-xs sm:text-sm">
               {selectedFlow.description}
             </p>
           </div>
           
-          {/* Step Progress */}
-          <div className="flex items-center justify-center gap-2 mb-6">
+          {/* Step Progress Dots */}
+          <div className="flex items-center justify-center gap-2 pb-4">
             {selectedFlow.steps.map((step, idx) => {
               const isActive = idx === currentStepIndex;
               const isPast = idx < currentStepIndex;
@@ -1013,152 +1163,79 @@ export default function UserGuidePage() {
             })}
           </div>
           
-          {/* Phones Display */}
-          <div className="flex flex-col items-center">
-            {/* Phones - with AnimatePresence for smooth transitions */}
-            <div className="flex justify-center items-start gap-6 sm:gap-10 mb-6 min-h-[520px] sm:min-h-[600px] md:min-h-[650px]">
-              <AnimatePresence mode="popLayout">
-                {/* Member Phone (Dark) */}
-                {showMember && (
-                  <motion.div 
-                    key="member-phone"
-                    className="flex flex-col items-center"
-                    initial={{ opacity: 0, x: -50, scale: 0.9 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -50, scale: 0.9 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  >
-                    <PhoneMockup 
-                      variant="dark" 
-                      isActive={currentStep.activeApp === 'member' || currentStep.activeApp === 'both'}
-                      isDimmed={currentStep.memberDimmed}
-                    >
-                      <ScreenshotDisplay
-                        screenshot={currentStep.memberScreenshot}
-                        variant="dark"
-                        label={memberPhoneLabel}
-                        isScanning={currentStep.memberScanning}
-                        scanningBackground={currentStep.scanningBackground}
-                        scanningBackgroundScale={currentStep.scanningBackgroundScale}
-                        scanningVariant={currentStep.scanningVariant}
-                      />
-                    </PhoneMockup>
-                    <div className="mt-4 text-center">
-                      <span className={`text-sm font-medium ${
-                        !currentStep.memberDimmed && (currentStep.activeApp === 'member' || currentStep.activeApp === 'both')
-                          ? 'text-emerald-600'
-                          : 'text-stone-400'
-                      }`}>
-                        {memberPhoneLabel}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {/* Pro Phone (Light) */}
-                {showPro && (
-                  <motion.div 
-                    key="pro-phone"
-                    className="flex flex-col items-center"
-                    initial={{ opacity: 0, x: 50, scale: 0.9 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  >
-                    <PhoneMockup 
-                      variant="light" 
-                      isActive={currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'}
-                      isDimmed={currentStep.proDimmed}
-                    >
-                      <ScreenshotDisplay
-                        screenshot={currentStep.proScreenshot}
-                        variant="light"
-                        label="Pro App"
-                        isScanning={currentStep.proScanning}
-                        scanningVariant={currentStep.scanningVariant}
-                      />
-                    </PhoneMockup>
-                    <div className="mt-4 text-center">
-                      <span className={`text-sm font-medium ${
-                        !currentStep.proDimmed && (currentStep.activeApp === 'pro' || currentStep.activeApp === 'both')
-                          ? 'text-stone-700'
-                          : 'text-stone-400'
-                      }`}>
-                        Pro App
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            
-            {/* Narrative */}
-            <div className="max-w-lg text-center mb-6">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
+          {/* Swipeable Carousel */}
+          <div 
+            ref={carouselRef}
+            onScroll={handleScroll}
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            {selectedFlow.steps.map((step, idx) => {
+              const { showMember, showPro } = getPhoneVisibility(selectedFlow, step);
+              const isDualDisplay = showMember && showPro;
+              
+              return (
+                <div 
+                  key={step.id}
+                  className="flex-shrink-0 w-full snap-center"
                 >
-                  {/* Active App Indicator - only show for dual/dynamic mode with both phones visible */}
-                  {showMember && showPro && (
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      {(currentStep.activeApp === 'member' || currentStep.activeApp === 'both') && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">
-                          {memberPhoneLabel}
-                        </span>
-                      )}
-                      {(currentStep.activeApp === 'pro' || currentStep.activeApp === 'both') && (
-                        <span className="px-2 py-0.5 rounded-full bg-stone-200 text-stone-700 text-[10px] font-medium">
-                          Pro
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  
-                  <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
-                    {currentStep.narrative}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                  <StepSlide
+                    step={step}
+                    flow={selectedFlow}
+                    showMember={showMember}
+                    showPro={showPro}
+                    isDualDisplay={isDualDisplay}
+                    memberPhoneLabel={memberPhoneLabel}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Desktop Navigation Buttons */}
+          <div className="hidden sm:flex items-center justify-center gap-4 py-4">
+            <button
+              onClick={goToPrevStep}
+              disabled={currentStepIndex === 0}
+              className={`p-2 rounded-full transition-colors ${
+                currentStepIndex === 0
+                  ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                  : 'bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-stone-800'
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
             
-            {/* Navigation */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={goToPrevStep}
-                disabled={currentStepIndex === 0}
-                className={`p-2 rounded-full transition-colors ${
-                  currentStepIndex === 0
-                    ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
-                    : 'bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-stone-800'
-                }`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              
-              <span className="text-stone-500 text-sm">
-                Step {currentStepIndex + 1} of {selectedFlow.steps.length}
-              </span>
-              
-              <button
-                onClick={goToNextStep}
-                disabled={currentStepIndex === selectedFlow.steps.length - 1}
-                className={`p-2 rounded-full transition-colors ${
-                  currentStepIndex === selectedFlow.steps.length - 1
-                    ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
-                    : 'bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-stone-800'
-                }`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+            <span className="text-stone-500 text-sm">
+              Step {currentStepIndex + 1} of {selectedFlow.steps.length}
+            </span>
+            
+            <button
+              onClick={goToNextStep}
+              disabled={currentStepIndex === selectedFlow.steps.length - 1}
+              className={`p-2 rounded-full transition-colors ${
+                currentStepIndex === selectedFlow.steps.length - 1
+                  ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                  : 'bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-stone-800'
+              }`}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Mobile Step Counter */}
+          <div className="sm:hidden text-center py-3">
+            <span className="text-stone-400 text-xs">
+              Swipe to navigate • Step {currentStepIndex + 1} of {selectedFlow.steps.length}
+            </span>
           </div>
         </div>
         
-        {/* Right Sidebar - Step List (Desktop) */}
+        {/* Right Sidebar - Desktop Step List */}
         <aside className="w-72 border-l border-stone-200 min-h-[calc(100vh-65px)] p-4 hidden xl:block bg-white">
           <h3 className="text-stone-400 text-xs font-semibold uppercase tracking-wider mb-4">
             Steps
@@ -1193,7 +1270,6 @@ export default function UserGuidePage() {
                         }`}>
                           {step.narrative}
                         </p>
-                        {/* App indicators - only for steps with both phones visible */}
                         {stepVisibility.showMember && stepVisibility.showPro && (
                           <div className="flex items-center gap-1 mt-1">
                             {(step.activeApp === 'member' || step.activeApp === 'both') && (
