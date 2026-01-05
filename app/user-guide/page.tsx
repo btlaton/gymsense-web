@@ -451,7 +451,7 @@ function getAllImagePaths(): string[] {
       if (step.scanningBackground) paths.push(step.scanningBackground);
     });
   });
-  return [...new Set(paths)]; // Remove duplicates
+  return Array.from(new Set(paths)); // Remove duplicates
 }
 
 // ============================================================================
