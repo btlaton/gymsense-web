@@ -401,7 +401,7 @@ const FLOWS: Flow[] = [
         narrative: 'Enter the product name, description (optional), and price then tap Create Product.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/create-new-product/step-2.png',
-        hotspot: { app: 'pro', x: '50%', y: '86%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '90%', type: 'tap' },
       },
       {
         id: 'create-product-3',
