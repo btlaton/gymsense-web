@@ -5,9 +5,15 @@ import type { NextRequest } from 'next/server';
 // Password is set via GUIDE_PASSWORD environment variable in Vercel
 
 const PROTECTED_PATHS = ['/user-guide'];
+const EXCLUDED_PATHS = ['/user-guide/login'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  
+  // Exclude login page from protection
+  if (EXCLUDED_PATHS.some(path => pathname === path)) {
+    return NextResponse.next();
+  }
   
   // Check if this path needs protection
   const isProtectedPath = PROTECTED_PATHS.some(path => pathname.startsWith(path));
