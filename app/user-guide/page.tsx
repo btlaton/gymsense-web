@@ -15,8 +15,7 @@ import {
   Package,
   Users,
   MessageSquare,
-  FileText,
-  ScanLine
+  FileText
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -35,7 +34,9 @@ interface Step {
   scanningBackground?: string;
   scanningBackgroundScale?: number;
   scanningVariant?: 'dark' | 'light';
-  scanningHideHeader?: boolean; // Hide gymsense logo for camera-style view
+  // Camera mode = plain camera view without branding (for customer phone scanning)
+  memberCameraMode?: boolean;
+  proCameraMode?: boolean;
   showMemberPhone?: boolean;
   showProPhone?: boolean;
   memberDimmed?: boolean;
@@ -176,9 +177,9 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/new-member-signup/step-4-pro.png',
         memberScanning: true,
-        scanningVariant: 'light',
+        memberCameraMode: true,
         scanningBackground: '/user-guide/new-member-signup/qr-code.png',
-        scanningHideHeader: true,
+        scanningVariant: 'light',
         showMemberPhone: true,
         showProPhone: true,
       },
@@ -240,9 +241,9 @@ const FLOWS: Flow[] = [
         narrative: "Use the Pro app to scan the member's QR code.",
         activeApp: 'both',
         proScanning: true,
-        scanningVariant: 'dark',
+        proCameraMode: true,
         scanningBackground: '/user-guide/customer-checkout/qr-code.png',
-        scanningHideHeader: true,
+        scanningVariant: 'dark',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
       },
       {
@@ -292,7 +293,7 @@ const FLOWS: Flow[] = [
         activeApp: 'member',
         memberScanning: true,
         scanningBackground: '/user-guide/member-check-in/step-2-qr-code.png',
-        scanningBackgroundScale: 0.75, // Scaled up from 0.5
+        scanningBackgroundScale: 0.75,
         showMemberPhone: true,
         showProPhone: false,
       },
@@ -500,48 +501,46 @@ function getAllImagePaths(): string[] {
 }
 
 // ============================================================================
-// IMAGE PRELOADER HOOK - Enhanced to ensure true loading
+// IMAGE PRELOADER COMPONENT - Renders hidden images to force browser cache
 // ============================================================================
 
-function useImagePreloader(imagePaths: string[]) {
-  const [imagesLoaded, setImagesLoaded] = useState(false);
+function ImagePreloader({ 
+  imagePaths, 
+  onComplete 
+}: { 
+  imagePaths: string[]; 
+  onComplete: () => void;
+}) {
   const [loadedCount, setLoadedCount] = useState(0);
+  const totalCount = imagePaths.length;
 
   useEffect(() => {
-    if (imagePaths.length === 0) {
-      setImagesLoaded(true);
-      return;
+    if (loadedCount >= totalCount && totalCount > 0) {
+      onComplete();
     }
+  }, [loadedCount, totalCount, onComplete]);
 
-    let loadedImages = 0;
-    const totalImages = imagePaths.length;
+  if (totalCount === 0) {
+    onComplete();
+    return null;
+  }
 
-    const preloadImage = (src: string) => {
-      return new Promise<void>((resolve) => {
-        const img = new window.Image();
-        img.onload = () => {
-          loadedImages++;
-          setLoadedCount(loadedImages);
-          resolve();
-        };
-        img.onerror = () => {
-          loadedImages++;
-          setLoadedCount(loadedImages);
-          resolve();
-        };
-        img.src = src;
-      });
-    };
-
-    Promise.all(imagePaths.map(preloadImage)).then(() => {
-      // Add a small delay to ensure browser has cached
-      setTimeout(() => {
-        setImagesLoaded(true);
-      }, 100);
-    });
-  }, [imagePaths]);
-
-  return { imagesLoaded, loadedCount, totalCount: imagePaths.length };
+  return (
+    <div className="fixed -left-[9999px] -top-[9999px] w-1 h-1 overflow-hidden opacity-0 pointer-events-none">
+      {imagePaths.map((src) => (
+        <Image
+          key={src}
+          src={src}
+          alt=""
+          width={1}
+          height={1}
+          priority
+          onLoad={() => setLoadedCount(c => c + 1)}
+          onError={() => setLoadedCount(c => c + 1)}
+        />
+      ))}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -570,27 +569,6 @@ function LoadingSkeleton({ progress }: { progress: number }) {
 }
 
 // ============================================================================
-// HIDDEN IMAGE PRELOADER - Renders all images in DOM to ensure caching
-// ============================================================================
-
-function HiddenImagePreloader({ imagePaths }: { imagePaths: string[] }) {
-  return (
-    <div className="hidden" aria-hidden="true">
-      {imagePaths.map((src) => (
-        <Image
-          key={src}
-          src={src}
-          alt=""
-          width={1}
-          height={1}
-          priority
-        />
-      ))}
-    </div>
-  );
-}
-
-// ============================================================================
 // PHONE MOCKUP COMPONENT - 10% larger frames
 // ============================================================================
 
@@ -609,7 +587,7 @@ function PhoneMockup({
   isVisible?: boolean;
   children: React.ReactNode;
 }) {
-  // 10% larger frames
+  // 10% larger than previous sizes
   const sizeClasses = isDualMode
     ? 'w-[182px] sm:w-[220px] md:w-[264px] lg:w-[308px] h-[394px] sm:h-[476px] md:h-[572px] lg:h-[667px]'
     : 'w-[242px] sm:w-[286px] md:w-[330px] h-[524px] sm:h-[619px] md:h-[715px]';
@@ -632,12 +610,14 @@ function PhoneMockup({
         isDimmed ? 'opacity-50 scale-[0.98]' : (isActive ? 'opacity-100' : 'opacity-60 scale-[0.98]')
       }`}
     >
+      {/* Active indicator glow */}
       {isActive && !isDimmed && (
         <div className={`absolute -inset-2 sm:-inset-3 ${isDualMode ? 'rounded-[2.5rem]' : 'rounded-[3rem]'} blur-xl ${
           variant === 'dark' ? 'bg-emerald-500/15' : 'bg-emerald-600/10'
         }`} />
       )}
       
+      {/* Phone frame */}
       <div className={`relative ${sizeClasses} bg-stone-800 ${roundingClasses} p-[4px] sm:p-[5px] md:p-[6px] shadow-2xl`}>
         <div className={`w-full h-full ${innerRoundingClasses} overflow-hidden relative ${
           variant === 'dark' ? 'bg-stone-900' : 'bg-stone-100'
@@ -652,19 +632,15 @@ function PhoneMockup({
 }
 
 // ============================================================================
-// SCANNING ANIMATION COMPONENT - With optional header hiding
+// CAMERA SCANNING SCREEN - Plain camera view without branding
 // ============================================================================
 
-function ScanningScreen({ 
+function CameraScanningScreen({ 
   variant = 'dark',
   backgroundImage,
-  backgroundScale = 1,
-  hideHeader = false,
 }: { 
   variant?: 'dark' | 'light';
   backgroundImage?: string;
-  backgroundScale?: number;
-  hideHeader?: boolean;
 }) {
   const isDark = variant === 'dark';
   
@@ -672,101 +648,134 @@ function ScanningScreen({
     <div className={`h-full flex flex-col items-center justify-center p-4 relative ${
       isDark ? 'bg-stone-900' : 'bg-stone-100'
     }`}>
-      {/* Background image (actual QR code) */}
+      {/* Background QR code image */}
       {backgroundImage && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ transform: `scale(${backgroundScale})` }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center">
           <Image 
             src={backgroundImage} 
             alt="QR Code"
             fill
             className="object-contain object-center"
-            priority
           />
         </div>
       )}
       
-      {/* Header - only show if not hidden */}
-      {!hideHeader && (
-        <div className="absolute top-8 sm:top-12 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between z-10">
-          <span className={`font-display text-sm sm:text-base ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
-            gymsense
-          </span>
-          <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-            isDark ? 'bg-stone-700' : 'bg-stone-300'
-          }`}>
-            <ScanLine className={`w-3 h-3 sm:w-4 sm:h-4 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
-          </div>
-        </div>
-      )}
-      
-      {/* Only show scanning UI elements if no background image (generic scan view) */}
-      {!backgroundImage && (
-        <>
-          <p className={`text-xs sm:text-sm font-medium mb-3 sm:mb-4 z-10 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-            Scanning...
-          </p>
-          
-          <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 z-10">
-            <motion.div 
-              className={`absolute inset-0 border-2 rounded-xl sm:rounded-2xl ${
-                isDark ? 'border-emerald-500' : 'border-emerald-600'
-              }`}
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
-            
-            <div className={`absolute top-0 left-0 w-5 h-5 sm:w-6 sm:h-6 border-t-[3px] border-l-[3px] rounded-tl-lg sm:rounded-tl-xl ${
-              isDark ? 'border-emerald-400' : 'border-emerald-500'
-            }`} />
-            <div className={`absolute top-0 right-0 w-5 h-5 sm:w-6 sm:h-6 border-t-[3px] border-r-[3px] rounded-tr-lg sm:rounded-tr-xl ${
-              isDark ? 'border-emerald-400' : 'border-emerald-500'
-            }`} />
-            <div className={`absolute bottom-0 left-0 w-5 h-5 sm:w-6 sm:h-6 border-b-[3px] border-l-[3px] rounded-bl-lg sm:rounded-bl-xl ${
-              isDark ? 'border-emerald-400' : 'border-emerald-500'
-            }`} />
-            <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 border-b-[3px] border-r-[3px] rounded-br-lg sm:rounded-br-xl ${
-              isDark ? 'border-emerald-400' : 'border-emerald-500'
-            }`} />
-            
-            <motion.div 
-              className={`absolute inset-x-2 sm:inset-x-3 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
-              animate={{ top: ['10%', '85%', '10%'] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            
-            <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4">
-              <QRCodeDisplay size="responsive" dark={isDark} />
-            </div>
-          </div>
-          
-          <p className={`mt-3 sm:mt-4 text-[10px] sm:text-xs z-10 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
-            Point camera at QR code
-          </p>
-        </>
-      )}
-      
-      {/* Scanning line overlay for camera view with QR background */}
+      {/* Scanning frame overlay */}
+      <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 z-10">
+        {/* Animated border */}
+        <motion.div 
+          className={`absolute inset-0 border-2 rounded-xl sm:rounded-2xl ${
+            isDark ? 'border-emerald-500' : 'border-emerald-600'
+          }`}
+          animate={{ opacity: [1, 0.5, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        />
+        
+        {/* Corner accents */}
+        <div className={`absolute top-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-t-[3px] border-l-[3px] rounded-tl-lg sm:rounded-tl-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute top-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-t-[3px] border-r-[3px] rounded-tr-lg sm:rounded-tr-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 left-0 w-6 h-6 sm:w-8 sm:h-8 border-b-[3px] border-l-[3px] rounded-bl-lg sm:rounded-bl-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 right-0 w-6 h-6 sm:w-8 sm:h-8 border-b-[3px] border-r-[3px] rounded-br-lg sm:rounded-br-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        
+        {/* Scanning line */}
+        <motion.div 
+          className={`absolute inset-x-3 sm:inset-x-4 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
+          animate={{ top: ['10%', '85%', '10%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// BRANDED SCANNING SCREEN - With gymsense branding for in-app scanning
+// ============================================================================
+
+function BrandedScanningScreen({ 
+  variant = 'dark',
+  backgroundImage,
+  backgroundScale = 1,
+}: { 
+  variant?: 'dark' | 'light';
+  backgroundImage?: string;
+  backgroundScale?: number;
+}) {
+  const isDark = variant === 'dark';
+  
+  return (
+    <div className={`h-full flex flex-col items-center justify-center p-4 relative ${
+      isDark ? 'bg-stone-900' : 'bg-stone-100'
+    }`}>
       {backgroundImage && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64">
-            {/* Corner brackets */}
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/60 rounded-tl-lg" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/60 rounded-tr-lg" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/60 rounded-bl-lg" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-white/60 rounded-br-lg" />
-            
-            {/* Scanning line */}
-            <motion.div 
-              className="absolute inset-x-4 h-0.5 bg-emerald-400/80"
-              animate={{ top: ['5%', '90%', '5%'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </div>
+        <div 
+          className="absolute inset-0 flex items-center justify-center opacity-30"
+          style={{ transform: `scale(${backgroundScale})` }}
+        >
+          <Image 
+            src={backgroundImage} 
+            alt="Scanning context"
+            fill
+            className="object-contain object-center"
+          />
         </div>
       )}
+      
+      {/* Header with branding */}
+      <div className="absolute top-8 sm:top-12 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between z-10">
+        <span className={`font-display text-sm sm:text-base ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+          gymsense
+        </span>
+      </div>
+      
+      <p className={`text-xs sm:text-sm font-medium mb-3 sm:mb-4 z-10 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+        Scanning...
+      </p>
+      
+      <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 z-10">
+        <motion.div 
+          className={`absolute inset-0 border-2 rounded-xl sm:rounded-2xl ${
+            isDark ? 'border-emerald-500' : 'border-emerald-600'
+          }`}
+          animate={{ opacity: [1, 0.5, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        />
+        
+        <div className={`absolute top-0 left-0 w-5 h-5 sm:w-6 sm:h-6 border-t-[3px] border-l-[3px] rounded-tl-lg sm:rounded-tl-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute top-0 right-0 w-5 h-5 sm:w-6 sm:h-6 border-t-[3px] border-r-[3px] rounded-tr-lg sm:rounded-tr-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 left-0 w-5 h-5 sm:w-6 sm:h-6 border-b-[3px] border-l-[3px] rounded-bl-lg sm:rounded-bl-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 border-b-[3px] border-r-[3px] rounded-br-lg sm:rounded-br-xl ${
+          isDark ? 'border-emerald-400' : 'border-emerald-500'
+        }`} />
+        
+        <motion.div 
+          className={`absolute inset-x-2 sm:inset-x-3 h-0.5 ${isDark ? 'bg-emerald-500' : 'bg-emerald-600'}`}
+          animate={{ top: ['10%', '85%', '10%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        
+        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4">
+          <QRCodeDisplay size="responsive" dark={isDark} />
+        </div>
+      </div>
+      
+      <p className={`mt-3 sm:mt-4 text-[10px] sm:text-xs z-10 ${isDark ? 'text-stone-500' : 'text-stone-400'}`}>
+        Point camera at QR code
+      </p>
     </div>
   );
 }
@@ -851,27 +860,36 @@ function ScreenshotDisplay({
   variant,
   label,
   isScanning,
+  isCameraMode,
   scanningBackground,
   scanningBackgroundScale,
   scanningVariant,
-  scanningHideHeader,
 }: {
   screenshot?: string;
   variant: 'dark' | 'light';
   label: string;
   isScanning?: boolean;
+  isCameraMode?: boolean;
   scanningBackground?: string;
   scanningBackgroundScale?: number;
   scanningVariant?: 'dark' | 'light';
-  scanningHideHeader?: boolean;
 }) {
   if (isScanning) {
+    // Camera mode = plain camera view (customer phone scanning)
+    if (isCameraMode) {
+      return (
+        <CameraScanningScreen 
+          variant={scanningVariant || variant} 
+          backgroundImage={scanningBackground}
+        />
+      );
+    }
+    // Branded mode = in-app scanning with gymsense branding
     return (
-      <ScanningScreen 
+      <BrandedScanningScreen 
         variant={scanningVariant || variant} 
         backgroundImage={scanningBackground}
         backgroundScale={scanningBackgroundScale}
-        hideHeader={scanningHideHeader}
       />
     );
   }
@@ -885,7 +903,6 @@ function ScreenshotDisplay({
           fill
           className="object-cover object-top"
           priority
-          loading="eager"
         />
       </div>
     );
@@ -931,9 +948,25 @@ const SWIPE_VELOCITY_THRESHOLD = 300;
 export default function UserGuidePage() {
   const [selectedFlowId, setSelectedFlowId] = useState(FLOWS[0].id);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   
   const allImagePaths = getAllImagePaths();
-  const { imagesLoaded, loadedCount, totalCount } = useImagePreloader(allImagePaths);
+  
+  // Track loading progress
+  useEffect(() => {
+    if (!imagesLoaded) {
+      const interval = setInterval(() => {
+        setLoadProgress(p => Math.min(p + 5, 95));
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [imagesLoaded]);
+  
+  const handleImagesLoaded = useCallback(() => {
+    setLoadProgress(100);
+    setTimeout(() => setImagesLoaded(true), 100);
+  }, []);
   
   const selectedFlow = FLOWS.find(f => f.id === selectedFlowId) || FLOWS[0];
   const currentStep = selectedFlow.steps[currentStepIndex];
@@ -971,16 +1004,18 @@ export default function UserGuidePage() {
     }
   }, [goToNextStep, goToPrevStep]);
   
+  // Show loading screen
   if (!imagesLoaded) {
-    const progress = totalCount > 0 ? (loadedCount / totalCount) * 100 : 0;
-    return <LoadingSkeleton progress={progress} />;
+    return (
+      <>
+        <ImagePreloader imagePaths={allImagePaths} onComplete={handleImagesLoaded} />
+        <LoadingSkeleton progress={loadProgress} />
+      </>
+    );
   }
   
   return (
     <main className="min-h-screen bg-stone-50 text-stone-950 overflow-x-hidden">
-      {/* Hidden preloader to ensure all images are in DOM */}
-      <HiddenImagePreloader imagePaths={allImagePaths} />
-      
       {/* Header */}
       <header className="border-b border-stone-200 px-4 py-3 sm:py-4 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -1064,7 +1099,7 @@ export default function UserGuidePage() {
             {selectedFlow.title}
           </h1>
           
-          {/* Step Navigation - Above narrative */}
+          {/* Step Navigation - Above narration */}
           <div className="flex items-center justify-center gap-3 mb-2">
             <button
               onClick={goToPrevStep}
@@ -1095,10 +1130,11 @@ export default function UserGuidePage() {
             </button>
           </div>
           
-          {/* Narrative Text - Above frames */}
-          <div className="max-w-lg mx-auto text-center mb-4 px-2">
+          {/* Narration - Above frame */}
+          <div className="max-w-xl mx-auto text-center mb-4 px-2">
+            {/* Active App Indicator for dual mode */}
             {isDualMode && (
-              <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="flex items-center justify-center gap-2 mb-1.5">
                 {(currentStep.activeApp === 'member' || currentStep.activeApp === 'both') && (
                   <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">
                     {memberPhoneLabel}
@@ -1117,7 +1153,7 @@ export default function UserGuidePage() {
             </p>
           </div>
           
-          {/* Swipeable Phones Area */}
+          {/* Swipeable Phone Display */}
           <motion.div 
             className="flex flex-col items-center touch-pan-y select-none"
             drag="x"
@@ -1146,10 +1182,10 @@ export default function UserGuidePage() {
                       variant="dark"
                       label={memberPhoneLabel}
                       isScanning={currentStep.memberScanning}
+                      isCameraMode={currentStep.memberCameraMode}
                       scanningBackground={currentStep.scanningBackground}
                       scanningBackgroundScale={currentStep.scanningBackgroundScale}
                       scanningVariant={currentStep.scanningVariant}
-                      scanningHideHeader={currentStep.scanningHideHeader}
                     />
                   </PhoneMockup>
                   <div className="mt-2 sm:mt-3 text-center">
@@ -1179,9 +1215,9 @@ export default function UserGuidePage() {
                       variant="light"
                       label="Pro App"
                       isScanning={currentStep.proScanning}
-                      scanningVariant={currentStep.scanningVariant}
+                      isCameraMode={currentStep.proCameraMode}
                       scanningBackground={currentStep.scanningBackground}
-                      scanningHideHeader={currentStep.scanningHideHeader}
+                      scanningVariant={currentStep.scanningVariant}
                     />
                   </PhoneMockup>
                   <div className="mt-2 sm:mt-3 text-center">
