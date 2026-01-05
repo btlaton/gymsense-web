@@ -191,7 +191,7 @@ const FLOWS: Flow[] = [
         memberScanning: true,
         memberCameraMode: true,
         scanningBackground: '/user-guide/new-member-signup/qr-code.png',
-        scanningBackgroundScale: 0.8,
+        scanningBackgroundScale: 0.72,
         scanningVariant: 'light',
         showMemberPhone: true,
         showProPhone: true,
@@ -258,7 +258,7 @@ const FLOWS: Flow[] = [
         proScanning: true,
         proCameraMode: true,
         scanningBackground: '/user-guide/customer-checkout/qr-code.png',
-        scanningBackgroundScale: 0.8,
+        scanningBackgroundScale: 0.72,
         scanningVariant: 'dark',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
       },
@@ -311,7 +311,7 @@ const FLOWS: Flow[] = [
         memberScanning: true,
         scanningBackground: '/user-guide/member-check-in/step-2-qr-code.png',
         scanningBackgroundScale: 0.75,
-        scanningBackgroundOffset: 'translateY(-20%)',
+        scanningBackgroundOffset: 'translateY(-17%)',
         showMemberPhone: true,
         showProPhone: false,
       },
@@ -349,7 +349,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-2-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '48%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '50%', type: 'tap' },
       },
       {
         id: 'schedule-session-3',
@@ -358,7 +358,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '61%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '66%', type: 'tap' },
       },
       {
         id: 'schedule-session-4',
@@ -1174,7 +1174,7 @@ export default function UserGuidePage() {
           </h1>
           
           {/* Step Navigation - Above narration */}
-          <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="flex items-center justify-center gap-3 mb-1">
             <button
               onClick={goToPrevStep}
               disabled={currentStepIndex === 0}
@@ -1203,6 +1203,11 @@ export default function UserGuidePage() {
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
+          
+          {/* Swipe hint - mobile only */}
+          <p className="text-stone-400 text-[10px] text-center mb-2 lg:hidden">
+            Swipe left or right to navigate
+          </p>
           
           {/* Narration - Above frame */}
           <div className="max-w-xl mx-auto text-center mb-4 px-2">
@@ -1305,10 +1310,6 @@ export default function UserGuidePage() {
               )}
             </div>
             
-            {/* Swipe hint */}
-            <p className="text-stone-400 text-[10px] mt-3 lg:hidden">
-              Swipe left or right to navigate
-            </p>
           </motion.div>
         </div>
         
