@@ -1,0 +1,49 @@
+# Gymsense Web - Coding Agent Rules
+
+## ⚠️ GIT COMMITS - IMPORTANT ⚠️
+
+**After making file changes, always commit and push directly to main.**
+
+The sandbox blocks git writes by default. Use `required_permissions: ['git_write']` for git commands.
+
+```bash
+# Stage and commit changes
+git add -A && git commit -m "feat: description of changes"
+
+# Push to origin
+git push origin main
+```
+
+**Commit message conventions:**
+- `feat:` - New features or enhancements
+- `fix:` - Bug fixes
+- `chore:` - Config, dependencies, cleanup
+- `docs:` - Documentation only
+
+---
+
+## Project Overview
+
+This is the **gymsense.io** marketing and web checkout site built with Next.js 14.
+
+**Key Pages:**
+- `/` - Landing page with app demo
+- `/user-guide` - Interactive user guide for Pro and Member apps
+- `/checkout/accept/[token]` - Stripe checkout flow for new member signups
+- `/check-in/[gymId]` - QR code check-in page for gyms
+- `/privacy`, `/terms`, `/sms-terms` - Legal pages
+
+**Tech Stack:**
+- Next.js 14 (App Router)
+- Tailwind CSS
+- Framer Motion (animations)
+- Deployed on Vercel
+
+---
+
+## User Preferences
+
+- Fix bugs without creating comprehensive markdown docs
+- Focus on implementation over documentation
+- Commit changes directly after editing (don't wait for user to commit)
+
