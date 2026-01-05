@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, ArrowRight } from 'lucide-react';
 
-export default function UserGuideLoginPage() {
+function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +76,25 @@ export default function UserGuideLoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+function LoginFormFallback() {
+  return (
+    <main className="min-h-screen bg-stone-950 text-stone-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm text-center">
+        <h1 className="font-display text-4xl text-emerald-500 mb-2">gymsense</h1>
+        <p className="text-stone-500 text-sm">Loading...</p>
+      </div>
+    </main>
+  );
+}
+
+export default function UserGuideLoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }
 
