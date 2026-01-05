@@ -23,6 +23,13 @@ import Image from 'next/image';
 // FLOW DATA STRUCTURE
 // ============================================================================
 
+interface Hotspot {
+  app: 'member' | 'pro';
+  x: string;  // CSS position (e.g., '85%', 'calc(50% + 10px)')
+  y: string;  // CSS position (e.g., '90%', '60%')
+  type: 'tap' | 'highlight';
+}
+
 interface Step {
   id: string;
   narrative: string;
@@ -33,6 +40,7 @@ interface Step {
   proScanning?: boolean;
   scanningBackground?: string;
   scanningBackgroundScale?: number;
+  scanningBackgroundOffset?: string; // CSS transform offset (e.g., 'translateY(-20%)')
   scanningVariant?: 'dark' | 'light';
   // Camera mode = plain camera view without branding (for customer phone scanning)
   memberCameraMode?: boolean;
@@ -41,6 +49,7 @@ interface Step {
   showProPhone?: boolean;
   memberDimmed?: boolean;
   proDimmed?: boolean;
+  hotspot?: Hotspot;
 }
 
 interface Flow {
@@ -154,6 +163,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-1-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '85%', y: '90%', type: 'tap' },
       },
       {
         id: 'new-member-signup-2',
@@ -162,6 +172,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-2-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '50%', y: '90%', type: 'tap' },
       },
       {
         id: 'new-member-signup-3',
@@ -170,6 +181,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '50%', y: '70%', type: 'tap' },
       },
       {
         id: 'new-member-signup-4',
@@ -179,6 +191,7 @@ const FLOWS: Flow[] = [
         memberScanning: true,
         memberCameraMode: true,
         scanningBackground: '/user-guide/new-member-signup/qr-code.png',
+        scanningBackgroundScale: 0.8,
         scanningVariant: 'light',
         showMemberPhone: true,
         showProPhone: true,
@@ -228,6 +241,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/customer-checkout/step-1-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-1-member.png',
         memberDimmed: true,
+        hotspot: { app: 'pro', x: '50%', y: '90%', type: 'tap' },
       },
       {
         id: 'customer-checkout-2',
@@ -235,6 +249,7 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/customer-checkout/step-2-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
+        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
       },
       {
         id: 'customer-checkout-3',
@@ -243,6 +258,7 @@ const FLOWS: Flow[] = [
         proScanning: true,
         proCameraMode: true,
         scanningBackground: '/user-guide/customer-checkout/qr-code.png',
+        scanningBackgroundScale: 0.8,
         scanningVariant: 'dark',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
       },
@@ -253,6 +269,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/customer-checkout/step-4-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
         memberDimmed: true,
+        hotspot: { app: 'pro', x: '55%', y: '60%', type: 'tap' },
       },
       {
         id: 'customer-checkout-5',
@@ -294,6 +311,7 @@ const FLOWS: Flow[] = [
         memberScanning: true,
         scanningBackground: '/user-guide/member-check-in/step-2-qr-code.png',
         scanningBackgroundScale: 0.75,
+        scanningBackgroundOffset: 'translateY(-20%)',
         showMemberPhone: true,
         showProPhone: false,
       },
@@ -322,6 +340,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-1-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '85%', y: '90%', type: 'tap' },
       },
       {
         id: 'schedule-session-2',
@@ -330,6 +349,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-2-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '50%', y: '40%', type: 'tap' },
       },
       {
         id: 'schedule-session-3',
@@ -338,6 +358,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
       },
       {
         id: 'schedule-session-4',
@@ -346,6 +367,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-4-pro.png',
         showMemberPhone: false,
         showProPhone: true,
+        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
       },
       {
         id: 'schedule-session-5',
@@ -638,9 +660,11 @@ function PhoneMockup({
 function CameraScanningScreen({ 
   variant = 'dark',
   backgroundImage,
+  backgroundScale = 1,
 }: { 
   variant?: 'dark' | 'light';
   backgroundImage?: string;
+  backgroundScale?: number;
 }) {
   const isDark = variant === 'dark';
   
@@ -650,7 +674,10 @@ function CameraScanningScreen({
     }`}>
       {/* Background QR code image */}
       {backgroundImage && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ transform: `scale(${backgroundScale})` }}
+        >
           <Image 
             src={backgroundImage} 
             alt="QR Code"
@@ -704,10 +731,12 @@ function BrandedScanningScreen({
   variant = 'dark',
   backgroundImage,
   backgroundScale = 1,
+  backgroundOffset,
 }: { 
   variant?: 'dark' | 'light';
   backgroundImage?: string;
   backgroundScale?: number;
+  backgroundOffset?: string;
 }) {
   const isDark = variant === 'dark';
   
@@ -718,7 +747,7 @@ function BrandedScanningScreen({
       {backgroundImage && (
         <div 
           className="absolute inset-0 flex items-center justify-center opacity-30"
-          style={{ transform: `scale(${backgroundScale})` }}
+          style={{ transform: `scale(${backgroundScale}) ${backgroundOffset || ''}` }}
         >
           <Image 
             src={backgroundImage} 
@@ -830,6 +859,51 @@ function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'med
 }
 
 // ============================================================================
+// TAP INDICATOR COMPONENT
+// ============================================================================
+
+function TapIndicator({ x, y }: { x: string; y: string }) {
+  return (
+    <div 
+      className="absolute z-50 pointer-events-none"
+      style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
+    >
+      {/* Outer pulsing ring */}
+      <motion.div
+        className="absolute inset-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/30 -translate-x-1/2 -translate-y-1/2"
+        animate={{ 
+          scale: [1, 1.5, 1],
+          opacity: [0.6, 0, 0.6]
+        }}
+        transition={{ 
+          duration: 1.5, 
+          repeat: Infinity,
+          ease: 'easeInOut'
+        }}
+        style={{ left: '50%', top: '50%' }}
+      />
+      {/* Middle pulsing ring */}
+      <motion.div
+        className="absolute inset-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-500/40 -translate-x-1/2 -translate-y-1/2"
+        animate={{ 
+          scale: [1, 1.3, 1],
+          opacity: [0.8, 0.3, 0.8]
+        }}
+        transition={{ 
+          duration: 1.5, 
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 0.1
+        }}
+        style={{ left: '50%', top: '50%' }}
+      />
+      {/* Inner solid circle */}
+      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-600 border-2 border-white shadow-lg" />
+    </div>
+  );
+}
+
+// ============================================================================
 // PLACEHOLDER SCREEN
 // ============================================================================
 
@@ -863,6 +937,7 @@ function ScreenshotDisplay({
   isCameraMode,
   scanningBackground,
   scanningBackgroundScale,
+  scanningBackgroundOffset,
   scanningVariant,
 }: {
   screenshot?: string;
@@ -872,6 +947,7 @@ function ScreenshotDisplay({
   isCameraMode?: boolean;
   scanningBackground?: string;
   scanningBackgroundScale?: number;
+  scanningBackgroundOffset?: string;
   scanningVariant?: 'dark' | 'light';
 }) {
   if (isScanning) {
@@ -881,6 +957,7 @@ function ScreenshotDisplay({
         <CameraScanningScreen 
           variant={scanningVariant || variant} 
           backgroundImage={scanningBackground}
+          backgroundScale={scanningBackgroundScale}
         />
       );
     }
@@ -890,6 +967,7 @@ function ScreenshotDisplay({
         variant={scanningVariant || variant} 
         backgroundImage={scanningBackground}
         backgroundScale={scanningBackgroundScale}
+        backgroundOffset={scanningBackgroundOffset}
       />
     );
   }
@@ -1132,22 +1210,6 @@ export default function UserGuidePage() {
           
           {/* Narration - Above frame */}
           <div className="max-w-xl mx-auto text-center mb-4 px-2">
-            {/* Active App Indicator for dual mode */}
-            {isDualMode && (
-              <div className="flex items-center justify-center gap-2 mb-1.5">
-                {(currentStep.activeApp === 'member' || currentStep.activeApp === 'both') && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-medium">
-                    {memberPhoneLabel}
-                  </span>
-                )}
-                {(currentStep.activeApp === 'pro' || currentStep.activeApp === 'both') && (
-                  <span className="px-2 py-0.5 rounded-full bg-stone-200 text-stone-700 text-[10px] font-medium">
-                    Pro
-                  </span>
-                )}
-              </div>
-            )}
-            
             <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
               {currentStep.narrative}
             </p>
@@ -1170,24 +1232,31 @@ export default function UserGuidePage() {
               {/* Member Phone */}
               {showMember && (
                 <div className="flex flex-col items-center">
-                  <PhoneMockup 
-                    variant="dark" 
-                    isActive={currentStep.activeApp === 'member' || currentStep.activeApp === 'both'}
-                    isDimmed={currentStep.memberDimmed}
-                    isDualMode={isDualMode}
-                    isVisible={showMember}
-                  >
-                    <ScreenshotDisplay
-                      screenshot={currentStep.memberScreenshot}
-                      variant="dark"
-                      label={memberPhoneLabel}
-                      isScanning={currentStep.memberScanning}
-                      isCameraMode={currentStep.memberCameraMode}
-                      scanningBackground={currentStep.scanningBackground}
-                      scanningBackgroundScale={currentStep.scanningBackgroundScale}
-                      scanningVariant={currentStep.scanningVariant}
-                    />
-                  </PhoneMockup>
+                  <div className="relative">
+                    <PhoneMockup 
+                      variant="dark" 
+                      isActive={currentStep.activeApp === 'member' || currentStep.activeApp === 'both'}
+                      isDimmed={currentStep.memberDimmed}
+                      isDualMode={isDualMode}
+                      isVisible={showMember}
+                    >
+                      <ScreenshotDisplay
+                        screenshot={currentStep.memberScreenshot}
+                        variant="dark"
+                        label={memberPhoneLabel}
+                        isScanning={currentStep.memberScanning}
+                        isCameraMode={currentStep.memberCameraMode}
+                        scanningBackground={currentStep.scanningBackground}
+                        scanningBackgroundScale={currentStep.scanningBackgroundScale}
+                        scanningBackgroundOffset={currentStep.scanningBackgroundOffset}
+                        scanningVariant={currentStep.scanningVariant}
+                      />
+                    </PhoneMockup>
+                    {/* Tap indicator for member phone */}
+                    {currentStep.hotspot?.app === 'member' && currentStep.hotspot.type === 'tap' && (
+                      <TapIndicator x={currentStep.hotspot.x} y={currentStep.hotspot.y} />
+                    )}
+                  </div>
                   <div className="mt-2 sm:mt-3 text-center">
                     <span className={`text-xs sm:text-sm font-medium ${
                       !currentStep.memberDimmed && (currentStep.activeApp === 'member' || currentStep.activeApp === 'both')
@@ -1203,23 +1272,30 @@ export default function UserGuidePage() {
               {/* Pro Phone */}
               {showPro && (
                 <div className="flex flex-col items-center">
-                  <PhoneMockup 
-                    variant="light" 
-                    isActive={currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'}
-                    isDimmed={currentStep.proDimmed}
-                    isDualMode={isDualMode}
-                    isVisible={showPro}
-                  >
-                    <ScreenshotDisplay
-                      screenshot={currentStep.proScreenshot}
-                      variant="light"
-                      label="Pro App"
-                      isScanning={currentStep.proScanning}
-                      isCameraMode={currentStep.proCameraMode}
-                      scanningBackground={currentStep.scanningBackground}
-                      scanningVariant={currentStep.scanningVariant}
-                    />
-                  </PhoneMockup>
+                  <div className="relative">
+                    <PhoneMockup 
+                      variant="light" 
+                      isActive={currentStep.activeApp === 'pro' || currentStep.activeApp === 'both'}
+                      isDimmed={currentStep.proDimmed}
+                      isDualMode={isDualMode}
+                      isVisible={showPro}
+                    >
+                      <ScreenshotDisplay
+                        screenshot={currentStep.proScreenshot}
+                        variant="light"
+                        label="Pro App"
+                        isScanning={currentStep.proScanning}
+                        isCameraMode={currentStep.proCameraMode}
+                        scanningBackground={currentStep.scanningBackground}
+                        scanningBackgroundScale={currentStep.scanningBackgroundScale}
+                        scanningVariant={currentStep.scanningVariant}
+                      />
+                    </PhoneMockup>
+                    {/* Tap indicator for pro phone */}
+                    {currentStep.hotspot?.app === 'pro' && currentStep.hotspot.type === 'tap' && (
+                      <TapIndicator x={currentStep.hotspot.x} y={currentStep.hotspot.y} />
+                    )}
+                  </div>
                   <div className="mt-2 sm:mt-3 text-center">
                     <span className={`text-xs sm:text-sm font-medium ${
                       !currentStep.proDimmed && (currentStep.activeApp === 'pro' || currentStep.activeApp === 'both')
