@@ -249,7 +249,7 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/customer-checkout/step-2-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
-        hotspot: { app: 'pro', x: '50%', y: '56%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '53%', type: 'tap' },
       },
       {
         id: 'customer-checkout-3',
@@ -358,7 +358,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '56%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '61%', type: 'tap' },
       },
       {
         id: 'schedule-session-4',
@@ -870,10 +870,10 @@ function TapIndicator({ x, y }: { x: string; y: string }) {
     >
       {/* Outer pulsing ring */}
       <motion.div
-        className="absolute w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/30"
+        className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-emerald-500/60"
         animate={{ 
-          scale: [1, 1.8, 1],
-          opacity: [0.6, 0, 0.6]
+          scale: [1, 1.6, 1],
+          opacity: [0.8, 0, 0.8]
         }}
         transition={{ 
           duration: 1.5, 
@@ -881,22 +881,20 @@ function TapIndicator({ x, y }: { x: string; y: string }) {
           ease: 'easeInOut'
         }}
       />
-      {/* Middle pulsing ring */}
+      {/* Inner pulsing ring */}
       <motion.div
-        className="absolute w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-500/50"
+        className="absolute w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-emerald-500/80"
         animate={{ 
-          scale: [1, 1.5, 1],
-          opacity: [0.8, 0.2, 0.8]
+          scale: [1, 1.3, 1],
+          opacity: [1, 0.3, 1]
         }}
         transition={{ 
           duration: 1.5, 
           repeat: Infinity,
           ease: 'easeInOut',
-          delay: 0.1
+          delay: 0.15
         }}
       />
-      {/* Inner solid circle */}
-      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-600 border-2 border-white shadow-lg" />
     </div>
   );
 }
