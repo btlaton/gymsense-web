@@ -19,9 +19,11 @@ function LoginForm() {
     setIsLoading(true);
     
     // Redirect with password param - middleware will validate and set cookie
-    const url = new URL(redirectPath, window.location.origin);
-    url.searchParams.set('password', password);
-    router.push(url.toString());
+    const targetPath = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`;
+    const redirectUrl = `${targetPath}?password=${encodeURIComponent(password)}`;
+    
+    // Use window.location for full page navigation (needed for middleware to run)
+    window.location.href = redirectUrl;
   };
   
   return (
