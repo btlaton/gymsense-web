@@ -401,13 +401,14 @@ const FLOWS: Flow[] = [
         narrative: 'Enter the product name, description (optional), and price then tap Create Product.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/create-new-product/step-2.png',
-        hotspot: { app: 'pro', x: '50%', y: '93%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '86%', type: 'tap' },
       },
       {
         id: 'create-product-3',
         narrative: 'The product is now available for sale in the Shop.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/create-new-product/step-3.png',
+        hotspot: { app: 'pro', x: '50%', y: '85%', type: 'tap' },
       },
     ],
   },
@@ -430,7 +431,7 @@ const FLOWS: Flow[] = [
         narrative: 'Enter the team member\'s name, email and select the desired role. Tap Add User & Send Invite.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/add-team-member/step-2.png',
-        hotspot: { app: 'pro', x: '50%', y: '70%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '64%', type: 'tap' },
       },
       {
         id: 'add-team-3',
@@ -452,7 +453,7 @@ const FLOWS: Flow[] = [
         narrative: 'Navigate to the Admin -> Profile screen and tap the Get Help button.',
         activeApp: 'pro',
         proScreenshot: '/user-guide/submit-support-request/step-1.png',
-        hotspot: { app: 'pro', x: '50%', y: '65%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '57%', type: 'tap' },
       },
       {
         id: 'support-2',
