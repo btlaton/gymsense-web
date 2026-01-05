@@ -163,7 +163,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-1-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '85%', y: '90%', type: 'tap' },
+        hotspot: { app: 'pro', x: '75%', y: '92%', type: 'tap' },
       },
       {
         id: 'new-member-signup-2',
@@ -172,7 +172,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-2-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '90%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '93%', type: 'tap' },
       },
       {
         id: 'new-member-signup-3',
@@ -181,7 +181,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/new-member-signup/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '70%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '65%', type: 'tap' },
       },
       {
         id: 'new-member-signup-4',
@@ -241,7 +241,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/customer-checkout/step-1-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-1-member.png',
         memberDimmed: true,
-        hotspot: { app: 'pro', x: '50%', y: '90%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '93%', type: 'tap' },
       },
       {
         id: 'customer-checkout-2',
@@ -249,7 +249,7 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/customer-checkout/step-2-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
-        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '56%', type: 'tap' },
       },
       {
         id: 'customer-checkout-3',
@@ -269,7 +269,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/customer-checkout/step-4-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-2-member.png',
         memberDimmed: true,
-        hotspot: { app: 'pro', x: '55%', y: '60%', type: 'tap' },
+        hotspot: { app: 'pro', x: '70%', y: '58%', type: 'tap' },
       },
       {
         id: 'customer-checkout-5',
@@ -340,7 +340,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-1-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '85%', y: '90%', type: 'tap' },
+        hotspot: { app: 'pro', x: '75%', y: '92%', type: 'tap' },
       },
       {
         id: 'schedule-session-2',
@@ -349,7 +349,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-2-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '40%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '48%', type: 'tap' },
       },
       {
         id: 'schedule-session-3',
@@ -358,7 +358,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-3-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '56%', type: 'tap' },
       },
       {
         id: 'schedule-session-4',
@@ -367,7 +367,7 @@ const FLOWS: Flow[] = [
         proScreenshot: '/user-guide/schedule-training-session/step-4-pro.png',
         showMemberPhone: false,
         showProPhone: true,
-        hotspot: { app: 'pro', x: '50%', y: '60%', type: 'tap' },
+        hotspot: { app: 'pro', x: '50%', y: '65%', type: 'tap' },
       },
       {
         id: 'schedule-session-5',
