@@ -865,14 +865,14 @@ function QRCodeDisplay({ size = 'small', dark = false }: { size?: 'small' | 'med
 function TapIndicator({ x, y }: { x: string; y: string }) {
   return (
     <div 
-      className="absolute z-50 pointer-events-none"
+      className="absolute z-50 pointer-events-none flex items-center justify-center"
       style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
     >
       {/* Outer pulsing ring */}
       <motion.div
-        className="absolute inset-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/30 -translate-x-1/2 -translate-y-1/2"
+        className="absolute w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/30"
         animate={{ 
-          scale: [1, 1.5, 1],
+          scale: [1, 1.8, 1],
           opacity: [0.6, 0, 0.6]
         }}
         transition={{ 
@@ -880,14 +880,13 @@ function TapIndicator({ x, y }: { x: string; y: string }) {
           repeat: Infinity,
           ease: 'easeInOut'
         }}
-        style={{ left: '50%', top: '50%' }}
       />
       {/* Middle pulsing ring */}
       <motion.div
-        className="absolute inset-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-500/40 -translate-x-1/2 -translate-y-1/2"
+        className="absolute w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-500/50"
         animate={{ 
-          scale: [1, 1.3, 1],
-          opacity: [0.8, 0.3, 0.8]
+          scale: [1, 1.5, 1],
+          opacity: [0.8, 0.2, 0.8]
         }}
         transition={{ 
           duration: 1.5, 
@@ -895,7 +894,6 @@ function TapIndicator({ x, y }: { x: string; y: string }) {
           ease: 'easeInOut',
           delay: 0.1
         }}
-        style={{ left: '50%', top: '50%' }}
       />
       {/* Inner solid circle */}
       <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-600 border-2 border-white shadow-lg" />
