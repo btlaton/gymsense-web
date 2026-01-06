@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { Button } from '../ui/Button';
 
 // Word-by-word animation like Linear
@@ -45,27 +46,21 @@ export function HeroSection() {
   const mobileWords = ['Purpose-built', 'for', 'modern', 'gym', 'operations'];
 
   return (
-    <section className="relative min-h-screen flex items-start pt-32 md:pt-40 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-stone-950 via-stone-950 to-stone-900" />
       
-      {/* Subtle grid pattern overlay */}
+      {/* Radial gradient glow behind screenshots */}
       <div 
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `
-            linear-gradient(to right, #fafaf9 1px, transparent 1px),
-            linear-gradient(to bottom, #fafaf9 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
+          background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)',
         }}
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 w-full">
+      {/* Content area */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 md:pt-40 pb-8 w-full">
         <div className="flex flex-col items-start">
-          {/* Spacer for desktop */}
-          <div className="hidden md:block h-8" />
-          
           {/* Main headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight max-w-5xl">
             {mounted ? (
@@ -111,35 +106,135 @@ export function HeroSection() {
               Schedule a 10-min demo →
             </Button>
           </motion.div>
+        </div>
+      </div>
 
-          {/* Spacer before hero image area */}
-          <div className="h-16 md:h-24" />
-
-          {/* Hero Image/Mockup Placeholder */}
+      {/* Screenshot Container - Stacked cascade with subtle 3D */}
+      <div className="relative flex-1 min-h-[550px] md:min-h-[650px] lg:min-h-[750px]">
+        {/* Perspective container - subtle depth */}
+        <div 
+          className="absolute inset-0 overflow-hidden"
+          style={{ 
+            perspective: '2500px',
+            perspectiveOrigin: '50% 40%',
+          }}
+        >
+          {/* 3D container with gentle tilt */}
           <motion.div
-            className="w-full max-w-5xl"
-            initial={{ opacity: 0, y: 40 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 1.1, duration: 0.8, ease: 'easeOut' }}
+            className="absolute inset-0 flex items-start justify-center pt-4"
+            style={{
+              transformStyle: 'preserve-3d',
+            }}
+            initial={{ opacity: 0, rotateX: 0 }}
+            animate={mounted ? { 
+              opacity: 1, 
+              rotateX: 18,
+            } : {}}
+            transition={{ delay: 0.6, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="relative aspect-[16/10] bg-stone-900 rounded-xl border border-stone-800 overflow-hidden shadow-2xl">
-              {/* Placeholder for app screenshot/mockup */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-800 flex items-center justify-center">
-                    <span className="font-display text-2xl text-emerald-500">gs</span>
+            {/* Stacked screenshots - cascading from back-left to front-right */}
+            {mounted && (
+              <>
+                {/* Back-left screenshot - hero-3 (Member App) */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    zIndex: 1,
+                    left: '50%',
+                    top: '0',
+                  }}
+                  initial={{ opacity: 0, y: 60, x: 'calc(-50% - 245px)' }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: -60,
+                    x: 'calc(-50% - 245px)',
+                  }}
+                  transition={{ delay: 0.8, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl shadow-black/90 border border-stone-600/20">
+                    <Image
+                      src="/hero-3.png"
+                      alt="Gymsense Member App View"
+                      width={420}
+                      height={900}
+                      className="w-[240px] sm:w-[300px] md:w-[380px] lg:w-[440px] xl:w-[480px] h-auto"
+                      priority
+                    />
                   </div>
-                  <p className="text-stone-500 text-sm">
-                    [App Screenshot / 3D Mockup Placeholder]
-                  </p>
-                </div>
-              </div>
-              
-              {/* Gradient overlay for depth */}
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/50 to-transparent pointer-events-none" />
-            </div>
+                </motion.div>
+
+                {/* Middle screenshot - hero-1 (Schedule) */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    zIndex: 2,
+                    left: '50%',
+                    top: '0',
+                  }}
+                  initial={{ opacity: 0, y: 60, x: '-50%' }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    x: '-50%',
+                  }}
+                  transition={{ delay: 0.9, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl shadow-black/90 border border-stone-500/30">
+                    <Image
+                      src="/hero-1.png"
+                      alt="Gymsense Pro App - Schedule View"
+                      width={420}
+                      height={900}
+                      className="w-[240px] sm:w-[300px] md:w-[380px] lg:w-[440px] xl:w-[480px] h-auto"
+                      priority
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Front-right screenshot - hero-2 (Financials) - main focus */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    zIndex: 3,
+                    left: '50%',
+                    top: '0',
+                  }}
+                  initial={{ opacity: 0, y: 60, x: 'calc(-50% + 245px)' }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 60,
+                    x: 'calc(-50% + 245px)',
+                  }}
+                  transition={{ delay: 1.0, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl shadow-black/90 border border-stone-600/20">
+                    <Image
+                      src="/hero-2.png"
+                      alt="Gymsense Pro App - Financials View"
+                      width={420}
+                      height={900}
+                      className="w-[240px] sm:w-[300px] md:w-[380px] lg:w-[440px] xl:w-[480px] h-auto"
+                      priority
+                    />
+                  </div>
+                </motion.div>
+              </>
+            )}
           </motion.div>
         </div>
+
+        {/* Gradient overlays for depth/fade effect */}
+        {/* Bottom fade - strong fade to background */}
+        <div 
+          className="absolute inset-x-0 bottom-0 h-[45%] pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(to top, rgb(12, 10, 9) 0%, rgb(12, 10, 9) 15%, transparent 100%)',
+          }}
+        />
+        
+        {/* Side fades - subtle vignette */}
+        <div className="absolute inset-y-0 left-0 w-[10%] bg-gradient-to-r from-stone-950 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-y-0 right-0 w-[10%] bg-gradient-to-l from-stone-950 to-transparent pointer-events-none z-10" />
       </div>
     </section>
   );
