@@ -16,17 +16,16 @@ const featureBlocks = [
     categoryColor: 'emerald',
     title: 'Trusted financial infrastructure',
     description: "Built on Stripe Connect. Process payments, manage subscriptions, and handle billing with the same infrastructure used by the world's leading companies.",
-    learnMoreHref: '#payments',
     subSections: [
       {
-        title: 'Lorem ipsum dolor',
-        description: 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud.',
-        imagePlaceholder: 'Payments Feature 1',
+        title: 'Billing and payments powered by Stripe',
+        description: 'Accept credit cards, ACH, and Apple Pay with enterprise-grade security. Automatic invoicing, failed payment recovery, and real-time payout tracking—all handled for you.',
+        imagePlaceholder: 'Stripe Integration',
       },
       {
-        title: 'Consectetur adipiscing',
-        description: 'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure.',
-        imagePlaceholder: 'Payments Feature 2',
+        title: 'Hardware-free transactions',
+        description: 'No terminals, no dongles, no monthly fees. Members pay with their phones using secure QR codes. Staff complete transactions in seconds, not minutes.',
+        imagePlaceholder: 'QR Payment Flow',
       },
     ] as [{ title: string; description: string; imagePlaceholder: string }, { title: string; description: string; imagePlaceholder: string }],
   },
@@ -35,36 +34,34 @@ const featureBlocks = [
     categoryColor: 'blue',
     title: 'Frictionless interactions',
     description: 'Every touchpoint designed to be instant and intuitive. From check-in to checkout, members never wait or wonder what to do next.',
-    learnMoreHref: '#member-experience',
     subSections: [
       {
-        title: 'Duis aute irure dolor',
-        description: 'In reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat.',
-        imagePlaceholder: 'Member Experience Feature 1',
+        title: 'Touchless member check-ins',
+        description: 'Members scan a QR code at the door with their phone—no cards to swipe, no apps to fumble with. Check-in takes under 2 seconds and works every time.',
+        imagePlaceholder: 'Check-in Flow',
       },
       {
-        title: 'Sunt in culpa qui',
-        description: 'Officia deserunt mollit anim id est laborum sed ut perspiciatis unde omnis iste natus error sit voluptatem.',
-        imagePlaceholder: 'Member Experience Feature 2',
+        title: 'Instant app-to-app updates',
+        description: 'Schedule a session, make a purchase, update a membership—changes sync instantly between staff and member apps. No refresh buttons, no waiting.',
+        imagePlaceholder: 'Real-time Sync',
       },
     ] as [{ title: string; description: string; imagePlaceholder: string }, { title: string; description: string; imagePlaceholder: string }],
   },
   {
-    category: 'Analytics & Reporting',
+    category: 'Insights & Analytics',
     categoryColor: 'purple',
     title: 'Actionable insights, not static reports',
     description: 'Real-time dashboards that surface what matters. Understand member behavior, revenue trends, and operational health at a glance.',
-    learnMoreHref: '#analytics',
     subSections: [
       {
-        title: 'Neque porro quisquam',
-        description: 'Est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit sed quia non numquam eius modi.',
-        imagePlaceholder: 'Analytics Feature 1',
+        title: 'LTV-based customer analytics',
+        description: 'See which members drive revenue and which are at risk of churning. Track lifetime value, visit frequency, and spending patterns to make smarter business decisions.',
+        imagePlaceholder: 'Customer LTV Dashboard',
       },
       {
-        title: 'Tempora incidunt ut',
-        description: 'Labore et dolore magnam aliquam quaerat voluptatem ut enim ad minima veniam quis nostrum exercitationem.',
-        imagePlaceholder: 'Analytics Feature 2',
+        title: 'Real-time view of transactions and payouts',
+        description: 'Know exactly what you earned today, this week, or this month. Track pending payouts, refunds, and failed payments without digging through spreadsheets.',
+        imagePlaceholder: 'Revenue Dashboard',
       },
     ] as [{ title: string; description: string; imagePlaceholder: string }, { title: string; description: string; imagePlaceholder: string }],
   },
@@ -73,17 +70,16 @@ const featureBlocks = [
     categoryColor: 'orange',
     title: 'Enterprise-grade ops management',
     description: "Staff scheduling, session management, inventory tracking, and more. Everything you need to run a gym, nothing you don't.",
-    learnMoreHref: '#operations',
     subSections: [
       {
-        title: 'At vero eos et accusamus',
-        description: 'Et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores.',
-        imagePlaceholder: 'Operations Feature 1',
+        title: 'Self-service product catalog',
+        description: 'Add products, set prices, and start selling in seconds. AI-generated images, automatic Stripe sync, and flexible pricing—no developer needed.',
+        imagePlaceholder: 'Product Management',
       },
       {
-        title: 'Nam libero tempore',
-        description: 'Cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.',
-        imagePlaceholder: 'Operations Feature 2',
+        title: 'Role-based app permissions',
+        description: 'Give trainers access to scheduling, staff access to the shop, and admins access to everything. Each role sees only what they need, nothing more.',
+        imagePlaceholder: 'Team Permissions',
       },
     ] as [{ title: string; description: string; imagePlaceholder: string }, { title: string; description: string; imagePlaceholder: string }],
   },
@@ -111,7 +107,6 @@ export default function Home() {
             categoryColor={block.categoryColor}
             title={block.title}
             description={block.description}
-            learnMoreHref={block.learnMoreHref}
             subSections={block.subSections}
           />
         ))}

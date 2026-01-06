@@ -15,7 +15,7 @@ export function CTASection() {
           viewport={{ once: true }}
         >
           {/* Headline */}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight max-w-xl">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight whitespace-nowrap">
             Ready to modernize your gym?
           </h2>
 

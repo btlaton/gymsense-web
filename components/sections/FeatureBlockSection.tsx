@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 
 interface SubSection {
   title: string;
@@ -14,7 +13,6 @@ interface FeatureBlockProps {
   categoryColor?: string;
   title: string;
   description: string;
-  learnMoreHref?: string;
   heroImagePlaceholder?: string;
   subSections: [SubSection, SubSection]; // Exactly 2 subsections
 }
@@ -24,7 +22,6 @@ export function FeatureBlockSection({
   categoryColor = 'emerald',
   title,
   description,
-  learnMoreHref = '#',
   heroImagePlaceholder,
   subSections,
 }: FeatureBlockProps) {
@@ -49,15 +46,9 @@ export function FeatureBlockSection({
             viewport={{ once: true }}
           >
             <span className={`w-2 h-2 rounded-full ${colorClasses[categoryColor] || colorClasses.emerald}`} />
-            <Link 
-              href={learnMoreHref}
-              className="text-stone-400 text-sm font-medium hover:text-stone-300 transition-colors flex items-center gap-1"
-            >
+            <span className="text-stone-400 text-sm font-medium">
               {category}
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="text-stone-600">
-                <path d="M5.47 11.47a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06L8.94 8l-3.47 3.47z" />
-              </svg>
-            </Link>
+            </span>
           </motion.div>
 
           {/* Title */}
@@ -85,24 +76,6 @@ export function FeatureBlockSection({
             </p>
           </motion.div>
 
-          {/* Learn more link */}
-          <motion.div
-            className="mt-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <Link
-              href={learnMoreHref}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-stone-700 text-stone-300 text-sm font-medium hover:bg-stone-800 hover:border-stone-600 transition-colors"
-            >
-              Learn more
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M5.47 11.47a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06L8.94 8l-3.47 3.47z" />
-              </svg>
-            </Link>
-          </motion.div>
         </div>
 
         {/* Hero image placeholder (optional) */}
