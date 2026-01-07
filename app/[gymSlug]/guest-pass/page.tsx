@@ -16,7 +16,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { User, Mail, Check, Loader2, AlertCircle, Dumbbell, ArrowRight } from 'lucide-react';
+import { User, Mail, Check, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase Edge Function URL
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ldwwiiiskujewcluclbx.supabase.co';
@@ -49,15 +50,27 @@ export default function GuestPassPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   
-  // Verify gym exists
+  // Fetch gym info by slug
   useEffect(() => {
     async function fetchGym() {
       try {
-        // Use a simple query to verify the gym exists
-        // We'll validate on the edge function side
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const { data, error: fetchError } = await supabase
+          .from('gyms')
+          .select('id, name, slug')
+          .eq('slug', gymSlug.toLowerCase())
+          .single();
+        
+        if (fetchError || !data) {
+          console.error('Gym not found:', fetchError);
+          setError('Gym not found. Please check the URL.');
+          setLoading(false);
+          return;
+        }
+        
+        setGym(data);
         setLoading(false);
-        // For now, we just set a placeholder - the edge function will validate
-        setGym({ id: '', name: '', slug: gymSlug });
       } catch {
         setError('Unable to load gym information');
         setLoading(false);
@@ -244,12 +257,8 @@ export default function GuestPassPage() {
       <div className="max-w-md mx-auto px-6 py-4">
         {/* Hero */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/50">
-            <Dumbbell className="w-8 h-8 text-emerald-500" />
-          </div>
-          
           <h1 className="text-3xl font-bold text-white mb-3">
-            Get Your Guest Pass
+            Get Your Guest Pass for {gym?.name || 'the Gym'}
           </h1>
           
           <p className="text-stone-400 text-lg">
