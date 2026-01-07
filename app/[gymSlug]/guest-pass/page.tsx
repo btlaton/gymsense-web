@@ -244,7 +244,7 @@ export default function GuestPassPage() {
   
   // Form state
   return (
-    <main className="min-h-screen bg-stone-950">
+    <main className="bg-stone-950">
       {/* Header */}
       <header className="px-6 py-8">
         <div className="max-w-md mx-auto text-center">
@@ -258,7 +258,8 @@ export default function GuestPassPage() {
         {/* Hero */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-3">
-            Get Your Guest Pass for {gym?.name || 'the Gym'}
+            Get your guest pass for<br />
+            {gym?.name || 'the Gym'}
           </h1>
           
           <p className="text-stone-400 text-lg">
@@ -344,7 +345,7 @@ export default function GuestPassPage() {
       </div>
       
       {/* Footer */}
-      <footer className="px-6 py-12 mt-8">
+      <footer className="px-6 py-8 mt-4">
         <div className="max-w-md mx-auto text-center">
           <div className="font-display text-xl text-emerald-600 mb-2">
             gymsense
