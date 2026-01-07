@@ -14,7 +14,8 @@ import {
   Package,
   Users,
   MessageSquare,
-  FileText
+  FileText,
+  Ticket
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -283,6 +284,59 @@ const FLOWS: Flow[] = [
         activeApp: 'both',
         proScreenshot: '/user-guide/customer-checkout/step-6-pro.png',
         memberScreenshot: '/user-guide/customer-checkout/step-6-member.png',
+      },
+    ],
+  },
+  {
+    id: 'digital-guest-pass',
+    title: 'Digital Guest Pass',
+    icon: Ticket,
+    category: 'transactions',
+    displayMode: 'single-member',
+    steps: [
+      {
+        id: 'digital-guest-pass-1',
+        narrative: 'Visit the gym\'s guest pass page and enter your name and email address. Tap Get My Guest Pass to receive your activation code.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-1.png',
+      },
+      {
+        id: 'digital-guest-pass-2',
+        narrative: 'Check your email for the welcome message containing your 4-digit activation code. Tap the download link to install the gymsense Member app.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-2.png',
+      },
+      {
+        id: 'digital-guest-pass-3',
+        narrative: 'After completing onboarding, you\'ll land on the home screen. Choose between a Day Pass (1 visit) or Week Pass (7 visits) under "Buy a Guest Pass".',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-3.png',
+        hotspot: { app: 'member', x: '30%', y: '49%', type: 'tap' },
+      },
+      {
+        id: 'digital-guest-pass-4',
+        narrative: 'Review the purchase details and tap Purchase to confirm. Your saved payment method will be charged automatically.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
+        hotspot: { app: 'member', x: '65%', y: '67%', type: 'tap' },
+      },
+      {
+        id: 'digital-guest-pass-5',
+        narrative: 'Your guest pass is now active! The confirmation shows how many visits are included with your purchase.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-5.png',
+      },
+      {
+        id: 'digital-guest-pass-6',
+        narrative: 'The home screen now displays your available visits. When you arrive at the gym, swipe left to check in by scanning the gym\'s QR code.',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-6.png',
+      },
+      {
+        id: 'digital-guest-pass-7',
+        narrative: 'After checking in, one visit is deducted from your pass. Your check-in and purchase appear in Recent Activity—you\'re all set to work out!',
+        activeApp: 'member',
+        memberScreenshot: '/user-guide/digital-guest-pass/step-7.png',
       },
     ],
   },
