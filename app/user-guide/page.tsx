@@ -315,14 +315,14 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'digital-guest-pass-4',
-        narrative: 'Review the purchase details and tap Purchase to confirm. Your saved payment method will be charged automatically.',
+        narrative: 'Review the gym\'s membership agreement, check the box to accept the terms, then tap Purchase to complete the transaction.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '65%', y: '56%', type: 'tap' },
+        hotspot: { app: 'member', x: '50%', y: '80%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
-        narrative: 'Your guest pass is now active! The confirmation shows how many visits are included with your purchase.',
+        narrative: 'Purchase complete! The confirmation shows your guest pass is now active with the included visits ready to use.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-5.png',
       },
