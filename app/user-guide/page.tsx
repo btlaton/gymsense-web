@@ -311,14 +311,14 @@ const FLOWS: Flow[] = [
         narrative: 'After completing onboarding, you\'ll land on the home screen. Choose between a Day Pass or Week Pass under "Buy a Guest Pass".',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-3.png',
-        hotspot: { app: 'member', x: '30%', y: '44%', type: 'tap' },
+        hotspot: { app: 'member', x: '30%', y: '40%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-4',
         narrative: 'Review the purchase details and tap Purchase to confirm. Your saved payment method will be charged automatically.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '65%', y: '55%', type: 'tap' },
+        hotspot: { app: 'member', x: '65%', y: '50%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
