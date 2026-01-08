@@ -318,7 +318,7 @@ const FLOWS: Flow[] = [
         narrative: 'Review the purchase details and tap Purchase to confirm. Your saved payment method will be charged automatically.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '65%', y: '53%', type: 'tap' },
+        hotspot: { app: 'member', x: '65%', y: '56%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
