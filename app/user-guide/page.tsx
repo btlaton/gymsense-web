@@ -308,17 +308,17 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'digital-guest-pass-3',
-        narrative: 'After completing onboarding, you\'ll land on the home screen. Choose between a Day Pass (1 visit) or Week Pass (7 visits) under "Buy a Guest Pass".',
+        narrative: 'After completing onboarding, you\'ll land on the home screen. Choose between a Day Pass or Week Pass under "Buy a Guest Pass".',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-3.png',
-        hotspot: { app: 'member', x: '30%', y: '49%', type: 'tap' },
+        hotspot: { app: 'member', x: '30%', y: '44%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-4',
         narrative: 'Review the purchase details and tap Purchase to confirm. Your saved payment method will be charged automatically.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '65%', y: '67%', type: 'tap' },
+        hotspot: { app: 'member', x: '65%', y: '55%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
@@ -328,7 +328,7 @@ const FLOWS: Flow[] = [
       },
       {
         id: 'digital-guest-pass-6',
-        narrative: 'The home screen now displays your available visits. When you arrive at the gym, swipe left to check in by scanning the gym\'s QR code.',
+        narrative: 'The home screen now displays your available visits. When you arrive at the gym, swipe right to check in by scanning the gym\'s QR code.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-6.png',
       },
