@@ -318,7 +318,7 @@ const FLOWS: Flow[] = [
         narrative: 'Review the gym\'s membership agreement, check the box to accept the terms, then tap Purchase to complete the transaction.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '50%', y: '80%', type: 'tap' },
+        hotspot: { app: 'member', x: '50%', y: '72%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
