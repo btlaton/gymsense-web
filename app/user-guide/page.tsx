@@ -50,6 +50,8 @@ interface Step {
   memberDimmed?: boolean;
   proDimmed?: boolean;
   hotspot?: Hotspot;
+  hideMemberLabel?: boolean;
+  hideProLabel?: boolean;
 }
 
 interface Flow {
@@ -299,12 +301,14 @@ const FLOWS: Flow[] = [
         narrative: 'Visit the gym\'s guest pass page and enter your name and email address. Tap Get My Guest Pass to receive your activation code.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-1.png',
+        hideMemberLabel: true,
       },
       {
         id: 'digital-guest-pass-2',
         narrative: 'Check your email for the welcome message containing your 4-digit activation code. Tap the download link to install the gymsense Member app.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-2.png',
+        hideMemberLabel: true,
       },
       {
         id: 'digital-guest-pass-3',
@@ -318,7 +322,6 @@ const FLOWS: Flow[] = [
         narrative: 'Review the gym\'s membership agreement, check the box to accept the terms, then tap Purchase to complete the transaction.',
         activeApp: 'member',
         memberScreenshot: '/user-guide/digital-guest-pass/step-4.png',
-        hotspot: { app: 'member', x: '50%', y: '72%', type: 'tap' },
       },
       {
         id: 'digital-guest-pass-5',
@@ -1310,15 +1313,17 @@ export default function UserGuidePage() {
                       <TapIndicator x={currentStep.hotspot.x} y={currentStep.hotspot.y} />
                     )}
                   </div>
-                  <div className="mt-2 sm:mt-3 text-center">
-                    <span className={`text-xs sm:text-sm font-medium ${
-                      !currentStep.memberDimmed && (currentStep.activeApp === 'member' || currentStep.activeApp === 'both')
-                        ? 'text-emerald-600'
-                        : 'text-stone-400'
-                    }`}>
-                      {memberPhoneLabel}
-                    </span>
-                  </div>
+                  {!currentStep.hideMemberLabel && (
+                    <div className="mt-2 sm:mt-3 text-center">
+                      <span className={`text-xs sm:text-sm font-medium ${
+                        !currentStep.memberDimmed && (currentStep.activeApp === 'member' || currentStep.activeApp === 'both')
+                          ? 'text-emerald-600'
+                          : 'text-stone-400'
+                      }`}>
+                        {memberPhoneLabel}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -1349,15 +1354,17 @@ export default function UserGuidePage() {
                       <TapIndicator x={currentStep.hotspot.x} y={currentStep.hotspot.y} />
                     )}
                   </div>
-                  <div className="mt-2 sm:mt-3 text-center">
-                    <span className={`text-xs sm:text-sm font-medium ${
-                      !currentStep.proDimmed && (currentStep.activeApp === 'pro' || currentStep.activeApp === 'both')
-                        ? 'text-stone-700'
-                        : 'text-stone-400'
-                    }`}>
-                      Pro App
-                    </span>
-                  </div>
+                  {!currentStep.hideProLabel && (
+                    <div className="mt-2 sm:mt-3 text-center">
+                      <span className={`text-xs sm:text-sm font-medium ${
+                        !currentStep.proDimmed && (currentStep.activeApp === 'pro' || currentStep.activeApp === 'both')
+                          ? 'text-stone-700'
+                          : 'text-stone-400'
+                      }`}>
+                        Pro App
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
