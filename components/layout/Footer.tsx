@@ -14,10 +14,10 @@ const footerSections = [
     ],
   },
   {
-    title: 'Company',
+    title: 'Support',
     links: [
-      { label: 'About', href: '#about' },
-      { label: 'Contact', href: '#get-started' },
+      { label: 'support@gymsense.io', href: 'mailto:support@gymsense.io' },
+      { label: 'Lake Forest, CA', href: '#' },
     ],
   },
   {
