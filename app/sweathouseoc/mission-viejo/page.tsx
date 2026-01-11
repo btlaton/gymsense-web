@@ -720,6 +720,9 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
 // MAIN PAGE COMPONENT
 // ============================================================================
 
+// Password for alpha testing
+const PAGE_PASSWORD = 'sweathouse2026';
+
 export default function SweatHouseCheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [agreements, setAgreements] = useState<AgreementTemplate[]>([]);
@@ -727,6 +730,79 @@ export default function SweatHouseCheckoutPage() {
   const [activeCategory, setActiveCategory] = useState<ProductCategory>('membership');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  // Password protection
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
+  // Check if already authenticated
+  useEffect(() => {
+    const stored = localStorage.getItem('sweathouse_auth');
+    if (stored === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === PAGE_PASSWORD) {
+      localStorage.setItem('sweathouse_auth', 'true');
+      setIsAuthenticated(true);
+      setPasswordError(false);
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  // Show password gate if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{ backgroundColor: BRAND.backgroundColor, fontFamily: 'Roboto, system-ui, sans-serif' }}
+      >
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <img 
+              src={BRAND.logoUrl} 
+              alt="Sweathouse" 
+              className="h-12 mx-auto mb-4"
+            />
+            <p className="text-gray-400 text-sm">Alpha Preview</p>
+          </div>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Enter password"
+                className="w-full px-4 py-3 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:ring-2"
+                style={{ 
+                  backgroundColor: '#1a1a1a',
+                  border: passwordError ? '1px solid #ef4444' : '1px solid #333',
+                }}
+                autoFocus
+              />
+              {passwordError && (
+                <p className="mt-2 text-sm text-red-400">Incorrect password</p>
+              )}
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide"
+              style={{ backgroundColor: BRAND.primaryColor }}
+            >
+              Enter
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   // Check for success redirect
   useEffect(() => {
