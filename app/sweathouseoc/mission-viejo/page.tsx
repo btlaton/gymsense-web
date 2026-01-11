@@ -149,9 +149,12 @@ function CheckoutFormInner({
     });
 
     pr.canMakePayment().then((result) => {
+      console.log('Apple Pay canMakePayment result:', result);
       if (result) {
         setPaymentRequest(pr);
         setCanMakePayment(true);
+      } else {
+        console.log('Apple Pay not available - user may not have Apple Pay set up');
       }
     });
 
