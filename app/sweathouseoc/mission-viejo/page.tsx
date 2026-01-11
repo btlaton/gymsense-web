@@ -76,58 +76,73 @@ type ProductCategory = 'membership' | 'class_pack' | 'private_session';
 // STRIPE SETUP
 // ============================================================================
 
+// Stripe publishable key (platform key, not connected account)
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51S7G4iDJJF9sHVx312eC7oFWkQFnpNlGifi56gjq5aMF3Xc8uE56jVpWzQBXKqHDGutJV5X3gsbcEM1XjYcMJ5lB00wHb3ZS9l';
+
 let stripePromise: Promise<Stripe | null> | null = null;
 
 function getStripe() {
   if (!stripePromise) {
-    stripePromise = loadStripe(
-      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-      { stripeAccount: BRAND.stripeAccountId }
-    );
+    stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
+      stripeAccount: BRAND.stripeAccountId,
+    });
   }
   return stripePromise;
 }
 
+
 // ============================================================================
-// CHECKOUT FORM COMPONENT
+// CHECKOUT FORM (inside Elements provider)
 // ============================================================================
 
-interface CheckoutFormProps {
+interface CheckoutFormInnerProps {
   product: Product;
   email: string;
-  onSuccess: (setupCode: string) => void;
+  termsAccepted: boolean;
+  setTermsAccepted: (accepted: boolean) => void;
+  agreement: AgreementTemplate | null;
+  onSuccess: () => void;
   onError: (error: string) => void;
+  onChangeEmail: () => void;
 }
 
-function CheckoutForm({ product, email, onSuccess, onError }: CheckoutFormProps) {
+function CheckoutFormInner({ 
+  product, 
+  email, 
+  termsAccepted, 
+  setTermsAccepted, 
+  agreement,
+  onSuccess,
+  onError,
+  onChangeEmail
+}: CheckoutFormInnerProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+
+  const canSubmit = stripe && elements && termsAccepted && !processing;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || !canSubmit) return;
     
     setProcessing(true);
     
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           receipt_email: email,
-          return_url: `${window.location.origin}/sweathouseoc/mission-viejo?success=true`,
+          return_url: `${window.location.origin}/sweathouseoc/mission-viejo?success=true&email=${encodeURIComponent(email)}`,
         },
-        redirect: 'if_required',
       });
       
       if (error) {
         onError(error.message || 'Payment failed');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Payment succeeded - fetch the setup code
-        // The webhook will have created the customer with setup_code
-        // For now, show success and tell them to check email
-        onSuccess('');
+      } else {
+        onSuccess();
       }
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Payment failed');
@@ -137,21 +152,81 @@ function CheckoutForm({ product, email, onSuccess, onError }: CheckoutFormProps)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement 
-        options={{
-          layout: 'tabs',
-          wallets: {
-            applePay: 'auto',
-            googlePay: 'auto',
-          },
-        }}
-      />
-      
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Email Confirmation */}
+      <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
+        <div className="flex items-center gap-2 text-sm text-gray-300">
+          <Mail className="w-4 h-4 text-gray-500" />
+          <span>{email}</span>
+        </div>
+        <button
+          type="button"
+          onClick={onChangeEmail}
+          className="text-xs underline hover:opacity-80 transition-opacity"
+          style={{ color: BRAND.primaryColor }}
+        >
+          Change
+        </button>
+      </div>
+
+      {/* Payment Element */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Payment Method
+        </label>
+        <PaymentElement 
+          options={{
+            layout: 'tabs',
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
+          }}
+        />
+      </div>
+
+      {/* Terms */}
+      <div className="space-y-2">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setTermsAccepted(!termsAccepted)}
+            className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0"
+            style={{ 
+              backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
+              borderColor: termsAccepted ? BRAND.primaryColor : '#555',
+            }}
+          >
+            {termsAccepted && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
+          </button>
+          <span className="text-sm text-gray-400">
+            I agree to the{' '}
+            <button 
+              type="button"
+              onClick={() => setShowTerms(!showTerms)}
+              className="underline hover:text-white transition-colors"
+              style={{ color: BRAND.primaryColor }}
+            >
+              {agreement?.name || 'terms and conditions'}
+            </button>
+          </span>
+        </label>
+        
+        {showTerms && agreement && (
+          <div 
+            className="p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
+            style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+          >
+            {agreement.content}
+          </div>
+        )}
+      </div>
+
+      {/* Submit */}
       <button
         type="submit"
-        disabled={!stripe || processing}
-        className="w-full py-4 rounded-lg font-semibold text-lg uppercase tracking-wide transition-all disabled:opacity-50"
+        disabled={!canSubmit}
+        className="w-full py-4 rounded-lg font-semibold text-lg uppercase tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ 
           backgroundColor: BRAND.primaryColor,
           color: '#000000',
@@ -163,7 +238,7 @@ function CheckoutForm({ product, email, onSuccess, onError }: CheckoutFormProps)
             Processing...
           </span>
         ) : (
-          `Pay $${product.price.toFixed(2)}`
+          `Pay $${product.price.toFixed(2)}${product.billing_mode === 'recurring' ? '/mo' : ''}`
         )}
       </button>
     </form>
@@ -182,44 +257,38 @@ interface CheckoutDrawerProps {
 }
 
 function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
-  const [step, setStep] = useState<'email' | 'terms' | 'payment' | 'success'>('email');
   const [email, setEmail] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [setupCode, setSetupCode] = useState<string>('');
+  const [success, setSuccess] = useState(false);
 
-  // Reset state when drawer opens/closes
+  // We'll create PaymentIntent after email is entered (triggered from form)
+
+  // Reset state when drawer closes
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setStep('email');
         setEmail('');
         setTermsAccepted(false);
         setClientSecret(null);
         setError(null);
-        setSetupCode('');
+        setSuccess(false);
       }, 300);
     }
   }, [isOpen]);
 
-  const isEmailValid = email.includes('@') && email.includes('.');
-
-  const handleEmailSubmit = () => {
-    if (!isEmailValid) return;
-    setStep('terms');
-  };
-
-  const handleTermsAccept = async () => {
-    if (!termsAccepted || !product) return;
+  const createPaymentIntent = async () => {
+    if (!product || !email) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      // Create checkout session via edge function
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-guest-checkout`, {
+      console.log('Creating PaymentIntent for:', product.name, product.price, 'email:', email);
+      
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-web-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,48 +296,36 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         },
         body: JSON.stringify({
           gymId: BRAND.gymId,
-          cartItems: [{
-            id: product.id,
-            name: product.name,
-            description: product.description || '',
-            price: product.price,
-            quantity: 1,
-            type: product.type,
-            billing_mode: product.billing_mode,
-            stripe_product_id: product.stripe_product_id,
-            stripe_price_id: product.stripe_price_id,
-            sessions_per_month: product.sessions_included,
-          }],
-          successUrl: `${window.location.origin}/sweathouseoc/mission-viejo?success=true&email=${encodeURIComponent(email)}`,
-          cancelUrl: `${window.location.origin}/sweathouseoc/mission-viejo`,
+          productId: product.id,
+          email: email,
         }),
       });
       
       const data = await response.json();
+      console.log('PaymentIntent response:', data);
       
       if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to create checkout');
+        throw new Error(data.error || 'Failed to initialize checkout');
       }
       
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('No client secret returned');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create checkout');
+      console.error('PaymentIntent error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePaymentSuccess = (code: string) => {
-    setSetupCode(code);
-    setStep('success');
+  const handleSuccess = () => {
+    setSuccess(true);
   };
 
-  const handlePaymentError = (errorMessage: string) => {
+  const handleError = (errorMessage: string) => {
     setError(errorMessage);
   };
 
@@ -296,7 +353,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
       >
         {/* Header */}
         <div 
-          className="sticky top-0 px-6 py-4 flex items-center justify-between"
+          className="sticky top-0 px-6 py-4 flex items-center justify-between z-10"
           style={{ backgroundColor: '#111111', borderBottom: '1px solid #333' }}
         >
           <h2 className="text-lg font-semibold text-white">Checkout</h2>
@@ -315,16 +372,11 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold text-white">{product.name}</h3>
-                {product.sessions_included && product.sessions_included !== 999 && (
-                  <p className="text-sm text-gray-400 mt-1">
-                    {product.sessions_included} {product.sessions_included === 1 ? 'class' : 'classes'}
-                  </p>
-                )}
-                {product.sessions_included === 999 && (
-                  <p className="text-sm text-gray-400 mt-1">Unlimited classes</p>
+                {product.description && (
+                  <p className="text-sm text-gray-400 mt-1">{product.description}</p>
                 )}
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0 ml-3">
                 <p className="text-xl font-bold" style={{ color: BRAND.primaryColor }}>
                   ${product.price.toFixed(2)}
                 </p>
@@ -332,28 +384,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                   <p className="text-xs text-gray-400">/month</p>
                 )}
               </div>
-            </div>
-            
-            {/* Product Details */}
-            <div className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid #333' }}>
-              {product.expires_in_days && (
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span>Expires in {product.expires_in_days} days</span>
-                </div>
-              )}
-              {product.billing_mode === 'recurring' && (
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Repeat className="w-4 h-4" />
-                  <span>Renews monthly until cancelled</span>
-                </div>
-              )}
-              {product.is_intro_offer && (
-                <div className="flex items-center gap-2 text-sm" style={{ color: BRAND.primaryColor }}>
-                  <Zap className="w-4 h-4" />
-                  <span>New client offer</span>
-                </div>
-              )}
             </div>
           </div>
           
@@ -365,8 +395,8 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Step: Email */}
-          {step === 'email' && (
+          {/* Step 1: Email (if no clientSecret yet) */}
+          {!clientSecret && !success && !loading && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -384,7 +414,11 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                       backgroundColor: '#1a1a1a',
                       border: '1px solid #333',
                     }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && email.includes('@') && email.includes('.')) {
+                        createPaymentIntent();
+                      }
+                    }}
                   />
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
@@ -393,112 +427,26 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               </div>
               
               <button
-                onClick={handleEmailSubmit}
-                disabled={!isEmailValid}
+                onClick={createPaymentIntent}
+                disabled={!email.includes('@') || !email.includes('.')}
                 className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ backgroundColor: BRAND.primaryColor }}
               >
-                Continue
+                Continue to Payment
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           )}
           
-          {/* Step: Terms */}
-          {step === 'terms' && agreement && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-white mb-2">{agreement.name}</h3>
-                <div 
-                  className="max-h-48 overflow-y-auto p-3 rounded-lg text-sm text-gray-400 whitespace-pre-wrap"
-                  style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                >
-                  {agreement.content}
-                </div>
-              </div>
-              
-              <label className="flex items-start gap-3 cursor-pointer">
-                <button
-                  type="button"
-                  onClick={() => setTermsAccepted(!termsAccepted)}
-                  className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0`}
-                  style={{ 
-                    backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
-                    borderColor: termsAccepted ? BRAND.primaryColor : '#555',
-                  }}
-                >
-                  {termsAccepted && <Check className="w-4 h-4 text-black" strokeWidth={3} />}
-                </button>
-                <span className="text-sm text-gray-300">
-                  I have read and agree to the {agreement.name}
-                </span>
-              </label>
-              
-              <button
-                onClick={handleTermsAccept}
-                disabled={!termsAccepted || loading}
-                className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: BRAND.primaryColor }}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Continue to Payment
-                    <ChevronRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={() => setStep('email')}
-                className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Back
-              </button>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND.primaryColor }} />
             </div>
           )}
           
-          {/* Step: Payment */}
-          {step === 'payment' && clientSecret && (
-            <div>
-              <Elements 
-                stripe={getStripe()} 
-                options={{ 
-                  clientSecret,
-                  appearance: {
-                    theme: 'night',
-                    variables: {
-                      colorPrimary: BRAND.primaryColor,
-                      fontFamily: 'Roboto, system-ui, sans-serif',
-                      colorBackground: '#1a1a1a',
-                      colorText: '#ffffff',
-                    },
-                  },
-                }}
-              >
-                <CheckoutForm
-                  product={product}
-                  email={email}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                />
-              </Elements>
-              
-              <button
-                onClick={() => setStep('terms')}
-                className="w-full mt-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Back
-              </button>
-            </div>
-          )}
-          
-          {/* Step: Success */}
-          {step === 'success' && (
+          {/* Success State */}
+          {success && (
             <div className="text-center py-4">
               <div 
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -509,23 +457,8 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               
               <h3 className="text-xl font-bold text-white mb-2">You&apos;re all set!</h3>
               <p className="text-gray-400 mb-6">
-                Check your email ({email}) for your confirmation and setup code.
+                Check your email for your confirmation and setup code.
               </p>
-              
-              {setupCode && (
-                <div 
-                  className="p-4 rounded-xl mb-6"
-                  style={{ backgroundColor: `${BRAND.primaryColor}20`, border: `1px solid ${BRAND.primaryColor}40` }}
-                >
-                  <p className="text-sm text-gray-400 mb-2">Your setup code</p>
-                  <p 
-                    className="text-3xl font-bold tracking-widest"
-                    style={{ color: BRAND.primaryColor }}
-                  >
-                    {setupCode.split('').join(' ')}
-                  </p>
-                </div>
-              )}
               
               <div className="rounded-xl p-4 text-left mb-6" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
                 <h4 className="font-semibold text-white mb-3">Next Steps</h4>
@@ -589,6 +522,55 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               </div>
             </div>
           )}
+          
+          {/* Single-Screen Checkout Form */}
+          {!loading && !success && clientSecret && (
+            <Elements 
+              stripe={getStripe()} 
+              options={{ 
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: BRAND.primaryColor,
+                    fontFamily: 'Roboto, system-ui, sans-serif',
+                    colorBackground: '#1a1a1a',
+                    colorText: '#ffffff',
+                    colorTextSecondary: '#9ca3af',
+                    borderRadius: '8px',
+                  },
+                  rules: {
+                    '.Input': {
+                      backgroundColor: '#1a1a1a',
+                      border: '1px solid #333',
+                    },
+                    '.Tab': {
+                      backgroundColor: '#1a1a1a',
+                      border: '1px solid #333',
+                    },
+                    '.Tab--selected': {
+                      backgroundColor: '#2a2a2a',
+                      borderColor: BRAND.primaryColor,
+                    },
+                  },
+                },
+              }}
+            >
+              <CheckoutFormInner
+                product={product}
+                email={email}
+                termsAccepted={termsAccepted}
+                setTermsAccepted={setTermsAccepted}
+                agreement={agreement}
+                onSuccess={handleSuccess}
+                onError={handleError}
+                onChangeEmail={() => {
+                  setClientSecret(null);
+                  setError(null);
+                }}
+              />
+            </Elements>
+          )}
         </div>
       </div>
     </>
@@ -605,13 +587,25 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onSelect }: ProductCardProps) {
+  const [isPressed, setIsPressed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const isIntro = product.is_intro_offer;
+  
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left p-4 rounded-xl border transition-all group hover:scale-[1.01]"
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => { setIsPressed(false); setIsHovered(false); }}
+      onMouseEnter={() => setIsHovered(true)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-100 group ${isIntro ? 'animate-border-pulse' : ''}`}
       style={{ 
-        backgroundColor: BRAND.cardBackground,
-        borderColor: '#333333',
+        backgroundColor: isHovered ? '#1a1a1a' : BRAND.cardBackground,
+        borderColor: isIntro ? undefined : '#333333',
+        boxShadow: isPressed ? 'none' : '2px 2px 0px #44403c',
+        transform: isPressed ? 'translate(2px, 2px)' : 'none',
       }}
     >
       {/* Top row: Name and Price */}
@@ -629,19 +623,11 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
         </div>
       </div>
       
-      {/* Bottom row: Description + badges on left, SELECT on right */}
+      {/* Bottom row: Description on left, SELECT on right */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="text-sm text-gray-400">
           {product.description && (
             <span>{product.description}</span>
-          )}
-          {product.is_intro_offer && (
-            <span 
-              className="px-1.5 py-0.5 rounded-full text-xs font-medium"
-              style={{ backgroundColor: `${BRAND.primaryColor}30`, color: BRAND.primaryColor }}
-            >
-              Intro
-            </span>
           )}
         </div>
         <div className="flex items-center text-xs font-semibold uppercase tracking-wide flex-shrink-0" style={{ color: BRAND.primaryColor }}>
@@ -661,7 +647,7 @@ export default function SweatHouseCheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [agreements, setAgreements] = useState<AgreementTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState<ProductCategory>('class_pack');
+  const [activeCategory, setActiveCategory] = useState<ProductCategory>('membership');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -698,10 +684,10 @@ export default function SweatHouseCheckoutPage() {
         }));
         setProducts(transformed);
         
-        // Set initial category based on what products exist
+        // Set initial category based on what products exist (priority: membership first)
         const types = new Set(transformed.map(p => p.type));
-        if (types.has('class_pack')) setActiveCategory('class_pack');
-        else if (types.has('membership')) setActiveCategory('membership');
+        if (types.has('membership')) setActiveCategory('membership');
+        else if (types.has('class_pack')) setActiveCategory('class_pack');
         else if (types.has('private_session')) setActiveCategory('private_session');
       }
       
@@ -734,11 +720,23 @@ export default function SweatHouseCheckoutPage() {
     }
   }, []);
 
-  // Get products by category
-  const categoryProducts = products.filter(p => p.type === activeCategory);
+  // Get products by category, intro offers first
+  const categoryProducts = products
+    .filter(p => p.type === activeCategory)
+    .sort((a, b) => {
+      // Intro offers first
+      if (a.is_intro_offer && !b.is_intro_offer) return -1;
+      if (!a.is_intro_offer && b.is_intro_offer) return 1;
+      // Then by price
+      return a.price - b.price;
+    });
   
   // Get available categories (only show tabs for categories with products)
-  const availableCategories = Array.from(new Set(products.map(p => p.type))) as ProductCategory[];
+  // Ordered: Memberships -> Class Packs -> Private Sessions
+  const categoryOrder: ProductCategory[] = ['membership', 'class_pack', 'private_session'];
+  const availableCategories = categoryOrder.filter(cat => 
+    products.some(p => p.type === cat)
+  );
   
   // Get agreement for selected product
   const getAgreementForProduct = (product: Product | null): AgreementTemplate | null => {
@@ -801,11 +799,11 @@ export default function SweatHouseCheckoutPage() {
       {/* Hero */}
       <section className="px-6 py-10 text-center" style={{ borderBottom: '1px solid #222' }}>
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-wide">
-            Join the Movement
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-3 uppercase tracking-wide">
+            An Option for Everybody
           </h1>
-          <p className="text-gray-400">
-            Choose your membership or class pack to get started
+          <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+            Explore our thoughtfully designed pricing options, tailored to meet your fitness needs. Whether you&apos;re just starting out or a seasoned Lagree enthusiast, we have a package that fits your goals and lifestyle.
           </p>
         </div>
       </section>
@@ -860,12 +858,7 @@ export default function SweatHouseCheckoutPage() {
       {/* Footer */}
       <footer className="px-6 py-8 mt-8" style={{ borderTop: '1px solid #222' }}>
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-sm text-gray-500 mb-2">
-            Powered by
-          </p>
-          <p className="font-display text-xl" style={{ color: BRAND.primaryColor }}>
-            gymsense
-          </p>
+          <span className="text-xl text-white" style={{ fontFamily: 'var(--font-pacifico), cursive' }}>gymsense</span>
         </div>
       </footer>
       
