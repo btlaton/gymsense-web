@@ -98,30 +98,31 @@ function getStripe() {
 interface CheckoutFormInnerProps {
   product: Product;
   email: string;
+  setEmail: (email: string) => void;
   termsAccepted: boolean;
   setTermsAccepted: (accepted: boolean) => void;
   agreement: AgreementTemplate | null;
   onSuccess: () => void;
   onError: (error: string) => void;
-  onChangeEmail: () => void;
 }
 
 function CheckoutFormInner({ 
   product, 
   email, 
+  setEmail,
   termsAccepted, 
   setTermsAccepted, 
   agreement,
   onSuccess,
-  onError,
-  onChangeEmail
+  onError
 }: CheckoutFormInnerProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
-  const canSubmit = stripe && elements && termsAccepted && !processing;
+  const isEmailValid = email.includes('@') && email.includes('.');
+  const canSubmit = stripe && elements && isEmailValid && termsAccepted && !processing;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,20 +154,28 @@ function CheckoutFormInner({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Email Confirmation */}
-      <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <Mail className="w-4 h-4 text-gray-500" />
-          <span>{email}</span>
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Email Address
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all text-white placeholder:text-gray-500"
+            style={{ 
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #333',
+            }}
+          />
         </div>
-        <button
-          type="button"
-          onClick={onChangeEmail}
-          className="text-xs underline hover:opacity-80 transition-opacity"
-          style={{ color: BRAND.primaryColor }}
-        >
-          Change
-        </button>
+        <p className="mt-1 text-xs text-gray-500">
+          We&apos;ll send your confirmation and setup code here.
+        </p>
       </div>
 
       {/* Payment Element */}
@@ -279,14 +288,14 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
     }
   }, [isOpen]);
 
-  const createPaymentIntent = async () => {
-    if (!product || !email) return;
+  const createPaymentIntent = useCallback(async () => {
+    if (!product) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      console.log('Creating PaymentIntent for:', product.name, product.price, 'email:', email);
+      console.log('Creating PaymentIntent for:', product.name, product.price);
       
       const response = await fetch(`${SUPABASE_URL}/functions/v1/create-web-checkout`, {
         method: 'POST',
@@ -297,7 +306,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         body: JSON.stringify({
           gymId: BRAND.gymId,
           productId: product.id,
-          email: email,
         }),
       });
       
@@ -319,7 +327,14 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
     } finally {
       setLoading(false);
     }
-  };
+  }, [product]);
+
+  // Create PaymentIntent when drawer opens
+  useEffect(() => {
+    if (isOpen && product && !clientSecret && !loading) {
+      createPaymentIntent();
+    }
+  }, [isOpen, product, clientSecret, loading, createPaymentIntent]);
 
   const handleSuccess = () => {
     setSuccess(true);
@@ -392,49 +407,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             <div className="mb-4 p-3 rounded-lg text-red-400 text-sm flex items-start gap-2" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
-            </div>
-          )}
-          
-          {/* Step 1: Email (if no clientSecret yet) */}
-          {!clientSecret && !success && !loading && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all text-white placeholder:text-gray-500"
-                    style={{ 
-                      backgroundColor: '#1a1a1a',
-                      border: '1px solid #333',
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && email.includes('@') && email.includes('.')) {
-                        createPaymentIntent();
-                      }
-                    }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  We&apos;ll send your confirmation and app setup code here.
-                </p>
-              </div>
-              
-              <button
-                onClick={createPaymentIntent}
-                disabled={!email.includes('@') || !email.includes('.')}
-                className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: BRAND.primaryColor }}
-              >
-                Continue to Payment
-                <ChevronRight className="w-5 h-5" />
-              </button>
             </div>
           )}
           
@@ -559,15 +531,12 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               <CheckoutFormInner
                 product={product}
                 email={email}
+                setEmail={setEmail}
                 termsAccepted={termsAccepted}
                 setTermsAccepted={setTermsAccepted}
                 agreement={agreement}
                 onSuccess={handleSuccess}
                 onError={handleError}
-                onChangeEmail={() => {
-                  setClientSecret(null);
-                  setError(null);
-                }}
               />
             </Elements>
           )}
