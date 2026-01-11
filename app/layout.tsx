@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Hanken_Grotesk, Pacifico } from 'next/font/google';
+import { Hanken_Grotesk, Pacifico, Roboto } from 'next/font/google';
 import './globals.css';
 
 const hanken = Hanken_Grotesk({
@@ -12,6 +12,13 @@ const pacifico = Pacifico({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-pacifico',
+  display: 'swap',
+});
+
+const roboto = Roboto({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-roboto',
   display: 'swap',
 });
 
@@ -35,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${hanken.variable} ${pacifico.variable}`}>
+    <html lang="en" className={`${hanken.variable} ${pacifico.variable} ${roboto.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

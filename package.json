@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.6.1",
     "@supabase/supabase-js": "^2.90.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.468.0",
