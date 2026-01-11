@@ -12,7 +12,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { 
+  Elements, 
+  CardElement, 
+  PaymentRequestButtonElement,
+  useStripe, 
+  useElements 
+} from '@stripe/react-stripe-js';
 import { 
   X, Check, Loader2, ChevronRight, Mail, 
   Clock, Zap, Repeat, AlertCircle,
@@ -102,6 +108,7 @@ interface CheckoutFormInnerProps {
   termsAccepted: boolean;
   setTermsAccepted: (accepted: boolean) => void;
   agreement: AgreementTemplate | null;
+  clientSecret: string;
   onSuccess: () => void;
   onError: (error: string) => void;
 }
@@ -113,6 +120,7 @@ function CheckoutFormInner({
   termsAccepted, 
   setTermsAccepted, 
   agreement,
+  clientSecret,
   onSuccess,
   onError
 }: CheckoutFormInnerProps) {
@@ -120,25 +128,82 @@ function CheckoutFormInner({
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [paymentRequest, setPaymentRequest] = useState<any>(null);
+  const [canMakePayment, setCanMakePayment] = useState(false);
 
   const isEmailValid = email.includes('@') && email.includes('.');
   const canSubmit = stripe && elements && isEmailValid && termsAccepted && !processing;
 
+  // Set up Apple Pay / Google Pay
+  useEffect(() => {
+    if (!stripe || !product) return;
+
+    const pr = stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: {
+        label: product.name,
+        amount: Math.round(product.price * 100),
+      },
+      requestPayerEmail: true,
+    });
+
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        setPaymentRequest(pr);
+        setCanMakePayment(true);
+      }
+    });
+
+    pr.on('paymentmethod', async (ev) => {
+      if (!stripe || !clientSecret) return;
+      
+      // Confirm with the payment method from Apple Pay
+      const { error, paymentIntent } = await stripe.confirmCardPayment(
+        clientSecret,
+        { payment_method: ev.paymentMethod.id },
+        { handleActions: false }
+      );
+
+      if (error) {
+        ev.complete('fail');
+        onError(error.message || 'Payment failed');
+      } else if (paymentIntent?.status === 'requires_action') {
+        ev.complete('success');
+        const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
+        if (confirmError) {
+          onError(confirmError.message || 'Payment failed');
+        } else {
+          onSuccess();
+        }
+      } else {
+        ev.complete('success');
+        onSuccess();
+      }
+    });
+  }, [stripe, product, elements, clientSecret, onSuccess, onError]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!stripe || !elements || !canSubmit) return;
+    if (!stripe || !elements || !canSubmit || !clientSecret) return;
     
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) return;
+
     setProcessing(true);
     
     try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
+      const { error } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: { email },
+          },
           receipt_email: email,
-          return_url: `${window.location.origin}/sweathouseoc/mission-viejo?success=true&email=${encodeURIComponent(email)}`,
-        },
-      });
+        }
+      );
       
       if (error) {
         onError(error.message || 'Payment failed');
@@ -178,20 +243,62 @@ function CheckoutFormInner({
         </p>
       </div>
 
-      {/* Payment Element */}
+      {/* Apple Pay / Google Pay Button */}
+      {canMakePayment && paymentRequest && (
+        <div>
+          <PaymentRequestButtonElement
+            options={{
+              paymentRequest,
+              style: {
+                paymentRequestButton: {
+                  type: 'default',
+                  theme: 'light',
+                  height: '48px',
+                },
+              },
+            }}
+          />
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-gray-700" />
+            <span className="text-xs text-gray-500">or enter card manually</span>
+            <div className="flex-1 h-px bg-gray-700" />
+          </div>
+        </div>
+      )}
+
+      {/* Simple Card Element */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Payment Method
-        </label>
-        <PaymentElement 
+        <CardElement
           options={{
-            layout: 'tabs',
-            wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#ffffff',
+                fontFamily: 'Roboto, system-ui, sans-serif',
+                '::placeholder': {
+                  color: '#6b7280',
+                },
+                iconColor: '#6b7280',
+              },
+              invalid: {
+                color: '#ef4444',
+                iconColor: '#ef4444',
+              },
             },
+            hidePostalCode: true,
           }}
+          className="p-4 rounded-lg"
+          id="card-element"
         />
+        <style jsx global>{`
+          #card-element {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+          }
+          #card-element.StripeElement--focus {
+            border-color: ${BRAND.primaryColor};
+          }
+        `}</style>
       </div>
 
       {/* Terms */}
@@ -535,6 +642,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 termsAccepted={termsAccepted}
                 setTermsAccepted={setTermsAccepted}
                 agreement={agreement}
+                clientSecret={clientSecret}
                 onSuccess={handleSuccess}
                 onError={handleError}
               />
