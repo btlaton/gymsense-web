@@ -26,11 +26,12 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ldwwiiiskujewcluclbx.supabase.co';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Sweathouse branding
+// Sweathouse branding - matches sweathouseoc.com
 const BRAND = {
-  primaryColor: '#1FB9D9',
-  secondaryColor: '#000000',
-  backgroundColor: '#FFFFFF',
+  primaryColor: '#1FB9D9',      // Teal accent
+  secondaryColor: '#FFFFFF',    // White text
+  backgroundColor: '#000000',   // Black background
+  cardBackground: '#111111',    // Slightly lighter for cards
   logoUrl: 'https://www.sweathouseoc.com/wp-content/uploads/2024/08/Teal-and-WhiteSweatHouse-Logo.png',
   gymId: '7a23390d-f78d-475a-aacb-75bf0aa05ef0',
   gymName: 'Sweathouse OC - Mission Viejo',
@@ -149,10 +150,10 @@ function CheckoutForm({ product, email, onSuccess, onError }: CheckoutFormProps)
       <button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full py-4 rounded-lg font-semibold text-lg transition-all disabled:opacity-50"
+        className="w-full py-4 rounded-lg font-semibold text-lg uppercase tracking-wide transition-all disabled:opacity-50"
         style={{ 
           backgroundColor: BRAND.primaryColor,
-          color: '#FFFFFF',
+          color: '#000000',
         }}
       >
         {processing ? (
@@ -282,38 +283,44 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
       
       {/* Drawer */}
       <div 
-        className={`fixed z-50 bg-white transition-transform duration-300 ease-out
+        className={`fixed z-50 transition-transform duration-300 ease-out
           bottom-0 left-0 right-0 rounded-t-3xl max-h-[90vh] overflow-y-auto
           md:bottom-auto md:top-0 md:left-auto md:right-0 md:w-[480px] md:h-full md:rounded-none
           ${isOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-x-full'}
         `}
-        style={{ fontFamily: 'Roboto, system-ui, sans-serif' }}
+        style={{ 
+          fontFamily: 'Roboto, system-ui, sans-serif',
+          backgroundColor: '#111111',
+        }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Checkout</h2>
+        <div 
+          className="sticky top-0 px-6 py-4 flex items-center justify-between"
+          style={{ backgroundColor: '#111111', borderBottom: '1px solid #333' }}
+        >
+          <h2 className="text-lg font-semibold text-white">Checkout</h2>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         
         {/* Content */}
         <div className="p-6">
           {/* Product Summary */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+          <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="font-semibold text-gray-900">{product.name}</h3>
+                <h3 className="font-semibold text-white">{product.name}</h3>
                 {product.sessions_included && product.sessions_included !== 999 && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-400 mt-1">
                     {product.sessions_included} {product.sessions_included === 1 ? 'class' : 'classes'}
                   </p>
                 )}
                 {product.sessions_included === 999 && (
-                  <p className="text-sm text-gray-500 mt-1">Unlimited classes</p>
+                  <p className="text-sm text-gray-400 mt-1">Unlimited classes</p>
                 )}
               </div>
               <div className="text-right">
@@ -321,21 +328,21 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                   ${product.price.toFixed(2)}
                 </p>
                 {product.billing_mode === 'recurring' && (
-                  <p className="text-xs text-gray-500">/month</p>
+                  <p className="text-xs text-gray-400">/month</p>
                 )}
               </div>
             </div>
             
             {/* Product Details */}
-            <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+            <div className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid #333' }}>
               {product.expires_in_days && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Clock className="w-4 h-4" />
                   <span>Expires in {product.expires_in_days} days</span>
                 </div>
               )}
               {product.billing_mode === 'recurring' && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Repeat className="w-4 h-4" />
                   <span>Renews monthly until cancelled</span>
                 </div>
@@ -351,7 +358,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-lg text-red-400 text-sm flex items-start gap-2" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -361,20 +368,21 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           {step === 'email' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all text-white placeholder:text-gray-500"
                     style={{ 
-                      '--tw-ring-color': BRAND.primaryColor,
-                    } as React.CSSProperties}
+                      backgroundColor: '#1a1a1a',
+                      border: '1px solid #333',
+                    }}
                     onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
                   />
                 </div>
@@ -386,7 +394,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               <button
                 onClick={handleEmailSubmit}
                 disabled={!isEmailValid}
-                className="w-full py-3 rounded-lg font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ backgroundColor: BRAND.primaryColor }}
               >
                 Continue
@@ -399,8 +407,11 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           {step === 'terms' && agreement && (
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">{agreement.name}</h3>
-                <div className="max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-lg text-sm text-gray-600 whitespace-pre-wrap">
+                <h3 className="font-semibold text-white mb-2">{agreement.name}</h3>
+                <div 
+                  className="max-h-48 overflow-y-auto p-3 rounded-lg text-sm text-gray-400 whitespace-pre-wrap"
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                >
                   {agreement.content}
                 </div>
               </div>
@@ -409,16 +420,15 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 <button
                   type="button"
                   onClick={() => setTermsAccepted(!termsAccepted)}
-                  className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
-                    termsAccepted 
-                      ? 'border-transparent' 
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  style={{ backgroundColor: termsAccepted ? BRAND.primaryColor : undefined }}
+                  className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0`}
+                  style={{ 
+                    backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
+                    borderColor: termsAccepted ? BRAND.primaryColor : '#555',
+                  }}
                 >
-                  {termsAccepted && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                  {termsAccepted && <Check className="w-4 h-4 text-black" strokeWidth={3} />}
                 </button>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-300">
                   I have read and agree to the {agreement.name}
                 </span>
               </label>
@@ -426,7 +436,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               <button
                 onClick={handleTermsAccept}
                 disabled={!termsAccepted || loading}
-                className="w-full py-3 rounded-lg font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ backgroundColor: BRAND.primaryColor }}
               >
                 {loading ? (
@@ -444,7 +454,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               
               <button
                 onClick={() => setStep('email')}
-                className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 Back
               </button>
@@ -459,10 +469,12 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 options={{ 
                   clientSecret,
                   appearance: {
-                    theme: 'stripe',
+                    theme: 'night',
                     variables: {
                       colorPrimary: BRAND.primaryColor,
                       fontFamily: 'Roboto, system-ui, sans-serif',
+                      colorBackground: '#1a1a1a',
+                      colorText: '#ffffff',
                     },
                   },
                 }}
@@ -477,7 +489,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               
               <button
                 onClick={() => setStep('terms')}
-                className="w-full mt-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="w-full mt-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 Back
               </button>
@@ -489,22 +501,22 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             <div className="text-center py-4">
               <div 
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: `${BRAND.primaryColor}20` }}
+                style={{ backgroundColor: `${BRAND.primaryColor}30` }}
               >
                 <Check className="w-8 h-8" style={{ color: BRAND.primaryColor }} />
               </div>
               
-              <h3 className="text-xl font-bold text-gray-900 mb-2">You&apos;re all set!</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl font-bold text-white mb-2">You&apos;re all set!</h3>
+              <p className="text-gray-400 mb-6">
                 Check your email ({email}) for your confirmation and setup code.
               </p>
               
               {setupCode && (
                 <div 
                   className="p-4 rounded-xl mb-6"
-                  style={{ backgroundColor: `${BRAND.primaryColor}10` }}
+                  style={{ backgroundColor: `${BRAND.primaryColor}20`, border: `1px solid ${BRAND.primaryColor}40` }}
                 >
-                  <p className="text-sm text-gray-600 mb-2">Your setup code</p>
+                  <p className="text-sm text-gray-400 mb-2">Your setup code</p>
                   <p 
                     className="text-3xl font-bold tracking-widest"
                     style={{ color: BRAND.primaryColor }}
@@ -514,39 +526,39 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 </div>
               )}
               
-              <div className="bg-gray-50 rounded-xl p-4 text-left mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Next Steps</h4>
+              <div className="rounded-xl p-4 text-left mb-6" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
+                <h4 className="font-semibold text-white mb-3">Next Steps</h4>
                 <div className="space-y-3">
                   <div className="flex gap-3">
                     <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-semibold"
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-black text-sm font-semibold"
                       style={{ backgroundColor: BRAND.primaryColor }}
                     >
                       1
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Download the <strong>Gymsense Member</strong> app
+                    <p className="text-sm text-gray-400">
+                      Download the <strong className="text-white">Gymsense Member</strong> app
                     </p>
                   </div>
                   <div className="flex gap-3">
                     <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-semibold"
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-black text-sm font-semibold"
                       style={{ backgroundColor: BRAND.primaryColor }}
                     >
                       2
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-400">
                       Enter your 4-digit setup code from your email
                     </p>
                   </div>
                   <div className="flex gap-3">
                     <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-semibold"
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-black text-sm font-semibold"
                       style={{ backgroundColor: BRAND.primaryColor }}
                     >
                       3
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-400">
                       Book your classes and check in when you arrive!
                     </p>
                   </div>
@@ -556,7 +568,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               <div className="space-y-3">
                 <a
                   href={APP_LINKS.ios}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-white transition-all"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-black uppercase tracking-wide transition-all hover:opacity-90"
                   style={{ backgroundColor: BRAND.primaryColor }}
                 >
                   <Download className="w-5 h-5" />
@@ -564,7 +576,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 </a>
                 <a
                   href={APP_LINKS.android}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold border-2 transition-all"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold border transition-all hover:bg-white/5"
                   style={{ 
                     borderColor: BRAND.primaryColor, 
                     color: BRAND.primaryColor,
@@ -595,23 +607,27 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left p-4 bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all group"
+      className="w-full text-left p-5 rounded-xl border transition-all group hover:scale-[1.02]"
+      style={{ 
+        backgroundColor: BRAND.cardBackground,
+        borderColor: '#333333',
+      }}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900 group-hover:text-gray-700">
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="font-semibold text-white text-lg group-hover:text-gray-200">
           {product.name}
         </h3>
         <div className="text-right">
-          <p className="text-lg font-bold" style={{ color: BRAND.primaryColor }}>
+          <p className="text-xl font-bold" style={{ color: BRAND.primaryColor }}>
             ${product.price.toFixed(2)}
           </p>
           {product.billing_mode === 'recurring' && (
-            <p className="text-xs text-gray-500">/month</p>
+            <p className="text-xs text-gray-400">/month</p>
           )}
         </div>
       </div>
       
-      <div className="flex items-center gap-3 text-sm text-gray-500">
+      <div className="flex items-center gap-3 text-sm text-gray-400">
         {product.sessions_included && product.sessions_included !== 999 && (
           <span>{product.sessions_included} {product.sessions_included === 1 ? 'class' : 'classes'}</span>
         )}
@@ -627,14 +643,14 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
         {product.is_intro_offer && (
           <span 
             className="px-2 py-0.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: `${BRAND.primaryColor}20`, color: BRAND.primaryColor }}
+            style={{ backgroundColor: `${BRAND.primaryColor}30`, color: BRAND.primaryColor }}
           >
             Intro Offer
           </span>
         )}
       </div>
       
-      <div className="mt-3 flex items-center justify-end text-sm font-medium" style={{ color: BRAND.primaryColor }}>
+      <div className="mt-4 flex items-center justify-end text-sm font-semibold uppercase tracking-wide" style={{ color: BRAND.primaryColor }}>
         Select
         <ChevronRight className="w-4 h-4 ml-1" />
       </div>
@@ -762,7 +778,7 @@ export default function SweatHouseCheckoutPage() {
             className="w-12 h-12 animate-spin mx-auto mb-4"
             style={{ color: BRAND.primaryColor }}
           />
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-400">Loading...</p>
         </div>
       </main>
     );
@@ -775,8 +791,8 @@ export default function SweatHouseCheckoutPage() {
     >
       {/* Header */}
       <header 
-        className="sticky top-0 z-30 px-6 py-4 shadow-sm"
-        style={{ backgroundColor: BRAND.backgroundColor }}
+        className="sticky top-0 z-30 px-6 py-4"
+        style={{ backgroundColor: BRAND.backgroundColor, borderBottom: '1px solid #222' }}
       >
         <div className="max-w-2xl mx-auto flex items-center justify-center">
           <img 
@@ -788,12 +804,12 @@ export default function SweatHouseCheckoutPage() {
       </header>
       
       {/* Hero */}
-      <section className="px-6 py-8 text-center border-b border-gray-100">
+      <section className="px-6 py-10 text-center" style={{ borderBottom: '1px solid #222' }}>
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-wide">
             Join the Movement
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             Choose your membership or class pack to get started
           </p>
         </div>
@@ -801,19 +817,23 @@ export default function SweatHouseCheckoutPage() {
       
       {/* Category Tabs */}
       {availableCategories.length > 1 && (
-        <div className="px-6 py-4 border-b border-gray-100 sticky top-[72px] z-20 bg-white">
+        <div 
+          className="px-6 py-4 sticky top-[72px] z-20"
+          style={{ backgroundColor: BRAND.backgroundColor, borderBottom: '1px solid #222' }}
+        >
           <div className="max-w-2xl mx-auto flex gap-2 overflow-x-auto">
             {availableCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                className={`px-5 py-2 rounded-full text-sm font-semibold uppercase tracking-wide whitespace-nowrap transition-all ${
                   activeCategory === category
-                    ? 'text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'text-black'
+                    : 'text-gray-400 hover:text-white'
                 }`}
                 style={{
-                  backgroundColor: activeCategory === category ? BRAND.primaryColor : undefined,
+                  backgroundColor: activeCategory === category ? BRAND.primaryColor : 'transparent',
+                  border: activeCategory === category ? 'none' : '1px solid #444',
                 }}
               >
                 {categoryLabels[category]}
@@ -843,9 +863,9 @@ export default function SweatHouseCheckoutPage() {
       </section>
       
       {/* Footer */}
-      <footer className="px-6 py-8 border-t border-gray-100 mt-8">
+      <footer className="px-6 py-8 mt-8" style={{ borderTop: '1px solid #222' }}>
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-sm text-gray-400 mb-2">
+          <p className="text-sm text-gray-500 mb-2">
             Powered by
           </p>
           <p className="font-display text-xl" style={{ color: BRAND.primaryColor }}>
