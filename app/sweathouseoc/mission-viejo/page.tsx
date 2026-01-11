@@ -23,8 +23,9 @@ import {
 // CONFIGURATION
 // ============================================================================
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ldwwiiiskujewcluclbx.supabase.co';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Supabase config - anon key is public (safe to expose)
+const SUPABASE_URL = 'https://ldwwiiiskujewcluclbx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkd3dpaWlza3VqZXdjbHVjbGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODg1MzksImV4cCI6MjA3OTA2NDUzOX0.6hErpbUmhLocUTnkPz09P_UBOCd-WL-ZrvcJkm9qt3c';
 
 // Sweathouse branding - matches sweathouseoc.com
 const BRAND = {
@@ -607,52 +608,46 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left p-5 rounded-xl border transition-all group hover:scale-[1.02]"
+      className="w-full text-left p-4 rounded-xl border transition-all group hover:scale-[1.01]"
       style={{ 
         backgroundColor: BRAND.cardBackground,
         borderColor: '#333333',
       }}
     >
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-white text-lg group-hover:text-gray-200">
+      {/* Top row: Name and Price */}
+      <div className="flex justify-between items-start mb-1.5">
+        <h3 className="font-semibold text-white text-base group-hover:text-gray-200">
           {product.name}
         </h3>
-        <div className="text-right">
-          <p className="text-xl font-bold" style={{ color: BRAND.primaryColor }}>
+        <div className="text-right flex-shrink-0 ml-3">
+          <span className="text-lg font-bold" style={{ color: BRAND.primaryColor }}>
             ${product.price.toFixed(2)}
-          </p>
+          </span>
           {product.billing_mode === 'recurring' && (
-            <p className="text-xs text-gray-400">/month</p>
+            <span className="text-xs text-gray-400 ml-0.5">/mo</span>
           )}
         </div>
       </div>
       
-      <div className="flex items-center gap-3 text-sm text-gray-400">
-        {product.sessions_included && product.sessions_included !== 999 && (
-          <span>{product.sessions_included} {product.sessions_included === 1 ? 'class' : 'classes'}</span>
-        )}
-        {product.sessions_included === 999 && (
-          <span>Unlimited classes</span>
-        )}
-        {product.expires_in_days && (
-          <>
-            <span>•</span>
-            <span>{product.expires_in_days} day{product.expires_in_days !== 1 ? 's' : ''}</span>
-          </>
-        )}
-        {product.is_intro_offer && (
-          <span 
-            className="px-2 py-0.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: `${BRAND.primaryColor}30`, color: BRAND.primaryColor }}
-          >
-            Intro Offer
-          </span>
-        )}
-      </div>
-      
-      <div className="mt-4 flex items-center justify-end text-sm font-semibold uppercase tracking-wide" style={{ color: BRAND.primaryColor }}>
-        Select
-        <ChevronRight className="w-4 h-4 ml-1" />
+      {/* Bottom row: Description + badges on left, SELECT on right */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          {product.description && (
+            <span>{product.description}</span>
+          )}
+          {product.is_intro_offer && (
+            <span 
+              className="px-1.5 py-0.5 rounded-full text-xs font-medium"
+              style={{ backgroundColor: `${BRAND.primaryColor}30`, color: BRAND.primaryColor }}
+            >
+              Intro
+            </span>
+          )}
+        </div>
+        <div className="flex items-center text-xs font-semibold uppercase tracking-wide flex-shrink-0" style={{ color: BRAND.primaryColor }}>
+          Select
+          <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+        </div>
       </div>
     </button>
   );
@@ -818,15 +813,15 @@ export default function SweatHouseCheckoutPage() {
       {/* Category Tabs */}
       {availableCategories.length > 1 && (
         <div 
-          className="px-6 py-4 sticky top-[72px] z-20"
+          className="px-4 py-3 sticky top-[72px] z-20"
           style={{ backgroundColor: BRAND.backgroundColor, borderBottom: '1px solid #222' }}
         >
-          <div className="max-w-2xl mx-auto flex gap-2 overflow-x-auto">
+          <div className="max-w-2xl mx-auto flex gap-1.5 justify-center">
             {availableCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-5 py-2 rounded-full text-sm font-semibold uppercase tracking-wide whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap transition-all ${
                   activeCategory === category
                     ? 'text-black'
                     : 'text-gray-400 hover:text-white'
