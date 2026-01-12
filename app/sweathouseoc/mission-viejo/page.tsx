@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { 
   X, Check, Loader2, ChevronRight, 
   Clock, Zap, Repeat, AlertCircle,
@@ -90,145 +90,199 @@ interface CheckoutDrawerProps {
   agreement: AgreementTemplate | null;
 }
 
-function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+// Inner form component that uses Stripe hooks
+function CheckoutForm({ 
+  product, 
+  agreement, 
+  onSuccess, 
+  onError 
+}: { 
+  product: Product; 
+  agreement: AgreementTemplate | null;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [email, setEmail] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  
-  // Prevent duplicate API calls
-  const hasInitialized = useRef(false);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!stripe || !elements) return;
+    
+    if (!email || !email.includes('@')) {
+      onError('Please enter a valid email');
+      return;
+    }
+    
+    if (!termsAccepted) {
+      onError('Please accept the agreement');
+      return;
+    }
+    
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      onError('Card element not found');
+      return;
+    }
+    
+    setProcessing(true);
+    
+    try {
+      // Create PaymentIntent or Subscription
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          gymId: BRAND.gymId,
+          email,
+          productId: product.id,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to create payment');
+      }
+      
+      // Confirm the payment
+      const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { email },
+        },
+        receipt_email: email,
+      });
+      
+      if (confirmError) {
+        throw new Error(confirmError.message || 'Payment failed');
+      }
+      
+      onSuccess();
+      
+    } catch (err) {
+      console.error('Payment error:', err);
+      onError(err instanceof Error ? err.message : 'Payment failed');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Email */}
+      <div>
+        <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          required
+          className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+          style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+        />
+      </div>
+      
+      {/* Card */}
+      <div>
+        <label className="block text-sm text-gray-400 mb-1.5">Card</label>
+        <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
+          <CardElement options={{
+            style: {
+              base: {
+                color: '#fff',
+                fontSize: '16px',
+                '::placeholder': { color: '#6b7280' },
+              },
+              invalid: { color: '#ef4444' },
+            },
+          }} />
+        </div>
+      </div>
+      
+      {/* Terms */}
+      <div>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setTermsAccepted(!termsAccepted)}
+            className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0"
+            style={{ 
+              backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
+              borderColor: termsAccepted ? BRAND.primaryColor : '#555',
+            }}
+          >
+            {termsAccepted && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
+          </button>
+          <span className="text-sm text-gray-400">
+            I agree to the{' '}
+            <button 
+              type="button"
+              onClick={() => setShowTerms(!showTerms)}
+              className="underline hover:text-white transition-colors"
+              style={{ color: BRAND.primaryColor }}
+            >
+              {agreement?.name || 'Membership Agreement'}
+            </button>
+          </span>
+        </label>
+        
+        {showTerms && agreement && (
+          <div 
+            className="mt-2 p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
+            style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+          >
+            {agreement.content}
+          </div>
+        )}
+      </div>
+      
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={processing || !stripe}
+        className="w-full py-4 rounded-xl font-semibold text-lg transition-all disabled:opacity-50"
+        style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
+      >
+        {processing ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </span>
+        ) : (
+          `Pay $${product.price.toFixed(2)}${product.billing_mode === 'recurring' ? '/mo' : ''}`
+        )}
+      </button>
+    </form>
+  );
+}
+
+function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Reset state when drawer closes
   useEffect(() => {
     if (!isOpen) {
-      // Delay reset to allow close animation
       const timer = setTimeout(() => {
-        setClientSecret(null);
-        setSessionId(null);
         setError(null);
         setSuccess(false);
-        setTermsAccepted(false);
-        setShowTerms(false);
-        hasInitialized.current = false;
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Create checkout session when drawer opens
-  useEffect(() => {
-    if (!isOpen || !product || hasInitialized.current || loading) return;
-    
-    hasInitialized.current = true;
-    
-    async function createCheckoutSession() {
-      if (!product) return; // TypeScript guard
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        console.log('Creating checkout session for:', product.name);
-        
-        // Build cart item for create-guest-checkout
-        const cartItem = {
-          id: product.id,
-          name: product.name,
-          description: product.description || '',
-          price: product.price,
-          quantity: 1,
-          type: product.type,
-          billing_mode: product.billing_mode,
-          stripe_product_id: product.stripe_product_id,
-          stripe_price_id: product.stripe_price_id,
-          sessions_per_month: product.sessions_included,
-        };
-        
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-guest-checkout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            gymId: BRAND.gymId,
-            cartItems: [cartItem],
-            successUrl: `${window.location.origin}/sweathouseoc/mission-viejo?success=true`,
-            cancelUrl: `${window.location.origin}/sweathouseoc/mission-viejo`,
-            uiMode: 'embedded',
-          }),
-        });
-        
-        const data = await response.json();
-        console.log('Checkout session response:', data);
-        
-        if (!response.ok || data.error) {
-          throw new Error(data.error || 'Failed to create checkout session');
-        }
-        
-        if (!data.clientSecret) {
-          throw new Error('No client secret returned');
-        }
-        
-        setClientSecret(data.clientSecret);
-        setSessionId(data.sessionId);
-        console.log('Checkout session created:', data.sessionId);
-        
-      } catch (err) {
-        console.error('Checkout session error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
-        hasInitialized.current = false; // Allow retry
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    createCheckoutSession();
-  }, [isOpen, product, loading]);
-
-  // Store agreement acceptance when terms are accepted
-  const handleTermsAccepted = useCallback(async (accepted: boolean) => {
-    setTermsAccepted(accepted);
-    
-    if (accepted && sessionId && agreement) {
-      try {
-        console.log('Storing agreement acceptance...');
-        
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/store-checkout-agreement`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            gymId: BRAND.gymId,
-            stripeSessionId: sessionId,
-            agreementType: agreement.agreement_type,
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          console.error('Failed to store agreement:', data.error);
-        } else {
-          console.log('Agreement acceptance stored');
-        }
-      } catch (err) {
-        console.error('Error storing agreement:', err);
-      }
-    }
-  }, [sessionId, agreement]);
-
-  // Handle checkout completion
-  const handleComplete = useCallback(() => {
-    console.log('Checkout completed!');
-    setSuccess(true);
-  }, []);
+  const handleSuccess = useCallback(() => setSuccess(true), []);
+  const handleError = useCallback((msg: string) => setError(msg), []);
 
   if (!isOpen || !product) return null;
 
@@ -301,13 +355,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND.primaryColor }} />
-            </div>
-          )}
-          
           {/* Success State */}
           {success && (
             <div className="text-center py-4">
@@ -368,59 +415,24 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Terms Agreement + Stripe Embedded Checkout - all on one screen */}
-          {!loading && !success && clientSecret && (
-            <div>
-              {/* Terms checkbox */}
-              <div className="mb-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <button
-                    type="button"
-                    onClick={() => handleTermsAccepted(!termsAccepted)}
-                    className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0"
-                    style={{ 
-                      backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
-                      borderColor: termsAccepted ? BRAND.primaryColor : '#555',
-                    }}
-                  >
-                    {termsAccepted && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
-                  </button>
-                  <span className="text-sm text-gray-400">
-                    I agree to the{' '}
-                    <button 
-                      type="button"
-                      onClick={() => setShowTerms(!showTerms)}
-                      className="underline hover:text-white transition-colors"
-                      style={{ color: BRAND.primaryColor }}
-                    >
-                      {agreement?.name || 'Membership Agreement'}
-                    </button>
-                  </span>
-                </label>
-                
-                {showTerms && agreement && (
-                  <div 
-                    className="mt-2 p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
-                    style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                  >
-                    {agreement.content}
-                  </div>
-                )}
-              </div>
-              
-              {/* Stripe Embedded Checkout */}
-              <div className="stripe-checkout-container">
-                <EmbeddedCheckoutProvider
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret,
-                    onComplete: handleComplete,
-                  }}
-                >
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
-              </div>
-            </div>
+          {/* Checkout Form */}
+          {!success && (
+            <Elements 
+              stripe={stripePromise} 
+              options={{
+                appearance: {
+                  theme: 'night',
+                  variables: { colorPrimary: BRAND.primaryColor },
+                },
+              }}
+            >
+              <CheckoutForm 
+                product={product}
+                agreement={agreement}
+                onSuccess={handleSuccess}
+                onError={handleError}
+              />
+            </Elements>
           )}
         </div>
       </div>
