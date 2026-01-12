@@ -405,6 +405,15 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 </div>
               </div>
               
+              {/* Book Now button */}
+              <a
+                href="/sweathouseoc/schedule"
+                className="block w-full py-3 rounded-xl font-semibold text-center mb-4"
+                style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
+              >
+                Book a Class
+              </a>
+              
               {/* Close button */}
               <button
                 onClick={onClose}
