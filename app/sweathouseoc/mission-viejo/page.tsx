@@ -99,7 +99,7 @@ function CheckoutForm({
 }: { 
   product: Product; 
   agreement: AgreementTemplate | null;
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
   onError: (msg: string) => void;
 }) {
   const stripe = useStripe();
@@ -166,7 +166,7 @@ function CheckoutForm({
         throw new Error(confirmError.message || 'Payment failed');
       }
       
-      onSuccess();
+      onSuccess(email);
       
     } catch (err) {
       console.error('Payment error:', err);
@@ -269,6 +269,7 @@ function CheckoutForm({
 function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState<string | null>(null);
 
   // Reset state when drawer closes
   useEffect(() => {
@@ -276,12 +277,16 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
       const timer = setTimeout(() => {
         setError(null);
         setSuccess(false);
+        setCustomerEmail(null);
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  const handleSuccess = useCallback(() => setSuccess(true), []);
+  const handleSuccess = useCallback((email: string) => {
+    setCustomerEmail(email);
+    setSuccess(true);
+  }, []);
   const handleError = useCallback((msg: string) => setError(msg), []);
 
   if (!isOpen || !product) return null;
@@ -407,7 +412,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
               
               {/* Book Now button */}
               <a
-                href="/sweathouseoc/schedule"
+                href={`/sweathouseoc/schedule?email=${encodeURIComponent(customerEmail || '')}`}
                 className="block w-full py-3 rounded-xl font-semibold text-center mb-4"
                 style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
               >
