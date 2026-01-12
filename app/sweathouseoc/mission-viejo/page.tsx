@@ -2,25 +2,19 @@
  * Sweathouse OC - Mission Viejo Checkout Page
  * 
  * Customer-facing product catalog and checkout flow for studio classes.
- * Uses Sweathouse branding and Stripe Elements for payment.
+ * Uses Sweathouse branding and Stripe Embedded Checkout.
  * 
  * URL: gymsense.io/sweathouseoc/mission-viejo
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import { 
-  Elements, 
-  CardElement, 
-  PaymentRequestButtonElement,
-  useStripe, 
-  useElements 
-} from '@stripe/react-stripe-js';
-import { 
-  X, Check, Loader2, ChevronRight, Mail, 
+  X, Check, Loader2, ChevronRight, 
   Clock, Zap, Repeat, AlertCircle,
   Download
 } from 'lucide-react';
@@ -29,23 +23,20 @@ import {
 // CONFIGURATION
 // ============================================================================
 
-// Supabase config - anon key is public (safe to expose)
 const SUPABASE_URL = 'https://ldwwiiiskujewcluclbx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkd3dpaWlza3VqZXdjbHVjbGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0ODg1MzksImV4cCI6MjA3OTA2NDUzOX0.6hErpbUmhLocUTnkPz09P_UBOCd-WL-ZrvcJkm9qt3c';
 
-// Sweathouse branding - matches sweathouseoc.com
 const BRAND = {
-  primaryColor: '#1FB9D9',      // Teal accent
-  secondaryColor: '#FFFFFF',    // White text
-  backgroundColor: '#000000',   // Black background
-  cardBackground: '#111111',    // Slightly lighter for cards
+  primaryColor: '#1FB9D9',
+  secondaryColor: '#FFFFFF',
+  backgroundColor: '#000000',
+  cardBackground: '#111111',
   logoUrl: 'https://www.sweathouseoc.com/wp-content/uploads/2024/08/Teal-and-WhiteSweatHouse-Logo.png',
   gymId: '7a23390d-f78d-475a-aacb-75bf0aa05ef0',
   gymName: 'Sweathouse OC - Mission Viejo',
   stripeAccountId: 'acct_1SoSYdDr8LtAIM9n',
 };
 
-// App download links
 const APP_LINKS = {
   ios: 'https://gymsense.io/download/ios',
   android: 'https://gymsense.io/download/android',
@@ -82,287 +73,11 @@ type ProductCategory = 'membership' | 'class_pack' | 'private_session';
 // STRIPE SETUP
 // ============================================================================
 
-// Stripe publishable key (platform key, not connected account)
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51S7G4iDJJF9sHVx312eC7oFWkQFnpNlGifi56gjq5aMF3Xc8uE56jVpWzQBXKqHDGutJV5X3gsbcEM1XjYcMJ5lB00wHb3ZS9l';
 
-let stripePromise: Promise<Stripe | null> | null = null;
-
-function getStripe() {
-  if (!stripePromise) {
-    stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
-      stripeAccount: BRAND.stripeAccountId,
-    });
-  }
-  return stripePromise;
-}
-
-
-// ============================================================================
-// CHECKOUT FORM (inside Elements provider)
-// ============================================================================
-
-interface CheckoutFormInnerProps {
-  product: Product;
-  email: string;
-  setEmail: (email: string) => void;
-  termsAccepted: boolean;
-  setTermsAccepted: (accepted: boolean) => void;
-  agreement: AgreementTemplate | null;
-  clientSecret: string;
-  onSuccess: () => void;
-  onError: (error: string) => void;
-}
-
-function CheckoutFormInner({ 
-  product, 
-  email, 
-  setEmail,
-  termsAccepted, 
-  setTermsAccepted, 
-  agreement,
-  clientSecret,
-  onSuccess,
-  onError
-}: CheckoutFormInnerProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
-  const [canMakePayment, setCanMakePayment] = useState(false);
-
-  const isEmailValid = email.includes('@') && email.includes('.');
-  const canSubmit = stripe && elements && isEmailValid && termsAccepted && !processing;
-
-  // Set up Apple Pay / Google Pay
-  useEffect(() => {
-    if (!stripe || !product) return;
-
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: product.name,
-        amount: Math.round(product.price * 100),
-      },
-      requestPayerEmail: true,
-    });
-
-    pr.canMakePayment().then((result) => {
-      console.log('Apple Pay canMakePayment result:', result);
-      if (result) {
-        setPaymentRequest(pr);
-        setCanMakePayment(true);
-      } else {
-        console.log('Apple Pay not available - user may not have Apple Pay set up');
-      }
-    });
-
-    pr.on('paymentmethod', async (ev) => {
-      if (!stripe || !clientSecret) return;
-      
-      // Confirm with the payment method from Apple Pay
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        { payment_method: ev.paymentMethod.id },
-        { handleActions: false }
-      );
-
-      if (error) {
-        ev.complete('fail');
-        onError(error.message || 'Payment failed');
-      } else if (paymentIntent?.status === 'requires_action') {
-        ev.complete('success');
-        const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
-        if (confirmError) {
-          onError(confirmError.message || 'Payment failed');
-        } else {
-          onSuccess();
-        }
-      } else {
-        ev.complete('success');
-        onSuccess();
-      }
-    });
-  }, [stripe, product, elements, clientSecret, onSuccess, onError]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!stripe || !elements || !canSubmit || !clientSecret) return;
-    
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) return;
-
-    setProcessing(true);
-    
-    try {
-      const { error } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: { email },
-          },
-          receipt_email: email,
-        }
-      );
-      
-      if (error) {
-        onError(error.message || 'Payment failed');
-      } else {
-        onSuccess();
-      }
-    } catch (err) {
-      onError(err instanceof Error ? err.message : 'Payment failed');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Email */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Email Address
-        </label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all text-white placeholder:text-gray-500"
-            style={{ 
-              backgroundColor: '#1a1a1a',
-              border: '1px solid #333',
-            }}
-          />
-        </div>
-        <p className="mt-1 text-xs text-gray-500">
-          We&apos;ll send your confirmation and setup code here.
-        </p>
-      </div>
-
-      {/* Apple Pay / Google Pay Button */}
-      {canMakePayment && paymentRequest && (
-        <div>
-          <PaymentRequestButtonElement
-            options={{
-              paymentRequest,
-              style: {
-                paymentRequestButton: {
-                  type: 'default',
-                  theme: 'light',
-                  height: '48px',
-                },
-              },
-            }}
-          />
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-gray-700" />
-            <span className="text-xs text-gray-500">or enter card manually</span>
-            <div className="flex-1 h-px bg-gray-700" />
-          </div>
-        </div>
-      )}
-
-      {/* Simple Card Element */}
-      <div>
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#ffffff',
-                fontFamily: 'Roboto, system-ui, sans-serif',
-                '::placeholder': {
-                  color: '#6b7280',
-                },
-                iconColor: '#6b7280',
-              },
-              invalid: {
-                color: '#ef4444',
-                iconColor: '#ef4444',
-              },
-            },
-            hidePostalCode: true,
-          }}
-          className="p-4 rounded-lg"
-          id="card-element"
-        />
-        <style jsx global>{`
-          #card-element {
-            background-color: #1a1a1a;
-            border: 1px solid #333;
-          }
-          #card-element.StripeElement--focus {
-            border-color: ${BRAND.primaryColor};
-          }
-        `}</style>
-      </div>
-
-      {/* Terms */}
-      <div className="space-y-2">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <button
-            type="button"
-            onClick={() => setTermsAccepted(!termsAccepted)}
-            className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0"
-            style={{ 
-              backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
-              borderColor: termsAccepted ? BRAND.primaryColor : '#555',
-            }}
-          >
-            {termsAccepted && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
-          </button>
-          <span className="text-sm text-gray-400">
-            I agree to the{' '}
-            <button 
-              type="button"
-              onClick={() => setShowTerms(!showTerms)}
-              className="underline hover:text-white transition-colors"
-              style={{ color: BRAND.primaryColor }}
-            >
-              {agreement?.name || 'terms and conditions'}
-            </button>
-          </span>
-        </label>
-        
-        {showTerms && agreement && (
-          <div 
-            className="p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
-            style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-          >
-            {agreement.content}
-          </div>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="w-full py-4 rounded-lg font-semibold text-lg uppercase tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ 
-          backgroundColor: BRAND.primaryColor,
-          color: '#000000',
-        }}
-      >
-        {processing ? (
-          <span className="flex items-center justify-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing...
-          </span>
-        ) : (
-          `Pay $${product.price.toFixed(2)}${product.billing_mode === 'recurring' ? '/mo' : ''}`
-        )}
-      </button>
-    </form>
-  );
-}
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
+  stripeAccount: BRAND.stripeAccountId,
+});
 
 // ============================================================================
 // CHECKOUT DRAWER COMPONENT
@@ -376,83 +91,149 @@ interface CheckoutDrawerProps {
 }
 
 function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
-  const [email, setEmail] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // We'll create PaymentIntent after email is entered (triggered from form)
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  
+  // Prevent duplicate API calls
+  const hasInitialized = useRef(false);
 
   // Reset state when drawer closes
   useEffect(() => {
     if (!isOpen) {
-      setTimeout(() => {
-        setEmail('');
-        setTermsAccepted(false);
+      // Delay reset to allow close animation
+      const timer = setTimeout(() => {
         setClientSecret(null);
+        setSessionId(null);
         setError(null);
         setSuccess(false);
+        setTermsAccepted(false);
+        setShowTerms(false);
+        setCheckoutReady(false);
+        hasInitialized.current = false;
       }, 300);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  const createPaymentIntent = useCallback(async () => {
-    if (!product) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Creating PaymentIntent for:', product.name, product.price);
-      
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-web-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          gymId: BRAND.gymId,
-          productId: product.id,
-        }),
-      });
-      
-      const data = await response.json();
-      console.log('PaymentIntent response:', data);
-      
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to initialize checkout');
-      }
-      
-      if (data.clientSecret) {
-        setClientSecret(data.clientSecret);
-      } else {
-        throw new Error('No client secret returned');
-      }
-    } catch (err) {
-      console.error('PaymentIntent error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
-    } finally {
-      setLoading(false);
-    }
-  }, [product]);
-
-  // Create PaymentIntent when drawer opens
+  // Create checkout session when drawer opens
   useEffect(() => {
-    if (isOpen && product && !clientSecret && !loading) {
-      createPaymentIntent();
+    if (!isOpen || !product || hasInitialized.current || loading) return;
+    
+    hasInitialized.current = true;
+    
+    async function createCheckoutSession() {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log('Creating checkout session for:', product.name);
+        
+        // Build cart item for create-guest-checkout
+        const cartItem = {
+          id: product.id,
+          name: product.name,
+          description: product.description || '',
+          price: product.price,
+          quantity: 1,
+          type: product.type,
+          billing_mode: product.billing_mode,
+          stripe_product_id: product.stripe_product_id,
+          stripe_price_id: product.stripe_price_id,
+          sessions_per_month: product.sessions_included,
+        };
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-guest-checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            gymId: BRAND.gymId,
+            cartItems: [cartItem],
+            successUrl: `${window.location.origin}/sweathouseoc/mission-viejo?success=true`,
+            cancelUrl: `${window.location.origin}/sweathouseoc/mission-viejo`,
+            uiMode: 'embedded',
+          }),
+        });
+        
+        const data = await response.json();
+        console.log('Checkout session response:', data);
+        
+        if (!response.ok || data.error) {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+        
+        if (!data.clientSecret) {
+          throw new Error('No client secret returned');
+        }
+        
+        setClientSecret(data.clientSecret);
+        setSessionId(data.sessionId);
+        console.log('Checkout session created:', data.sessionId);
+        
+      } catch (err) {
+        console.error('Checkout session error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
+        hasInitialized.current = false; // Allow retry
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [isOpen, product, clientSecret, loading, createPaymentIntent]);
+    
+    createCheckoutSession();
+  }, [isOpen, product, loading]);
 
-  const handleSuccess = () => {
+  // Store agreement acceptance when terms are accepted
+  const handleTermsAccepted = useCallback(async (accepted: boolean) => {
+    setTermsAccepted(accepted);
+    
+    if (accepted && sessionId && agreement) {
+      try {
+        console.log('Storing agreement acceptance...');
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/store-checkout-agreement`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            gymId: BRAND.gymId,
+            stripeSessionId: sessionId,
+            agreementType: agreement.agreement_type,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          console.error('Failed to store agreement:', data.error);
+        } else {
+          console.log('Agreement acceptance stored');
+          setCheckoutReady(true);
+        }
+      } catch (err) {
+        console.error('Error storing agreement:', err);
+        // Don't block checkout - agreement can be linked later
+        setCheckoutReady(true);
+      }
+    } else if (!accepted) {
+      setCheckoutReady(false);
+    }
+  }, [sessionId, agreement]);
+
+  // Handle checkout completion
+  const handleComplete = useCallback(() => {
+    console.log('Checkout completed!');
     setSuccess(true);
-  };
-
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage);
-  };
+  }, []);
 
   if (!isOpen || !product) return null;
 
@@ -500,6 +281,11 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 {product.description && (
                   <p className="text-sm text-gray-400 mt-1">{product.description}</p>
                 )}
+                {product.sessions_included && (
+                  <p className="text-sm text-gray-400 mt-1">
+                    {product.sessions_included} class credits
+                  </p>
+                )}
               </div>
               <div className="text-right flex-shrink-0 ml-3">
                 <p className="text-xl font-bold" style={{ color: BRAND.primaryColor }}>
@@ -542,23 +328,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 Your {product?.sessions_included} class credits are ready to use.
               </p>
               
-              {/* Primary CTA - Book Now */}
-              <a
-                href={`/sweathouseoc/schedule?email=${encodeURIComponent(email)}`}
-                className="flex items-center justify-center gap-2 w-full py-4 rounded-lg font-semibold text-black uppercase tracking-wide transition-all hover:opacity-90 mb-6"
-                style={{ backgroundColor: BRAND.primaryColor }}
-              >
-                Book Your First Class
-                <ChevronRight className="w-5 h-5" />
-              </a>
-              
-              {/* Divider */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex-1 h-px bg-gray-700" />
-                <span className="text-gray-500 text-sm">or book later in the app</span>
-                <div className="flex-1 h-px bg-gray-700" />
-              </div>
-              
               {/* App Download Instructions */}
               <div className="rounded-xl p-4 text-left mb-6" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
                 <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
@@ -567,7 +336,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 </h4>
                 <div className="space-y-2 text-sm text-gray-400">
                   <p>Use the app to book classes, check in when you arrive, and manage your membership.</p>
-                  <p className="text-white">Your 4-digit setup code has been sent to <strong>{email}</strong></p>
+                  <p className="text-white">Check your email for your 4-digit setup code!</p>
                 </div>
                 
                 <div className="flex gap-2 mt-4">
@@ -604,51 +373,66 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Single-Screen Checkout Form */}
-          {!loading && !success && clientSecret && (
-            <Elements 
-              stripe={getStripe()} 
-              options={{ 
-                clientSecret,
-                appearance: {
-                  theme: 'night',
-                  variables: {
-                    colorPrimary: BRAND.primaryColor,
-                    fontFamily: 'Roboto, system-ui, sans-serif',
-                    colorBackground: '#1a1a1a',
-                    colorText: '#ffffff',
-                    colorTextSecondary: '#9ca3af',
-                    borderRadius: '8px',
-                  },
-                  rules: {
-                    '.Input': {
-                      backgroundColor: '#1a1a1a',
-                      border: '1px solid #333',
-                    },
-                    '.Tab': {
-                      backgroundColor: '#1a1a1a',
-                      border: '1px solid #333',
-                    },
-                    '.Tab--selected': {
-                      backgroundColor: '#2a2a2a',
-                      borderColor: BRAND.primaryColor,
-                    },
-                  },
-                },
-              }}
-            >
-              <CheckoutFormInner
-                product={product}
-                email={email}
-                setEmail={setEmail}
-                termsAccepted={termsAccepted}
-                setTermsAccepted={setTermsAccepted}
-                agreement={agreement}
-                clientSecret={clientSecret}
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            </Elements>
+          {/* Terms Agreement (shown before checkout is ready) */}
+          {!loading && !success && clientSecret && !checkoutReady && (
+            <div className="mb-6">
+              <div className="space-y-2 mb-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={() => handleTermsAccepted(!termsAccepted)}
+                    className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0"
+                    style={{ 
+                      backgroundColor: termsAccepted ? BRAND.primaryColor : 'transparent',
+                      borderColor: termsAccepted ? BRAND.primaryColor : '#555',
+                    }}
+                  >
+                    {termsAccepted && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
+                  </button>
+                  <span className="text-sm text-gray-400">
+                    I agree to the{' '}
+                    <button 
+                      type="button"
+                      onClick={() => setShowTerms(!showTerms)}
+                      className="underline hover:text-white transition-colors"
+                      style={{ color: BRAND.primaryColor }}
+                    >
+                      {agreement?.name || 'terms and conditions'}
+                    </button>
+                  </span>
+                </label>
+                
+                {showTerms && agreement && (
+                  <div 
+                    className="p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
+                    style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                  >
+                    {agreement.content}
+                  </div>
+                )}
+              </div>
+              
+              {!termsAccepted && (
+                <p className="text-sm text-gray-500 text-center">
+                  Please accept the terms to continue to payment
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* Stripe Embedded Checkout */}
+          {!loading && !success && clientSecret && checkoutReady && (
+            <div className="stripe-checkout-container">
+              <EmbeddedCheckoutProvider
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  onComplete: handleComplete,
+                }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            </div>
           )}
         </div>
       </div>
@@ -722,7 +506,6 @@ function ProductCard({ product, onSelect }: ProductCardProps) {
 // MAIN PAGE COMPONENT
 // ============================================================================
 
-// Password for alpha testing
 const PAGE_PASSWORD = 'sweathouse2026';
 
 export default function SweatHouseCheckoutPage() {
@@ -751,7 +534,8 @@ export default function SweatHouseCheckoutPage() {
     if (!isAuthenticated) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
-      setIsDrawerOpen(true);
+      // Clear URL params
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }, [isAuthenticated]);
 
@@ -766,14 +550,14 @@ export default function SweatHouseCheckoutPage() {
     }
   };
 
-  // Fetch products and agreements (only when authenticated)
+  // Fetch products and agreements
   useEffect(() => {
     if (!isAuthenticated) return;
     
     async function fetchData() {
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       
-      // Fetch products (excluding retail)
+      // Fetch products
       const { data: productsData } = await supabase
         .from('products')
         .select('id, name, description, price, type, sessions_included, expires_in_days, is_intro_offer, stripe_product_id, stripe_price_id, recurring')
@@ -783,14 +567,13 @@ export default function SweatHouseCheckoutPage() {
         .order('price', { ascending: true });
       
       if (productsData) {
-        // Transform to add billing_mode
         const transformed = productsData.map(p => ({
           ...p,
           billing_mode: (p.recurring ? 'recurring' : 'one_off') as 'one_off' | 'recurring',
         }));
         setProducts(transformed);
         
-        // Set initial category based on what products exist (priority: membership first)
+        // Set initial category
         const types = new Set(transformed.map(p => p.type));
         if (types.has('membership')) setActiveCategory('membership');
         else if (types.has('class_pack')) setActiveCategory('class_pack');
@@ -820,25 +603,18 @@ export default function SweatHouseCheckoutPage() {
 
   const handleDrawerClose = useCallback(() => {
     setIsDrawerOpen(false);
-    // Clear URL params if returning from success
-    if (window.location.search.includes('success')) {
-      window.history.replaceState({}, '', window.location.pathname);
-    }
   }, []);
 
-  // Get products by category, intro offers first
+  // Get products by category
   const categoryProducts = products
     .filter(p => p.type === activeCategory)
     .sort((a, b) => {
-      // Intro offers first
       if (a.is_intro_offer && !b.is_intro_offer) return -1;
       if (!a.is_intro_offer && b.is_intro_offer) return 1;
-      // Then by price
       return a.price - b.price;
     });
   
-  // Get available categories (only show tabs for categories with products)
-  // Ordered: Memberships -> Class Packs -> Private Sessions
+  // Get available categories
   const categoryOrder: ProductCategory[] = ['membership', 'class_pack', 'private_session'];
   const availableCategories = categoryOrder.filter(cat => 
     products.some(p => p.type === cat)
@@ -848,7 +624,6 @@ export default function SweatHouseCheckoutPage() {
   const getAgreementForProduct = (product: Product | null): AgreementTemplate | null => {
     if (!product) return null;
     
-    // Map product type to agreement type
     const agreementTypeMap: Record<string, string> = {
       'membership': 'studio_membership',
       'class_pack': 'class_pack',
@@ -859,14 +634,13 @@ export default function SweatHouseCheckoutPage() {
     return agreements.find(a => a.agreement_type === agreementType) || null;
   };
 
-  // Category labels
   const categoryLabels: Record<ProductCategory, string> = {
     'membership': 'Memberships',
     'class_pack': 'Class Packs',
     'private_session': 'Private Sessions',
   };
 
-  // Show password gate if not authenticated
+  // Password gate
   if (!isAuthenticated) {
     return (
       <div 
@@ -958,7 +732,7 @@ export default function SweatHouseCheckoutPage() {
             An Option for Everybody
           </h1>
           <p className="text-gray-400 text-sm md:text-base leading-relaxed">
-            Explore our thoughtfully designed pricing options, tailored to meet your fitness needs. Whether you&apos;re just starting out or a seasoned Lagree enthusiast, we have a package that fits your goals and lifestyle.
+            Explore our thoughtfully designed pricing options, tailored to meet your fitness needs.
           </p>
         </div>
       </section>
