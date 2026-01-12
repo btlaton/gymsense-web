@@ -438,6 +438,8 @@ export default function SweatHouseSchedulePage() {
     }
 
     async function fetchData() {
+      if (!email) return; // TypeScript guard
+      
       setLoading(true);
       setError(null);
 
@@ -467,7 +469,12 @@ export default function SweatHouseSchedulePage() {
           .eq('status', 'active')
           .gt('credits_remaining', 0);
 
-        setCredits(creditsData || []);
+        // Transform Supabase array relations to single objects
+        const transformedCredits = (creditsData || []).map((c: any) => ({
+          ...c,
+          product: Array.isArray(c.product) ? c.product[0] || null : c.product,
+        }));
+        setCredits(transformedCredits);
 
         // 3. Fetch class instances for next 30 days
         const now = new Date();
@@ -487,7 +494,13 @@ export default function SweatHouseSchedulePage() {
           .lte('starts_at', thirtyDaysLater.toISOString())
           .order('starts_at', { ascending: true });
 
-        setClassInstances(instancesData || []);
+        // Transform Supabase array relations to single objects
+        const transformedInstances = (instancesData || []).map((i: any) => ({
+          ...i,
+          class_definition: Array.isArray(i.class_definition) ? i.class_definition[0] || null : i.class_definition,
+          instructor: Array.isArray(i.instructor) ? i.instructor[0] || null : i.instructor,
+        }));
+        setClassInstances(transformedInstances);
 
         // 4. Fetch customer's existing bookings
         const { data: bookingsData } = await supabase
