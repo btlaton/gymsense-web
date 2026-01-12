@@ -98,7 +98,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
   const [success, setSuccess] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [checkoutReady, setCheckoutReady] = useState(false);
   
   // Prevent duplicate API calls
   const hasInitialized = useRef(false);
@@ -114,7 +113,6 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         setSuccess(false);
         setTermsAccepted(false);
         setShowTerms(false);
-        setCheckoutReady(false);
         hasInitialized.current = false;
       }, 300);
       return () => clearTimeout(timer);
@@ -219,15 +217,10 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           console.error('Failed to store agreement:', data.error);
         } else {
           console.log('Agreement acceptance stored');
-          setCheckoutReady(true);
         }
       } catch (err) {
         console.error('Error storing agreement:', err);
-        // Don't block checkout - agreement can be linked later
-        setCheckoutReady(true);
       }
-    } else if (!accepted) {
-      setCheckoutReady(false);
     }
   }, [sessionId, agreement]);
 
@@ -375,10 +368,11 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Terms Agreement (shown before checkout is ready) */}
-          {!loading && !success && clientSecret && !checkoutReady && (
-            <div className="mb-6">
-              <div className="space-y-2 mb-4">
+          {/* Terms Agreement + Stripe Embedded Checkout - all on one screen */}
+          {!loading && !success && clientSecret && (
+            <div>
+              {/* Terms checkbox */}
+              <div className="mb-4">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <button
                     type="button"
@@ -399,14 +393,14 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                       className="underline hover:text-white transition-colors"
                       style={{ color: BRAND.primaryColor }}
                     >
-                      {agreement?.name || 'terms and conditions'}
+                      {agreement?.name || 'Membership Agreement'}
                     </button>
                   </span>
                 </label>
                 
                 {showTerms && agreement && (
                   <div 
-                    className="p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
+                    className="mt-2 p-3 rounded-lg text-xs text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap"
                     style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                   >
                     {agreement.content}
@@ -414,26 +408,18 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                 )}
               </div>
               
-              {!termsAccepted && (
-                <p className="text-sm text-gray-500 text-center">
-                  Please accept the terms to continue to payment
-                </p>
-              )}
-            </div>
-          )}
-          
-          {/* Stripe Embedded Checkout */}
-          {!loading && !success && clientSecret && checkoutReady && (
-            <div className="stripe-checkout-container">
-              <EmbeddedCheckoutProvider
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  onComplete: handleComplete,
-                }}
-              >
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
+              {/* Stripe Embedded Checkout */}
+              <div className="stripe-checkout-container">
+                <EmbeddedCheckoutProvider
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    onComplete: handleComplete,
+                  }}
+                >
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              </div>
             </div>
           )}
         </div>
