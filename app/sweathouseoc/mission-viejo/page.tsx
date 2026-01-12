@@ -128,6 +128,8 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
     hasInitialized.current = true;
     
     async function createCheckoutSession() {
+      if (!product) return; // TypeScript guard
+      
       setLoading(true);
       setError(null);
       
