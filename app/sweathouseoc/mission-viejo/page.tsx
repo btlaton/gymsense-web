@@ -12,10 +12,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { 
+  Elements, 
+  PaymentElement, 
+  LinkAuthenticationElement,
+  useStripe, 
+  useElements 
+} from '@stripe/react-stripe-js';
 import { 
   X, Check, Loader2, ChevronRight, 
-  Clock, Zap, Repeat, AlertCircle,
+  AlertCircle,
   Download
 } from 'lucide-react';
 
@@ -95,16 +101,19 @@ function CheckoutForm({
   product, 
   agreement, 
   onSuccess, 
-  onError 
+  onError,
+  customerEmail,
+  setCustomerEmail,
 }: { 
   product: Product; 
   agreement: AgreementTemplate | null;
-  onSuccess: (email: string) => void;
+  onSuccess: (email: string, name: string) => void;
   onError: (msg: string) => void;
+  customerEmail: string;
+  setCustomerEmail: (email: string) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
-  const [email, setEmail] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -114,59 +123,42 @@ function CheckoutForm({
     
     if (!stripe || !elements) return;
     
-    if (!email || !email.includes('@')) {
-      onError('Please enter a valid email');
-      return;
-    }
-    
     if (!termsAccepted) {
       onError('Please accept the agreement');
-      return;
-    }
-    
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
-      onError('Card element not found');
       return;
     }
     
     setProcessing(true);
     
     try {
-      // Create PaymentIntent or Subscription
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          gymId: BRAND.gymId,
-          email,
-          productId: product.id,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to create payment');
+      // Submit the form to validate all fields
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        throw new Error(submitError.message || 'Please complete all required fields');
       }
-      
-      // Confirm the payment
-      const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: { email },
+
+      // Confirm the payment using PaymentElement
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/sweathouseoc/mission-viejo?success=true`,
+          receipt_email: customerEmail,
         },
-        receipt_email: email,
+        redirect: 'if_required',
       });
       
       if (confirmError) {
         throw new Error(confirmError.message || 'Payment failed');
       }
       
-      onSuccess(email);
+      // Get the billing name from the payment intent
+      if (paymentIntent?.status === 'succeeded') {
+        // Retrieve the payment method to get billing details
+        const pm = await stripe.retrievePaymentIntent(paymentIntent.client_secret!);
+        const billingName = (pm.paymentIntent?.shipping?.name) || 
+                           customerEmail.split('@')[0];
+        onSuccess(customerEmail, billingName);
+      }
       
     } catch (err) {
       console.error('Payment error:', err);
@@ -178,35 +170,33 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Email */}
+      {/* Email - Using LinkAuthenticationElement for Stripe Link support */}
       <div>
         <label className="block text-sm text-gray-400 mb-1.5">Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
-          required
-          className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
-          style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+        <LinkAuthenticationElement 
+          options={{
+            defaultValues: { email: customerEmail },
+          }}
+          onChange={(e) => setCustomerEmail(e.value.email)}
         />
       </div>
       
-      {/* Card */}
+      {/* Payment - Using PaymentElement with name collection */}
       <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Card</label>
-        <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}>
-          <CardElement options={{
-            style: {
-              base: {
-                color: '#fff',
-                fontSize: '16px',
-                '::placeholder': { color: '#6b7280' },
-              },
-              invalid: { color: '#ef4444' },
+        <label className="block text-sm text-gray-400 mb-1.5">Payment Details</label>
+        <PaymentElement 
+          options={{
+            layout: 'tabs',
+            fields: {
+              billingDetails: {
+                name: 'always',
+                email: 'never', // Already collected via LinkAuthenticationElement
+                phone: 'never', // Will be collected during app onboarding
+                address: 'never',
+              }
             },
-          }} />
-        </div>
+          }}
+        />
       </div>
       
       {/* Terms */}
@@ -269,7 +259,52 @@ function CheckoutForm({
 function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState<string | null>(null);
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+
+  // Fetch client secret when drawer opens with a product
+  useEffect(() => {
+    if (!isOpen || !product) return;
+    
+    // Reset state for new checkout
+    setError(null);
+    setSuccess(false);
+    setClientSecret(null);
+    
+    async function createCheckout() {
+      setLoadingCheckout(true);
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            gymId: BRAND.gymId,
+            email: customerEmail || 'pending@checkout.temp', // Placeholder, will be updated
+            productId: product.id,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || data.error) {
+          throw new Error(data.error || 'Failed to initialize checkout');
+        }
+        
+        setClientSecret(data.clientSecret);
+      } catch (err) {
+        console.error('Checkout init error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
+      } finally {
+        setLoadingCheckout(false);
+      }
+    }
+    
+    createCheckout();
+  }, [isOpen, product]);
 
   // Reset state when drawer closes
   useEffect(() => {
@@ -277,13 +312,14 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
       const timer = setTimeout(() => {
         setError(null);
         setSuccess(false);
-        setCustomerEmail(null);
+        setCustomerEmail('');
+        setClientSecret(null);
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  const handleSuccess = useCallback((email: string) => {
+  const handleSuccess = useCallback((email: string, _name: string) => {
     setCustomerEmail(email);
     setSuccess(true);
   }, []);
@@ -431,22 +467,69 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           
           {/* Checkout Form */}
           {!success && (
-            <Elements 
-              stripe={stripePromise} 
-              options={{
-                appearance: {
-                  theme: 'night',
-                  variables: { colorPrimary: BRAND.primaryColor },
-                },
-              }}
-            >
-              <CheckoutForm 
-                product={product}
-                agreement={agreement}
-                onSuccess={handleSuccess}
-                onError={handleError}
-              />
-            </Elements>
+            <>
+              {loadingCheckout && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND.primaryColor }} />
+                </div>
+              )}
+              
+              {!loadingCheckout && clientSecret && (
+                <Elements 
+                  stripe={stripePromise} 
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: 'night',
+                      variables: { 
+                        colorPrimary: BRAND.primaryColor,
+                        colorBackground: '#1a1a1a',
+                        colorText: '#ffffff',
+                        colorTextSecondary: '#9ca3af',
+                        colorDanger: '#ef4444',
+                        fontFamily: 'Roboto, system-ui, sans-serif',
+                        borderRadius: '8px',
+                      },
+                      rules: {
+                        '.Input': {
+                          backgroundColor: '#1a1a1a',
+                          border: '1px solid #333',
+                        },
+                        '.Input:focus': {
+                          border: `1px solid ${BRAND.primaryColor}`,
+                          boxShadow: `0 0 0 1px ${BRAND.primaryColor}`,
+                        },
+                        '.Label': {
+                          color: '#9ca3af',
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <CheckoutForm 
+                    product={product}
+                    agreement={agreement}
+                    onSuccess={handleSuccess}
+                    onError={handleError}
+                    customerEmail={customerEmail}
+                    setCustomerEmail={setCustomerEmail}
+                  />
+                </Elements>
+              )}
+              
+              {!loadingCheckout && !clientSecret && error && (
+                <div className="text-center py-8">
+                  <p className="text-gray-400 mb-4">Unable to load checkout. Please try again.</p>
+                  <button
+                    onClick={onClose}
+                    className="text-sm underline"
+                    style={{ color: BRAND.primaryColor }}
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
