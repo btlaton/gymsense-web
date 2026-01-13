@@ -459,19 +459,19 @@ export default function SweatHouseSchedulePage() {
 
         setCustomer(customerData);
 
-        // 2. Fetch credits
-        const { data: creditsData } = await supabase
-          .from('class_credits')
-          .select('id, credits_remaining, credits_used, expires_at, product:products(name)')
-          .eq('customer_id', customerData.id)
-          .eq('gym_id', BRAND.gymId)
-          .eq('status', 'active')
-          .gt('credits_remaining', 0);
+        // 2. Fetch credits using RPC function (bypasses RLS for unauthenticated users)
+        const { data: creditsData } = await supabase.rpc('get_customer_credits_by_email', {
+          p_email: email,
+          p_gym_id: BRAND.gymId
+        });
 
-        // Transform Supabase array relations to single objects
+        // Transform to expected shape
         const transformedCredits = (creditsData || []).map((c: any) => ({
-          ...c,
-          product: Array.isArray(c.product) ? c.product[0] || null : c.product,
+          id: c.id,
+          credits_remaining: c.credits_remaining,
+          credits_used: c.credits_used,
+          expires_at: c.expires_at,
+          product: c.product_name ? { name: c.product_name } : null,
         }));
         setCredits(transformedCredits);
 
