@@ -217,8 +217,8 @@ function CheckoutForm({
               billingDetails: {
                 name: 'never', // We collect name separately above
                 email: 'never', // Already collected via LinkAuthenticationElement
-                phone: 'never', // Will be collected during app onboarding
-                address: 'never',
+                phone: 'auto', // Let Stripe decide based on payment method
+                address: 'auto', // Let Stripe decide based on payment method
               }
             },
           }}
