@@ -104,6 +104,8 @@ function CheckoutForm({
   onError,
   customerEmail,
   setCustomerEmail,
+  customerName,
+  setCustomerName,
 }: { 
   product: Product; 
   agreement: AgreementTemplate | null;
@@ -111,6 +113,8 @@ function CheckoutForm({
   onError: (msg: string) => void;
   customerEmail: string;
   setCustomerEmail: (email: string) => void;
+  customerName: string;
+  setCustomerName: (name: string) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -122,6 +126,11 @@ function CheckoutForm({
     e.preventDefault();
     
     if (!stripe || !elements) return;
+    
+    if (!customerName.trim()) {
+      onError('Please enter your name');
+      return;
+    }
     
     if (!termsAccepted) {
       onError('Please accept the agreement');
@@ -137,12 +146,18 @@ function CheckoutForm({
         throw new Error(submitError.message || 'Please complete all required fields');
       }
 
-      // Confirm the payment using PaymentElement
+      // Confirm the payment using PaymentElement with billing details
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/sweathouseoc/mission-viejo?success=true`,
           receipt_email: customerEmail,
+          payment_method_data: {
+            billing_details: {
+              name: customerName.trim(),
+              email: customerEmail,
+            },
+          },
         },
         redirect: 'if_required',
       });
@@ -151,13 +166,8 @@ function CheckoutForm({
         throw new Error(confirmError.message || 'Payment failed');
       }
       
-      // Get the billing name from the payment intent
       if (paymentIntent?.status === 'succeeded') {
-        // Retrieve the payment method to get billing details
-        const pm = await stripe.retrievePaymentIntent(paymentIntent.client_secret!);
-        const billingName = (pm.paymentIntent?.shipping?.name) || 
-                           customerEmail.split('@')[0];
-        onSuccess(customerEmail, billingName);
+        onSuccess(customerEmail, customerName.trim());
       }
       
     } catch (err) {
@@ -170,6 +180,24 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name - Custom input for guaranteed collection */}
+      <div>
+        <label className="block text-sm text-gray-400 mb-1.5">Name</label>
+        <input
+          type="text"
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          placeholder="Your full name"
+          required
+          className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+          style={{ 
+            backgroundColor: '#1a1a1a', 
+            border: '1px solid #333',
+            focusRingColor: BRAND.primaryColor,
+          }}
+        />
+      </div>
+      
       {/* Email - Using LinkAuthenticationElement for Stripe Link support */}
       <div>
         <label className="block text-sm text-gray-400 mb-1.5">Email</label>
@@ -181,7 +209,7 @@ function CheckoutForm({
         />
       </div>
       
-      {/* Payment - Using PaymentElement with name collection */}
+      {/* Payment - Using PaymentElement */}
       <div>
         <label className="block text-sm text-gray-400 mb-1.5">Payment Details</label>
         <PaymentElement 
@@ -189,7 +217,7 @@ function CheckoutForm({
             layout: 'tabs',
             fields: {
               billingDetails: {
-                name: 'auto', // Stripe will show name field for card payments
+                name: 'never', // We collect name separately above
                 email: 'never', // Already collected via LinkAuthenticationElement
                 phone: 'never', // Will be collected during app onboarding
                 address: 'never',
@@ -260,6 +288,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [customerName, setCustomerName] = useState<string>('');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 
@@ -316,6 +345,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         setError(null);
         setSuccess(false);
         setCustomerEmail('');
+        setCustomerName('');
         setClientSecret(null);
       }, 300);
       return () => clearTimeout(timer);
@@ -516,6 +546,8 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                     onError={handleError}
                     customerEmail={customerEmail}
                     setCustomerEmail={setCustomerEmail}
+                    customerName={customerName}
+                    setCustomerName={setCustomerName}
                   />
                 </Elements>
               )}
