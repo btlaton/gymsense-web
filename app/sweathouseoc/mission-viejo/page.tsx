@@ -189,7 +189,7 @@ function CheckoutForm({
             layout: 'tabs',
             fields: {
               billingDetails: {
-                name: 'always',
+                name: 'auto', // Stripe will show name field for card payments
                 email: 'never', // Already collected via LinkAuthenticationElement
                 phone: 'never', // Will be collected during app onboarding
                 address: 'never',
