@@ -57,8 +57,7 @@ interface ClassInstance {
   } | null;
   instructor: {
     id: string;
-    first_name: string;
-    last_name: string | null;
+    name: string;
   } | null;
 }
 
@@ -153,9 +152,7 @@ function ClassCard({
   const spotsRemaining = classInstance.capacity - (classInstance.booked_count || 0);
   const isFull = spotsRemaining <= 0;
   const isPast = new Date(classInstance.starts_at) < new Date();
-  const instructorName = classInstance.instructor 
-    ? `${classInstance.instructor.first_name}${classInstance.instructor.last_name ? ' ' + classInstance.instructor.last_name : ''}`
-    : 'TBA';
+  const instructorName = classInstance.instructor?.name || 'TBA';
 
   return (
     <div 
@@ -232,9 +229,7 @@ function BookingDrawer({
   onClose: () => void;
   isLoading: boolean;
 }) {
-  const instructorName = classInstance.instructor 
-    ? `${classInstance.instructor.first_name}${classInstance.instructor.last_name ? ' ' + classInstance.instructor.last_name : ''}`
-    : 'TBA';
+  const instructorName = classInstance.instructor?.name || 'TBA';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60">
@@ -310,9 +305,7 @@ function SuccessDrawer({
   onBookAnother: () => void;
   onClose: () => void;
 }) {
-  const instructorName = classInstance.instructor 
-    ? `${classInstance.instructor.first_name}${classInstance.instructor.last_name ? ' ' + classInstance.instructor.last_name : ''}`
-    : 'TBA';
+  const instructorName = classInstance.instructor?.name || 'TBA';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60">
@@ -480,18 +473,22 @@ export default function SweatHouseSchedulePage() {
         const thirtyDaysLater = new Date();
         thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
 
-        const { data: instancesData } = await supabase
+        const { data: instancesData, error: instancesError } = await supabase
           .from('class_instances')
           .select(`
             id, starts_at, ends_at, capacity, booked_count, status, instructor_id,
             class_definition:class_definitions(id, name),
-            instructor:team(id, first_name, last_name)
+            instructor:team!class_instances_instructor_id_fkey(id, name)
           `)
           .eq('gym_id', BRAND.gymId)
           .eq('status', 'scheduled')
           .gte('starts_at', now.toISOString())
           .lte('starts_at', thirtyDaysLater.toISOString())
           .order('starts_at', { ascending: true });
+        
+        if (instancesError) {
+          console.error('Error fetching class instances:', instancesError);
+        }
 
         // Transform Supabase array relations to single objects
         const transformedInstances = (instancesData || []).map((i: any) => ({
