@@ -81,8 +81,7 @@ interface ClassBooking {
 
 interface Customer {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
+  name: string;
   email: string;
 }
 
@@ -447,7 +446,7 @@ export default function SweatHouseSchedulePage() {
         // 1. Find customer by email
         const { data: customerData, error: customerError } = await supabase
           .from('customers')
-          .select('id, first_name, last_name, email')
+          .select('id, name, email')
           .eq('email', email.toLowerCase().trim())
           .eq('gym_id', BRAND.gymId)
           .single();
