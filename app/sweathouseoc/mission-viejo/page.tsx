@@ -193,7 +193,6 @@ function CheckoutForm({
           style={{ 
             backgroundColor: '#1a1a1a', 
             border: '1px solid #333',
-            focusRingColor: BRAND.primaryColor,
           }}
         />
       </div>
