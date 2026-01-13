@@ -267,6 +267,9 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
   useEffect(() => {
     if (!isOpen || !product) return;
     
+    // Capture product ID for async closure (TypeScript narrowing)
+    const productId = product.id;
+    
     // Reset state for new checkout
     setError(null);
     setSuccess(false);
@@ -284,7 +287,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           body: JSON.stringify({
             gymId: BRAND.gymId,
             email: customerEmail || 'pending@checkout.temp', // Placeholder, will be updated
-            productId: product.id,
+            productId,
           }),
         });
         
