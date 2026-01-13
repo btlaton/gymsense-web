@@ -99,13 +99,14 @@ interface CheckoutDrawerProps {
 // Inner form component that uses Stripe hooks
 function CheckoutForm({ 
   product, 
-  agreement, 
+  agreement,
   onSuccess, 
   onError,
   customerEmail,
   setCustomerEmail,
   customerName,
   setCustomerName,
+  hasClientSecret,
 }: { 
   product: Product; 
   agreement: AgreementTemplate | null;
@@ -115,6 +116,7 @@ function CheckoutForm({
   setCustomerEmail: (email: string) => void;
   customerName: string;
   setCustomerName: (name: string) => void;
+  hasClientSecret: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -207,23 +209,25 @@ function CheckoutForm({
         />
       </div>
       
-      {/* Payment - Using PaymentElement */}
-      <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Payment Details</label>
-        <PaymentElement 
-          options={{
-            layout: 'tabs',
-            fields: {
-              billingDetails: {
-                name: 'never', // We collect name separately above
-                email: 'never', // Already collected via LinkAuthenticationElement
-                phone: 'auto', // Let Stripe decide based on payment method
-                address: 'auto', // Let Stripe decide based on payment method
-              }
-            },
-          }}
-        />
-      </div>
+      {/* Payment - Only show after checkout is created with email */}
+      {hasClientSecret && (
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Payment Details</label>
+          <PaymentElement 
+            options={{
+              layout: 'tabs',
+              fields: {
+                billingDetails: {
+                  name: 'never', // We collect name separately above
+                  email: 'never', // Already collected via LinkAuthenticationElement
+                  phone: 'auto', // Let Stripe decide based on payment method
+                  address: 'auto', // Let Stripe decide based on payment method
+                }
+              },
+            }}
+          />
+        </div>
+      )}
       
       {/* Terms */}
       <div>
@@ -292,61 +296,54 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
   const [checkoutProductId, setCheckoutProductId] = useState<string | null>(null);
   const checkoutInProgress = useRef(false);
 
-  // Fetch client secret when drawer opens with a product
+  // Create checkout when user has entered their email (not immediately on drawer open)
+  // This ensures Stripe customer and invoice are created with the correct email
+  const createCheckoutWithEmail = useCallback(async (email: string) => {
+    if (!product || checkoutInProgress.current) return;
+    
+    checkoutInProgress.current = true;
+    setLoadingCheckout(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          gymId: BRAND.gymId,
+          email: email, // Use the real email from the form
+          productId: product.id,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to initialize checkout');
+      }
+      
+      setClientSecret(data.clientSecret);
+      setCheckoutProductId(product.id);
+    } catch (err) {
+      console.error('Checkout init error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
+    } finally {
+      setLoadingCheckout(false);
+      checkoutInProgress.current = false;
+    }
+  }, [product]);
+  
+  // Reset client secret when product changes
   useEffect(() => {
     if (!isOpen || !product) return;
-    
-    // Guard: Don't create checkout if already in progress or already created for this product
-    if (checkoutInProgress.current || (clientSecret && checkoutProductId === product.id)) {
-      return;
-    }
-    
-    // Capture product ID for async closure (TypeScript narrowing)
-    const productId = product.id;
-    
-    // Reset state for new product
-    setError(null);
-    setSuccess(false);
-    if (checkoutProductId !== productId) {
+    if (checkoutProductId !== product.id) {
       setClientSecret(null);
+      setError(null);
     }
-    
-    async function createCheckout() {
-      checkoutInProgress.current = true;
-      setLoadingCheckout(true);
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            gymId: BRAND.gymId,
-            email: 'checkout@pending.local', // Placeholder - real email captured via LinkAuthenticationElement
-            productId,
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok || data.error) {
-          throw new Error(data.error || 'Failed to initialize checkout');
-        }
-        
-        setClientSecret(data.clientSecret);
-        setCheckoutProductId(productId);
-      } catch (err) {
-        console.error('Checkout init error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
-      } finally {
-        setLoadingCheckout(false);
-        checkoutInProgress.current = false;
-      }
-    }
-    
-    createCheckout();
-  }, [isOpen, product, clientSecret, checkoutProductId]);
+  }, [isOpen, product, checkoutProductId]);
 
   // Reset state when drawer closes
   useEffect(() => {
@@ -510,15 +507,81 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
             </div>
           )}
           
-          {/* Checkout Form */}
+          {/* Checkout Form - Two Steps */}
           {!success && (
             <>
+              {/* Step 1: Collect Name & Email BEFORE creating checkout */}
+              {!clientSecret && !loadingCheckout && (
+                <div className="space-y-4">
+                  {/* Name Input */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Name</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Your full name"
+                      className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+                      style={{ 
+                        backgroundColor: '#1a1a1a', 
+                        border: '1px solid #333',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Email Input */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+                      style={{ 
+                        backgroundColor: '#1a1a1a', 
+                        border: '1px solid #333',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Error Display */}
+                  {error && (
+                    <div className="p-3 rounded-lg bg-red-900/30 border border-red-500/30">
+                      <p className="text-sm text-red-400">{error}</p>
+                    </div>
+                  )}
+                  
+                  {/* Continue Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!customerName.trim()) {
+                        handleError('Please enter your name');
+                        return;
+                      }
+                      if (!customerEmail.trim() || !customerEmail.includes('@')) {
+                        handleError('Please enter a valid email');
+                        return;
+                      }
+                      createCheckoutWithEmail(customerEmail.trim());
+                    }}
+                    className="w-full py-4 rounded-lg font-semibold text-black uppercase tracking-wide transition-all hover:opacity-90"
+                    style={{ backgroundColor: BRAND.primaryColor }}
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              )}
+              
+              {/* Loading */}
               {loadingCheckout && (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND.primaryColor }} />
                 </div>
               )}
               
+              {/* Step 2: Payment form (after email is collected and checkout created) */}
               {!loadingCheckout && clientSecret && (
                 <Elements 
                   stripe={stripePromise} 
@@ -560,21 +623,9 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
                     setCustomerEmail={setCustomerEmail}
                     customerName={customerName}
                     setCustomerName={setCustomerName}
+                    hasClientSecret={!!clientSecret}
                   />
                 </Elements>
-              )}
-              
-              {!loadingCheckout && !clientSecret && error && (
-                <div className="text-center py-8">
-                  <p className="text-gray-400 mb-4">Unable to load checkout. Please try again.</p>
-                  <button
-                    onClick={onClose}
-                    className="text-sm underline"
-                    style={{ color: BRAND.primaryColor }}
-                  >
-                    Close
-                  </button>
-                </div>
               )}
             </>
           )}
