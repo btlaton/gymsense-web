@@ -289,20 +289,30 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
   const [customerName, setCustomerName] = useState<string>('');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [checkoutProductId, setCheckoutProductId] = useState<string | null>(null);
+  const checkoutInProgress = useRef(false);
 
   // Fetch client secret when drawer opens with a product
   useEffect(() => {
     if (!isOpen || !product) return;
     
+    // Guard: Don't create checkout if already in progress or already created for this product
+    if (checkoutInProgress.current || (clientSecret && checkoutProductId === product.id)) {
+      return;
+    }
+    
     // Capture product ID for async closure (TypeScript narrowing)
     const productId = product.id;
     
-    // Reset state for new checkout
+    // Reset state for new product
     setError(null);
     setSuccess(false);
-    setClientSecret(null);
+    if (checkoutProductId !== productId) {
+      setClientSecret(null);
+    }
     
     async function createCheckout() {
+      checkoutInProgress.current = true;
       setLoadingCheckout(true);
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/create-elements-checkout`, {
@@ -313,7 +323,7 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
           },
           body: JSON.stringify({
             gymId: BRAND.gymId,
-            email: customerEmail || 'pending@checkout.temp', // Placeholder, will be updated
+            email: 'checkout@pending.local', // Placeholder - real email captured via LinkAuthenticationElement
             productId,
           }),
         });
@@ -325,16 +335,18 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         }
         
         setClientSecret(data.clientSecret);
+        setCheckoutProductId(productId);
       } catch (err) {
         console.error('Checkout init error:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
       } finally {
         setLoadingCheckout(false);
+        checkoutInProgress.current = false;
       }
     }
     
     createCheckout();
-  }, [isOpen, product]);
+  }, [isOpen, product, clientSecret, checkoutProductId]);
 
   // Reset state when drawer closes
   useEffect(() => {
@@ -345,6 +357,8 @@ function CheckoutDrawer({ isOpen, onClose, product, agreement }: CheckoutDrawerP
         setCustomerEmail('');
         setCustomerName('');
         setClientSecret(null);
+        setCheckoutProductId(null);
+        checkoutInProgress.current = false;
       }, 300);
       return () => clearTimeout(timer);
     }
