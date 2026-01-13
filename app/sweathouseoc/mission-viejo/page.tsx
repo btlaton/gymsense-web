@@ -199,7 +199,6 @@ function CheckoutForm({
       
       {/* Email - Using LinkAuthenticationElement for Stripe Link support */}
       <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Email</label>
         <LinkAuthenticationElement 
           options={{
             defaultValues: { email: customerEmail },
