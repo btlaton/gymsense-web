@@ -48,6 +48,10 @@ const BRAND = {
 
 const APP_LINKS = {
   ios: 'https://gymsense.io/download/ios',
+
+// Password protection for alpha testing
+const ALPHA_PASSWORD = 'sweat2026';
+
   android: 'https://gymsense.io/download/android',
 };
 
@@ -878,6 +882,11 @@ function ClassCard({ classInstance, instructor, isExpanded, onToggle, onBook }: 
 // ============================================================================
 
 export default function SweatHouseSchedulePage() {
+  // Password protection state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassInstance[]>([]);
   const [instructors, setInstructors] = useState<StudioInstructor[]>([]);
@@ -885,6 +894,76 @@ export default function SweatHouseSchedulePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [checkoutClass, setCheckoutClass] = useState<ClassInstance | null>(null);
+
+  // Check localStorage for previous authentication
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gymsense_alpha_auth');
+      if (stored === 'true') {
+        setIsAuthenticated(true);
+      }
+    }
+  }, []);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ALPHA_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError(false);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('gymsense_alpha_auth', 'true');
+      }
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  // Password gate UI
+  if (!isAuthenticated) {
+    return (
+      <main 
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{ backgroundColor: BRAND.backgroundColor, fontFamily: 'Roboto, system-ui, sans-serif' }}
+      >
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <img 
+              src={BRAND.logoUrl}
+              alt="Sweathouse OC"
+              className="h-12 object-contain mx-auto mb-6"
+            />
+            <h1 className="text-xl font-bold text-white mb-2">Alpha Testing</h1>
+            <p className="text-gray-400 text-sm">Enter password to continue</p>
+          </div>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Password"
+              autoFocus
+              className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+              style={{ 
+                backgroundColor: '#1a1a1a', 
+                border: passwordError ? '1px solid #ef4444' : '1px solid #333',
+              }}
+            />
+            {passwordError && (
+              <p className="text-red-400 text-sm">Incorrect password</p>
+            )}
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl font-semibold transition-all"
+              style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
+            >
+              Continue
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
 
   // Generate date options (next 14 days)
   const dateOptions = useMemo(() => {
