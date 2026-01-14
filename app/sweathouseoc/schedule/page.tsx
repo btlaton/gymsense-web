@@ -48,12 +48,11 @@ const BRAND = {
 
 const APP_LINKS = {
   ios: 'https://gymsense.io/download/ios',
+  android: 'https://gymsense.io/download/android',
+};
 
 // Password protection for alpha testing
 const ALPHA_PASSWORD = 'sweat2026';
-
-  android: 'https://gymsense.io/download/android',
-};
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51S7G4iDJJF9sHVx312eC7oFWkQFnpNlGifi56gjq5aMF3Xc8uE56jVpWzQBXKqHDGutJV5X3gsbcEM1XjYcMJ5lB00wHb3ZS9l';
 
