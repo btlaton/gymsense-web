@@ -909,7 +909,7 @@ export default function SweatHouseSchedulePage() {
         .select(`
           id, starts_at, ends_at, capacity, booked_count, status,
           class_definition:class_definitions(id, name, description, class_type, default_duration_minutes),
-          instructor:team(id, name)
+          instructor:team!class_instances_instructor_id_fkey(id, name)
         `)
         .eq('gym_id', BRAND.gymId)
         .eq('status', 'scheduled')
