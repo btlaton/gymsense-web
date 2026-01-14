@@ -922,54 +922,7 @@ export default function SweatHouseSchedulePage() {
     }
   };
 
-  // Password gate UI
-  if (!isAuthenticated) {
-    return (
-      <main 
-        className="min-h-screen flex items-center justify-center p-6"
-        style={{ backgroundColor: BRAND.backgroundColor, fontFamily: 'Roboto, system-ui, sans-serif' }}
-      >
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <img 
-              src={BRAND.logoUrl}
-              alt="Sweathouse OC"
-              className="h-12 object-contain mx-auto mb-6"
-            />
-            <h1 className="text-xl font-bold text-white mb-2">Alpha Testing</h1>
-            <p className="text-gray-400 text-sm">Enter password to continue</p>
-          </div>
-          
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Password"
-              autoFocus
-              className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
-              style={{ 
-                backgroundColor: '#1a1a1a', 
-                border: passwordError ? '1px solid #ef4444' : '1px solid #333',
-              }}
-            />
-            {passwordError && (
-              <p className="text-red-400 text-sm">Incorrect password</p>
-            )}
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl font-semibold transition-all"
-              style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
-            >
-              Continue
-            </button>
-          </form>
-        </div>
-      </main>
-    );
-  }
-
-  // Generate date options (next 14 days)
+  // Generate date options (next 14 days) - all hooks must be before conditional returns
   const dateOptions = useMemo(() => {
     const dates: Date[] = [];
     for (let i = 0; i < 14; i++) {
@@ -977,6 +930,19 @@ export default function SweatHouseSchedulePage() {
     }
     return dates;
   }, []);
+
+  // Filter classes for selected date
+  const classesForDate = useMemo(() => {
+    return classes.filter(c => 
+      isSameDay(parseISO(c.starts_at), selectedDate)
+    );
+  }, [classes, selectedDate]);
+
+  // Get instructor by name
+  const getInstructor = useCallback((name: string | undefined) => {
+    if (!name) return null;
+    return instructors.find(i => i.name === name) || null;
+  }, [instructors]);
 
   // Fetch data only after authentication
   useEffect(() => {
@@ -1042,18 +1008,52 @@ export default function SweatHouseSchedulePage() {
     fetchData();
   }, [isAuthenticated]);
 
-  // Filter classes for selected date
-  const classesForDate = useMemo(() => {
-    return classes.filter(c => 
-      isSameDay(parseISO(c.starts_at), selectedDate)
+  // Password gate UI - must come after all hooks
+  if (!isAuthenticated) {
+    return (
+      <main 
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{ backgroundColor: BRAND.backgroundColor, fontFamily: 'Roboto, system-ui, sans-serif' }}
+      >
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <img 
+              src={BRAND.logoUrl}
+              alt="Sweathouse OC"
+              className="h-12 object-contain mx-auto mb-6"
+            />
+            <h1 className="text-xl font-bold text-white mb-2">Alpha Testing</h1>
+            <p className="text-gray-400 text-sm">Enter password to continue</p>
+          </div>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="Password"
+              autoFocus
+              className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+              style={{ 
+                backgroundColor: '#1a1a1a', 
+                border: passwordError ? '1px solid #ef4444' : '1px solid #333',
+              }}
+            />
+            {passwordError && (
+              <p className="text-red-400 text-sm">Incorrect password</p>
+            )}
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl font-semibold transition-all"
+              style={{ backgroundColor: BRAND.primaryColor, color: '#000' }}
+            >
+              Continue
+            </button>
+          </form>
+        </div>
+      </main>
     );
-  }, [classes, selectedDate]);
-
-  // Get instructor by name
-  const getInstructor = useCallback((name: string | undefined) => {
-    if (!name) return null;
-    return instructors.find(i => i.name === name) || null;
-  }, [instructors]);
+  }
 
   if (loading) {
     return (
