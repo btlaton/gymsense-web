@@ -708,13 +708,12 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
                 <button
                   key={product.id}
                   onClick={() => handleProductSelect(product)}
-                  className={`w-full p-4 rounded-xl text-left transition-all ${
-                    selectedProduct?.id === product.id ? 'ring-2' : ''
-                  }`}
+                  className={`w-full p-4 rounded-xl text-left transition-all`}
                   style={{ 
                     backgroundColor: '#1a1a1a', 
-                    border: '1px solid #333',
-                    ringColor: BRAND.primaryColor,
+                    border: selectedProduct?.id === product.id 
+                      ? `2px solid ${BRAND.primaryColor}` 
+                      : '1px solid #333',
                   }}
                 >
                   <div className="flex justify-between items-start">
