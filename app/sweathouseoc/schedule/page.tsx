@@ -894,13 +894,16 @@ export default function SweatHouseSchedulePage() {
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [checkoutClass, setCheckoutClass] = useState<ClassInstance | null>(null);
 
-  // Check localStorage for previous authentication
+  // Check localStorage for previous authentication (with Safari error handling)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    try {
       const stored = localStorage.getItem('gymsense_alpha_auth');
       if (stored === 'true') {
         setIsAuthenticated(true);
       }
+    } catch {
+      // localStorage not available (Safari private mode, etc.)
+      console.log('localStorage not available');
     }
   }, []);
 
@@ -909,8 +912,10 @@ export default function SweatHouseSchedulePage() {
     if (passwordInput === ALPHA_PASSWORD) {
       setIsAuthenticated(true);
       setPasswordError(false);
-      if (typeof window !== 'undefined') {
+      try {
         localStorage.setItem('gymsense_alpha_auth', 'true');
+      } catch {
+        // localStorage not available, just continue without persisting
       }
     } else {
       setPasswordError(true);
@@ -973,8 +978,10 @@ export default function SweatHouseSchedulePage() {
     return dates;
   }, []);
 
-  // Fetch data
+  // Fetch data only after authentication
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     async function fetchData() {
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       
@@ -1033,7 +1040,7 @@ export default function SweatHouseSchedulePage() {
     }
     
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   // Filter classes for selected date
   const classesForDate = useMemo(() => {
