@@ -21,7 +21,7 @@ export default function TermsOfServicePage() {
         <div className="mb-12">
           <h1 className="font-display text-3xl mb-2">gymsense</h1>
           <h2 className="text-2xl font-bold mb-2">Terms of Service</h2>
-          <p className="text-stone-400 text-sm">Last Updated: December 22, 2025</p>
+          <p className="text-stone-400 text-sm">Last Updated: January 14, 2026</p>
         </div>
 
         <div className="prose prose-invert prose-stone max-w-none">
@@ -286,9 +286,62 @@ export default function TermsOfServicePage() {
           </Section>
 
           {/* Section 16 */}
-          <Section title="16. Contact Us">
+          <Section title="16. Apple App Store Terms">
+            <p className="text-stone-300 mb-4">
+              The following terms apply specifically to users who access gymsense through Apple&apos;s App Store:
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.1 Acknowledgement</h4>
+            <p className="text-stone-300 mb-4">
+              You acknowledge that these Terms are between you and gymsense only, and not with Apple Inc. (&quot;Apple&quot;). gymsense, not Apple, is solely responsible for the gymsense apps and their content.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.2 Scope of License</h4>
+            <p className="text-stone-300 mb-4">
+              The license granted to you for the gymsense apps is a limited, non-transferable license to use the apps on any Apple-branded device that you own or control, as permitted by the Usage Rules set forth in the Apple Media Services Terms and Conditions.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.3 Maintenance and Support</h4>
+            <p className="text-stone-300 mb-4">
+              gymsense is solely responsible for providing any maintenance and support services for the apps. You acknowledge that Apple has no obligation whatsoever to furnish any maintenance and support services with respect to the apps.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.4 Warranty</h4>
+            <p className="text-stone-300 mb-4">
+              gymsense is solely responsible for any product warranties, whether express or implied by law. In the event of any failure of the apps to conform to any applicable warranty, you may notify Apple, and Apple will refund the purchase price (if any) for the app to you. To the maximum extent permitted by applicable law, Apple will have no other warranty obligation whatsoever with respect to the apps, and any other claims, losses, liabilities, damages, costs, or expenses attributable to any failure to conform to any warranty will be gymsense&apos;s sole responsibility.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.5 Product Claims</h4>
+            <p className="text-stone-300 mb-4">
+              You acknowledge that gymsense, not Apple, is responsible for addressing any claims you or any third party may have relating to the apps or your possession and/or use of the apps, including but not limited to: (i) product liability claims; (ii) any claim that the apps fail to conform to any applicable legal or regulatory requirement; and (iii) claims arising under consumer protection, privacy, or similar legislation.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.6 Intellectual Property Claims</h4>
+            <p className="text-stone-300 mb-4">
+              In the event of any third-party claim that the apps or your possession and use of the apps infringes that third party&apos;s intellectual property rights, gymsense, not Apple, will be solely responsible for the investigation, defense, settlement, and discharge of any such intellectual property infringement claim.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.7 Legal Compliance</h4>
+            <p className="text-stone-300 mb-4">
+              You represent and warrant that (i) you are not located in a country that is subject to a U.S. Government embargo, or that has been designated by the U.S. Government as a &quot;terrorist supporting&quot; country; and (ii) you are not listed on any U.S. Government list of prohibited or restricted parties.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.8 Third-Party Beneficiary</h4>
+            <p className="text-stone-300 mb-4">
+              You acknowledge and agree that Apple, and Apple&apos;s subsidiaries, are third-party beneficiaries of these Terms, and that, upon your acceptance of these Terms, Apple will have the right (and will be deemed to have accepted the right) to enforce these Terms against you as a third-party beneficiary thereof.
+            </p>
+
+            <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.9 Third-Party Terms</h4>
+            <p className="text-stone-300">
+              You must comply with applicable third-party terms of agreement when using the apps (e.g., your wireless data service agreement).
+            </p>
+          </Section>
+
+          {/* Section 17 */}
+          <Section title="17. Contact Us">
             <p className="text-stone-300 mb-4">If you have questions about these Terms, contact us at:</p>
             <ul className="list-none text-stone-300 space-y-2">
+              <li><strong className="text-stone-50">Developer:</strong> Brian Laton</li>
               <li><strong className="text-stone-50">Email:</strong> <a href="mailto:support@gymsense.io" className="text-orange-400 hover:underline">support@gymsense.io</a></li>
               <li><strong className="text-stone-50">Website:</strong> <a href="https://gymsense.io" className="text-orange-400 hover:underline">gymsense.io</a></li>
             </ul>
