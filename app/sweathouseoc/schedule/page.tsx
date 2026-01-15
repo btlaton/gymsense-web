@@ -771,6 +771,7 @@ interface ClassCardProps {
 }
 
 function ClassCard({ classInstance, instructor, isExpanded, onToggle, onBook }: ClassCardProps) {
+  const [activeTab, setActiveTab] = useState<'class' | 'instructor'>('class');
   const time = format(parseISO(classInstance.starts_at), 'h:mm a');
   const spotsRemaining = classInstance.capacity - (classInstance.booked_count || 0);
   const isFull = spotsRemaining <= 0;
@@ -783,21 +784,37 @@ function ClassCard({ classInstance, instructor, isExpanded, onToggle, onBook }: 
       {/* Main Row - Always Visible */}
       <button
         onClick={onToggle}
-        className="w-full p-4 flex items-center gap-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full p-4 flex items-center gap-3 text-left hover:bg-white/5 transition-colors"
       >
-        {/* Time */}
-        <div className="w-20 flex-shrink-0">
-          <span className="font-semibold text-white">{time}</span>
+        {/* Instructor Photo */}
+        <div className="flex-shrink-0">
+          {instructor?.photo_url ? (
+            <img 
+              src={instructor.photo_url} 
+              alt={instructor.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: '#333' }}
+            >
+              <User className="w-5 h-5 text-gray-400" />
+            </div>
+          )}
         </div>
         
-        {/* Class Info */}
+        {/* Time & Class Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">
-            {classInstance.class_definition.name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-white">{time}</span>
+            <span className="text-gray-500">·</span>
+            <span className="font-semibold text-white truncate">
+              {classInstance.class_definition.name}
+            </span>
+          </div>
           {classInstance.instructor && (
-            <p className="text-sm text-gray-400 flex items-center gap-1">
-              <User className="w-3 h-3" />
+            <p className="text-sm text-gray-400">
               {classInstance.instructor.name}
             </p>
           )}
@@ -809,7 +826,7 @@ function ClassCard({ classInstance, instructor, isExpanded, onToggle, onBook }: 
             className={`text-sm ${isFull ? 'text-red-400' : ''}`}
             style={{ color: isFull ? undefined : BRAND.primaryColor }}
           >
-            {isFull ? 'Full' : `${spotsRemaining} remaining`}
+            {isFull ? 'Full' : `${spotsRemaining} left`}
           </span>
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -822,41 +839,98 @@ function ClassCard({ classInstance, instructor, isExpanded, onToggle, onBook }: 
       {/* Expanded Content */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-gray-800">
-          {/* Description */}
-          {classInstance.class_definition.description && (
-            <p className="text-gray-400 text-sm mt-4 mb-4">
-              {classInstance.class_definition.description}
-            </p>
-          )}
+          {/* Segmented Tabs */}
+          <div className="flex gap-2 mt-4 mb-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('class');
+              }}
+              className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all"
+              style={{
+                backgroundColor: activeTab === 'class' ? BRAND.primaryColor : '#1a1a1a',
+                color: activeTab === 'class' ? '#000' : '#888',
+              }}
+            >
+              Class
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('instructor');
+              }}
+              className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all"
+              style={{
+                backgroundColor: activeTab === 'instructor' ? BRAND.primaryColor : '#1a1a1a',
+                color: activeTab === 'instructor' ? '#000' : '#888',
+              }}
+            >
+              Instructor
+            </button>
+          </div>
           
-          {/* Instructor Bio */}
-          {instructor && (
-            <div className="flex gap-4 mb-4 p-3 rounded-lg" style={{ backgroundColor: '#1a1a1a' }}>
-              {instructor.photo_url ? (
-                <img 
-                  src={instructor.photo_url} 
-                  alt={instructor.name}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                />
-              ) : (
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: BRAND.primaryColor }}
-                >
-                  <User className="w-8 h-8 text-black" />
+          {/* Tab Content */}
+          <div className="mb-4">
+            {activeTab === 'class' ? (
+              <div>
+                {/* Class Info */}
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>{classInstance.class_definition.default_duration_minutes || 50} min</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <Users className="w-4 h-4" />
+                    <span>{spotsRemaining} of {classInstance.capacity} spots</span>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-0">
-                <h4 className="font-semibold text-white">{instructor.name}</h4>
-                {instructor.title && (
-                  <p className="text-sm" style={{ color: BRAND.primaryColor }}>{instructor.title}</p>
-                )}
-                {instructor.bio && (
-                  <p className="text-sm text-gray-400 mt-1 line-clamp-3">{instructor.bio}</p>
+                {/* Class Description */}
+                {classInstance.class_definition.description ? (
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    {classInstance.class_definition.description}
+                  </p>
+                ) : (
+                  <p className="text-gray-500 text-sm italic">No description available.</p>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <div>
+                {instructor ? (
+                  <div className="flex gap-4">
+                    {/* Instructor Photo */}
+                    {instructor.photo_url ? (
+                      <img 
+                        src={instructor.photo_url} 
+                        alt={instructor.name}
+                        className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div 
+                        className="w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: BRAND.primaryColor }}
+                      >
+                        <User className="w-10 h-10 text-black" />
+                      </div>
+                    )}
+                    {/* Instructor Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-white text-lg">{instructor.name}</h4>
+                      {instructor.title && (
+                        <p className="text-sm mb-2" style={{ color: BRAND.primaryColor }}>{instructor.title}</p>
+                      )}
+                      {instructor.bio ? (
+                        <p className="text-gray-400 text-sm leading-relaxed">{instructor.bio}</p>
+                      ) : (
+                        <p className="text-gray-500 text-sm italic">No bio available.</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm italic">Instructor information not available.</p>
+                )}
+              </div>
+            )}
+          </div>
           
           {/* Book Button */}
           <button
@@ -931,17 +1005,20 @@ export default function SweatHouseSchedulePage() {
     return dates;
   }, []);
 
-  // Filter classes for selected date
+  // Filter classes for selected date, excluding past classes
   const classesForDate = useMemo(() => {
-    return classes.filter(c => 
-      isSameDay(parseISO(c.starts_at), selectedDate)
-    );
+    const now = new Date();
+    return classes.filter(c => {
+      const classStart = parseISO(c.starts_at);
+      // Must be on selected date AND not in the past
+      return isSameDay(classStart, selectedDate) && classStart > now;
+    });
   }, [classes, selectedDate]);
 
-  // Get instructor by name
+  // Get instructor by name (case-insensitive match)
   const getInstructor = useCallback((name: string | undefined) => {
     if (!name) return null;
-    return instructors.find(i => i.name === name) || null;
+    return instructors.find(i => i.name.toLowerCase() === name.toLowerCase()) || null;
   }, [instructors]);
 
   // Fetch data only after authentication
@@ -1074,39 +1151,29 @@ export default function SweatHouseSchedulePage() {
 
   return (
     <main 
-      className="min-h-screen"
+      className="min-h-screen flex flex-col"
       style={{ backgroundColor: BRAND.backgroundColor, fontFamily: 'Roboto, system-ui, sans-serif' }}
     >
-      {/* Header */}
+      {/* Sticky Header with Logo + Date Picker */}
       <header 
-        className="sticky top-0 z-30 px-6 py-4"
-        style={{ backgroundColor: BRAND.backgroundColor, borderBottom: '1px solid #222' }}
+        className="sticky top-0 z-30 pt-4"
+        style={{ backgroundColor: BRAND.backgroundColor }}
       >
-        <div className="max-w-2xl mx-auto flex items-center justify-center">
-          <img 
-            src={BRAND.logoUrl}
-            alt={BRAND.gymName}
-            className="h-12 object-contain"
-          />
+        {/* Logo */}
+        <div className="px-6 py-4">
+          <div className="max-w-2xl mx-auto flex items-center justify-center">
+            <img 
+              src={BRAND.logoUrl}
+              alt={BRAND.gymName}
+              className="h-12 object-contain"
+            />
+          </div>
         </div>
-      </header>
-      
-      {/* Hero */}
-      <section className="px-6 py-8 text-center" style={{ borderBottom: '1px solid #222' }}>
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 uppercase tracking-wide">
-            Book Your First Class
-          </h1>
-          <p className="text-gray-400 text-sm">
-            Browse our schedule and reserve your spot
-          </p>
-        </div>
-      </section>
-      
-      {/* Date Picker */}
-      <div 
-        className="px-4 py-3 sticky top-[72px] z-20 overflow-x-auto"
-        style={{ backgroundColor: BRAND.backgroundColor, borderBottom: '1px solid #222' }}
+        
+        {/* Date Picker */}
+        <div 
+          className="px-4 py-3 overflow-x-auto"
+          style={{ borderBottom: '1px solid #222' }}
       >
         <div className="flex gap-2 max-w-2xl mx-auto">
           {dateOptions.map((date) => {
@@ -1132,10 +1199,11 @@ export default function SweatHouseSchedulePage() {
             );
           })}
         </div>
-      </div>
+        </div>
+      </header>
       
       {/* Schedule */}
-      <section className="px-6 py-6">
+      <section className="px-6 py-6 flex-grow">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">
             {format(selectedDate, 'EEEE, MMMM d')}
