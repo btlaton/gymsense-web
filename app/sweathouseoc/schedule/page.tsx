@@ -131,6 +131,9 @@ function CheckoutForm({
   const [processing, setProcessing] = useState(false);
   const [validatingPhone, setValidatingPhone] = useState(false);
 
+  // Only require phone for intro offers (abuse prevention)
+  const requiresPhone = product.is_intro_offer;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -141,11 +144,13 @@ function CheckoutForm({
       return;
     }
     
-    if (!customerPhone.trim() || customerPhone.replace(/\D/g, '').length < 10) {
+    // Only validate phone for intro offers
+    if (requiresPhone && (!customerPhone.trim() || customerPhone.replace(/\D/g, '').length < 10)) {
       onError('Please enter a valid phone number');
       return;
     }
     
+    // Email is collected by LinkAuthenticationElement - check we have it
     if (!customerEmail.trim() || !customerEmail.includes('@')) {
       onError('Please enter a valid email address');
       return;
@@ -189,7 +194,7 @@ function CheckoutForm({
         throw new Error(submitError.message || 'Please complete all required fields');
       }
 
-      // Confirm the payment with billing details and receipt_email
+      // Confirm the payment with billing details
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -199,7 +204,7 @@ function CheckoutForm({
             billing_details: {
               name: customerName.trim(),
               email: customerEmail,
-              phone: customerPhone.replace(/\D/g, ''),
+              ...(requiresPhone && customerPhone ? { phone: customerPhone.replace(/\D/g, '') } : {}),
             },
           },
         },
@@ -242,43 +247,36 @@ function CheckoutForm({
         />
       </div>
       
-      {/* Phone */}
+      {/* Email - using Stripe's LinkAuthenticationElement */}
       <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Phone</label>
-        <input
-          type="tel"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="(555) 555-5555"
-          required
-          className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
-          style={{ 
-            backgroundColor: '#1a1a1a', 
-            border: '1px solid #333',
-          }}
+        <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+        <LinkAuthenticationElement 
+          onChange={(e) => setCustomerEmail(e.value.email)}
         />
       </div>
       
-      {/* Email */}
-      <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Email</label>
-        <input
-          type="email"
-          value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          placeholder="your@email.com"
-          required
-          className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
-          style={{ 
-            backgroundColor: '#1a1a1a', 
-            border: '1px solid #333',
-          }}
-        />
-      </div>
+      {/* Phone - only shown for intro offers (abuse prevention) */}
+      {requiresPhone && (
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Phone</label>
+          <input
+            type="tel"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="(555) 555-5555"
+            required
+            className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
+            style={{ 
+              backgroundColor: '#1a1a1a', 
+              border: '1px solid #333',
+            }}
+          />
+          <p className="text-xs text-gray-500 mt-1">Required to verify intro offer eligibility</p>
+        </div>
+      )}
       
       {/* Payment */}
       <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Payment</label>
         <PaymentElement 
           options={{
             layout: 'tabs',
@@ -381,8 +379,8 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
     }
   }, [isOpen, classInstance, introProduct, selectedProduct]);
 
-  // Create checkout when product is selected (for one-off) or when email provided (for recurring)
-  const createCheckout = useCallback(async (product: Product, email?: string) => {
+  // Create checkout when product is selected (unified flow - no email required upfront)
+  const createCheckout = useCallback(async (product: Product) => {
     if (!classInstance) return;
     
     setLoadingCheckout(true);
@@ -399,18 +397,12 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
           gymId: BRAND.gymId,
           productId: product.id,
           classInstanceId: classInstance.id,
-          email: product.recurring ? email : undefined,
         }),
       });
       
       const data = await response.json();
       
       if (!response.ok || data.error) {
-        if (data.requiresEmail) {
-          // Recurring product needs email first - will handle in UI
-          setLoadingCheckout(false);
-          return;
-        }
         throw new Error(data.error || 'Failed to initialize checkout');
       }
       
@@ -424,8 +416,9 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
   }, [classInstance]);
 
   // Create checkout when product changes (for one-off products)
+  // Create checkout when product is selected (for all products - unified flow)
   useEffect(() => {
-    if (isOpen && selectedProduct && classInstance && !selectedProduct.recurring) {
+    if (isOpen && selectedProduct && classInstance) {
       createCheckout(selectedProduct);
     }
   }, [isOpen, selectedProduct, classInstance, createCheckout]);
@@ -434,10 +427,7 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
     setSelectedProduct(product);
     setShowProductModal(false);
     setClientSecret(null);
-    
-    if (!product.recurring) {
-      createCheckout(product);
-    }
+    createCheckout(product);
   };
 
   const handleSuccess = useCallback((email: string) => {
@@ -665,25 +655,6 @@ function CheckoutDrawer({ isOpen, onClose, classInstance, products, instructors 
                 </Elements>
               )}
               
-              {/* Recurring product - need email first */}
-              {!loadingCheckout && !clientSecret && selectedProduct?.recurring && (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400">
-                    For memberships, please enter your email to continue.
-                  </p>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2"
-                    style={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                    onBlur={(e) => {
-                      if (e.target.value && e.target.value.includes('@')) {
-                        createCheckout(selectedProduct, e.target.value);
-                      }
-                    }}
-                  />
-                </div>
-              )}
             </>
           )}
         </div>
