@@ -10,8 +10,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - gymsense',
-  description: 'gymsense Privacy Policy - How we collect, use, and protect your personal information.',
+  title: 'Privacy Policy - Gymsense',
+  description: 'Gymsense Privacy Policy - How we collect, use, and protect your personal information.',
 };
 
 export default function PrivacyPolicyPage() {
@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
 
         <div className="prose prose-invert prose-stone max-w-none">
           <p className="text-stone-300 mb-8">
-            gymsense (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) operates the gymsense mobile applications (the &quot;Pro App&quot; and &quot;Member App&quot;) and related services. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our services.
+            Gymsense (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) operates the Gymsense mobile applications (the &quot;Pro App&quot; and &quot;Member App&quot;) and related services. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our services.
           </p>
 
           {/* Section 1 */}
@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
           <Section title="3. How We Share Your Information">
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">3.1 With Your Gym</h4>
             <p className="text-stone-300 mb-4">
-              Your gym (the business using gymsense Pro) has access to your profile information, check-in history, session bookings, and payment history. Your gym is the &quot;data controller&quot; for your information; gymsense acts as a &quot;data processor&quot; on their behalf.
+              Your gym (the business using Gymsense Pro) has access to your profile information, check-in history, session bookings, and payment history. Your gym is the &quot;data controller&quot; for your information; Gymsense acts as a &quot;data processor&quot; on their behalf.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">3.2 With Service Providers</h4>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyPage() {
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">3.4 Business Transfers</h4>
             <p className="text-stone-300">
-              If gymsense is acquired or merges with another company, your information may be transferred as part of that transaction.
+              If Gymsense is acquired or merges with another company, your information may be transferred as part of that transaction.
             </p>
           </Section>
 
@@ -159,7 +159,7 @@ export default function PrivacyPolicyPage() {
           {/* Section 7 */}
           <Section title="7. Children's Privacy">
             <p className="text-stone-300">
-              gymsense is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we learn we have collected such information, we will delete it promptly.
+              Gymsense is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we learn we have collected such information, we will delete it promptly.
             </p>
           </Section>
 
@@ -192,7 +192,7 @@ export default function PrivacyPolicyPage() {
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-stone-800 text-center text-stone-500 text-sm">
-          © 2025 gymsense. All rights reserved.
+          © 2025 Gymsense. All rights reserved.
         </footer>
       </div>
     </main>

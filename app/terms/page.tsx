@@ -9,8 +9,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - gymsense',
-  description: 'gymsense Terms of Service - The terms and conditions for using our services.',
+  title: 'Terms of Service - Gymsense',
+  description: 'Gymsense Terms of Service - The terms and conditions for using our services.',
 };
 
 export default function TermsOfServicePage() {
@@ -26,22 +26,22 @@ export default function TermsOfServicePage() {
 
         <div className="prose prose-invert prose-stone max-w-none">
           <p className="text-stone-300 mb-4">
-            Welcome to gymsense! These Terms of Service (&quot;Terms&quot;) govern your use of the gymsense mobile applications and services. By using gymsense, you agree to these Terms.
+            Welcome to Gymsense! These Terms of Service (&quot;Terms&quot;) govern your use of the Gymsense mobile applications and services. By using Gymsense, you agree to these Terms.
           </p>
 
           {/* Summary Box */}
           <div className="bg-stone-900 border-l-4 border-orange-500 p-4 rounded-r-lg mb-8">
             <p className="text-stone-300 m-0">
-              <strong className="text-stone-50">Summary:</strong> gymsense is a gym management platform. Gym owners use the Pro App to manage their business. Members use the Member App to check in, book sessions, and pay. You agree to use the service responsibly and pay for services you purchase.
+              <strong className="text-stone-50">Summary:</strong> Gymsense is a gym management platform. Gym owners use the Pro App to manage their business. Members use the Member App to check in, book sessions, and pay. You agree to use the service responsibly and pay for services you purchase.
             </p>
           </div>
 
           {/* Section 1 */}
           <Section title="1. Definitions">
             <ul className="list-disc list-inside text-stone-300 space-y-2">
-              <li><strong className="text-stone-50">&quot;gymsense,&quot; &quot;we,&quot; &quot;our,&quot; or &quot;us&quot;</strong> refers to gymsense and its affiliates</li>
-              <li><strong className="text-stone-50">&quot;Services&quot;</strong> refers to the gymsense Pro App, Member App, and related services</li>
-              <li><strong className="text-stone-50">&quot;Gym&quot;</strong> refers to a fitness business using gymsense Pro</li>
+              <li><strong className="text-stone-50">&quot;Gymsense,&quot; &quot;we,&quot; &quot;our,&quot; or &quot;us&quot;</strong> refers to Gymsense and its affiliates</li>
+              <li><strong className="text-stone-50">&quot;Services&quot;</strong> refers to the Gymsense Pro App, Member App, and related services</li>
+              <li><strong className="text-stone-50">&quot;Gym&quot;</strong> refers to a fitness business using Gymsense Pro</li>
               <li><strong className="text-stone-50">&quot;Member&quot;</strong> or <strong className="text-stone-50">&quot;Customer&quot;</strong> refers to an individual using the Member App or transacting with a Gym</li>
               <li><strong className="text-stone-50">&quot;User&quot;</strong> refers to anyone using our Services</li>
             </ul>
@@ -49,7 +49,7 @@ export default function TermsOfServicePage() {
 
           {/* Section 2 */}
           <Section title="2. Eligibility">
-            <p className="text-stone-300 mb-4">To use gymsense, you must:</p>
+            <p className="text-stone-300 mb-4">To use Gymsense, you must:</p>
             <ul className="list-disc list-inside text-stone-300 space-y-2">
               <li>Be at least 18 years old (or the age of majority in your jurisdiction)</li>
               <li>Have the legal capacity to enter into a binding agreement</li>
@@ -75,7 +75,7 @@ export default function TermsOfServicePage() {
           </Section>
 
           {/* Section 4 */}
-          <Section title="4. gymsense Services">
+          <Section title="4. Gymsense Services">
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">4.1 For Gym Owners (Pro App)</h4>
             <p className="text-stone-300 mb-2">The Pro App allows gym owners and staff to:</p>
             <ul className="list-disc list-inside text-stone-300 space-y-2">
@@ -107,17 +107,17 @@ export default function TermsOfServicePage() {
             <ul className="list-disc list-inside text-stone-300 space-y-2">
               <li>You authorize the payment processor to charge your payment method</li>
               <li>Your payment goes to the Gym</li>
-              <li>gymsense may receive a platform fee from the transaction</li>
+              <li>Gymsense may receive a platform fee from the transaction</li>
             </ul>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">5.2 Gym Pricing</h4>
             <p className="text-stone-300">
-              Gyms set their own prices for memberships, sessions, and products. gymsense is not responsible for pricing decisions made by gyms.
+              Gyms set their own prices for memberships, sessions, and products. Gymsense is not responsible for pricing decisions made by gyms.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">5.3 Refunds</h4>
             <p className="text-stone-300">
-              Refund policies are determined by each Gym. Contact your Gym directly for refund requests. gymsense does not process refunds on behalf of gyms unless required by law.
+              Refund policies are determined by each Gym. Contact your Gym directly for refund requests. Gymsense does not process refunds on behalf of gyms unless required by law.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">5.4 Subscriptions</h4>
@@ -149,19 +149,19 @@ export default function TermsOfServicePage() {
           <Section title="7. Intellectual Property">
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">7.1 Our Rights</h4>
             <p className="text-stone-300">
-              gymsense owns all rights to the Services, including the app design, code, trademarks, and content. You may not copy, modify, or distribute any part of our Services without permission.
+              Gymsense owns all rights to the Services, including the app design, code, trademarks, and content. You may not copy, modify, or distribute any part of our Services without permission.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">7.2 Your Content</h4>
             <p className="text-stone-300">
-              You retain ownership of any content you submit (e.g., profile information). By submitting content, you grant gymsense a license to use it to provide the Services.
+              You retain ownership of any content you submit (e.g., profile information). By submitting content, you grant Gymsense a license to use it to provide the Services.
             </p>
           </Section>
 
           {/* Section 8 */}
           <Section title="8. Privacy">
             <p className="text-stone-300">
-              Your privacy is important to us. Our <a href="/privacy" className="text-orange-400 hover:underline">Privacy Policy</a> explains how we collect, use, and protect your information. By using gymsense, you agree to our Privacy Policy.
+              Your privacy is important to us. Our <a href="/privacy" className="text-orange-400 hover:underline">Privacy Policy</a> explains how we collect, use, and protect your information. By using Gymsense, you agree to our Privacy Policy.
             </p>
           </Section>
 
@@ -173,7 +173,7 @@ export default function TermsOfServicePage() {
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">9.2 Gym Relationships</h4>
-            <p className="text-stone-300 mb-2">gymsense is a technology platform. We are not:</p>
+            <p className="text-stone-300 mb-2">Gymsense is a technology platform. We are not:</p>
             <ul className="list-disc list-inside text-stone-300 space-y-2">
               <li>A party to agreements between you and your Gym</li>
               <li>Responsible for the quality of gym services or facilities</li>
@@ -199,7 +199,7 @@ export default function TermsOfServicePage() {
 
           {/* Section 11 */}
           <Section title="11. Indemnification">
-            <p className="text-stone-300 mb-2">You agree to indemnify and hold harmless gymsense, its officers, directors, employees, and agents from any claims, damages, or expenses arising from:</p>
+            <p className="text-stone-300 mb-2">You agree to indemnify and hold harmless Gymsense, its officers, directors, employees, and agents from any claims, damages, or expenses arising from:</p>
             <ul className="list-disc list-inside text-stone-300 space-y-2">
               <li>Your use of the Services</li>
               <li>Your violation of these Terms</li>
@@ -211,7 +211,7 @@ export default function TermsOfServicePage() {
           <Section title="12. Termination">
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">12.1 By You</h4>
             <p className="text-stone-300">
-              You may stop using gymsense at any time. To delete your account, contact us at <a href="mailto:support@gymsense.io" className="text-orange-400 hover:underline">support@gymsense.io</a> or use the in-app settings.
+              You may stop using Gymsense at any time. To delete your account, contact us at <a href="mailto:support@gymsense.io" className="text-orange-400 hover:underline">support@gymsense.io</a> or use the in-app settings.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">12.2 By Us</h4>
@@ -266,7 +266,7 @@ export default function TermsOfServicePage() {
           <Section title="15. General Provisions">
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">15.1 Entire Agreement</h4>
             <p className="text-stone-300">
-              These Terms, together with our Privacy Policy, constitute the entire agreement between you and gymsense.
+              These Terms, together with our Privacy Policy, constitute the entire agreement between you and Gymsense.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">15.2 Severability</h4>
@@ -288,37 +288,37 @@ export default function TermsOfServicePage() {
           {/* Section 16 */}
           <Section title="16. Apple App Store Terms">
             <p className="text-stone-300 mb-4">
-              The following terms apply specifically to users who access gymsense through Apple&apos;s App Store:
+              The following terms apply specifically to users who access Gymsense through Apple&apos;s App Store:
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.1 Acknowledgement</h4>
             <p className="text-stone-300 mb-4">
-              You acknowledge that these Terms are between you and gymsense only, and not with Apple Inc. (&quot;Apple&quot;). gymsense, not Apple, is solely responsible for the gymsense apps and their content.
+              You acknowledge that these Terms are between you and Gymsense only, and not with Apple Inc. (&quot;Apple&quot;). Gymsense, not Apple, is solely responsible for the Gymsense apps and their content.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.2 Scope of License</h4>
             <p className="text-stone-300 mb-4">
-              The license granted to you for the gymsense apps is a limited, non-transferable license to use the apps on any Apple-branded device that you own or control, as permitted by the Usage Rules set forth in the Apple Media Services Terms and Conditions.
+              The license granted to you for the Gymsense apps is a limited, non-transferable license to use the apps on any Apple-branded device that you own or control, as permitted by the Usage Rules set forth in the Apple Media Services Terms and Conditions.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.3 Maintenance and Support</h4>
             <p className="text-stone-300 mb-4">
-              gymsense is solely responsible for providing any maintenance and support services for the apps. You acknowledge that Apple has no obligation whatsoever to furnish any maintenance and support services with respect to the apps.
+              Gymsense is solely responsible for providing any maintenance and support services for the apps. You acknowledge that Apple has no obligation whatsoever to furnish any maintenance and support services with respect to the apps.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.4 Warranty</h4>
             <p className="text-stone-300 mb-4">
-              gymsense is solely responsible for any product warranties, whether express or implied by law. In the event of any failure of the apps to conform to any applicable warranty, you may notify Apple, and Apple will refund the purchase price (if any) for the app to you. To the maximum extent permitted by applicable law, Apple will have no other warranty obligation whatsoever with respect to the apps, and any other claims, losses, liabilities, damages, costs, or expenses attributable to any failure to conform to any warranty will be gymsense&apos;s sole responsibility.
+              Gymsense is solely responsible for any product warranties, whether express or implied by law. In the event of any failure of the apps to conform to any applicable warranty, you may notify Apple, and Apple will refund the purchase price (if any) for the app to you. To the maximum extent permitted by applicable law, Apple will have no other warranty obligation whatsoever with respect to the apps, and any other claims, losses, liabilities, damages, costs, or expenses attributable to any failure to conform to any warranty will be Gymsense&apos;s sole responsibility.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.5 Product Claims</h4>
             <p className="text-stone-300 mb-4">
-              You acknowledge that gymsense, not Apple, is responsible for addressing any claims you or any third party may have relating to the apps or your possession and/or use of the apps, including but not limited to: (i) product liability claims; (ii) any claim that the apps fail to conform to any applicable legal or regulatory requirement; and (iii) claims arising under consumer protection, privacy, or similar legislation.
+              You acknowledge that Gymsense, not Apple, is responsible for addressing any claims you or any third party may have relating to the apps or your possession and/or use of the apps, including but not limited to: (i) product liability claims; (ii) any claim that the apps fail to conform to any applicable legal or regulatory requirement; and (iii) claims arising under consumer protection, privacy, or similar legislation.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.6 Intellectual Property Claims</h4>
             <p className="text-stone-300 mb-4">
-              In the event of any third-party claim that the apps or your possession and use of the apps infringes that third party&apos;s intellectual property rights, gymsense, not Apple, will be solely responsible for the investigation, defense, settlement, and discharge of any such intellectual property infringement claim.
+              In the event of any third-party claim that the apps or your possession and use of the apps infringes that third party&apos;s intellectual property rights, Gymsense, not Apple, will be solely responsible for the investigation, defense, settlement, and discharge of any such intellectual property infringement claim.
             </p>
 
             <h4 className="text-lg font-semibold text-stone-50 mt-6 mb-3">16.7 Legal Compliance</h4>
@@ -350,7 +350,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-stone-800 text-center text-stone-500 text-sm">
-          © 2025 gymsense. All rights reserved.
+          © 2025 Gymsense. All rights reserved.
         </footer>
       </div>
     </main>
